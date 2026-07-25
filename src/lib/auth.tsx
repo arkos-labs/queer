@@ -8,7 +8,7 @@ interface AuthContextValue {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
-  signUp: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: string | null; needsConfirmation: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -63,8 +63,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
-    return { error: error ? error.message : null };
+    // emailRedirectTo brings the person back to the app after they click
+    // the confirmation link (when "Confirm email" is enabled in Supabase).
+    // If Supabase returns a user but no session, confirmation is pending —
+    // the caller should show a "check your inbox" screen rather than
+    // routing straight into onboarding with no authenticated session.
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: window.location.origin + window.location.pathname },
+    });
+    return {
+      error: error ? error.message : null,
+      needsConfirmation: !error && !data.session,
+    };
   };
 
   const signIn = async (email: string, password: string) => {
@@ -103,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           service_category: null,
           intervention_zone: null,
           indicative_rates: null,
+          budget_indicatif: null,
           charte_accepted: true,
           charte_accepted_at: new Date().toISOString(),
           verification_status: 'none',

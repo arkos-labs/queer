@@ -115,7 +115,7 @@ export function OnboardingPage() {
       return;
     }
     await refreshProfile();
-    navigate('/profil');
+    navigate('/profil?bienvenue=1');
   };
 
   const next = () => setStep((s) => s + 1);

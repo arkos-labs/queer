@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
-import { AlertCircle, ArrowRight } from 'lucide-react';
+import { AlertCircle, ArrowRight, MailCheck } from 'lucide-react';
 
 export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
   const { signIn, signUp } = useAuth();
@@ -12,6 +12,11 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
   const [loading, setLoading] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptSensitiveData, setAcceptSensitiveData] = useState(false);
+  // Set when signup succeeded but Supabase requires the person to confirm
+  // their email address before a session exists — shown instead of
+  // silently bouncing them to /onboarding (where they'd have no active
+  // session and get redirected straight back to the login page).
+  const [confirmationSent, setConfirmationSent] = useState(false);
 
   const isSignup = mode === 'signup';
   const canSubmit = !isSignup || (acceptTerms && acceptSensitiveData);
@@ -21,18 +26,53 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
     if (!canSubmit) return;
     setError(null);
     setLoading(true);
-    const { error } = isSignup
-      ? await signUp(email, password)
-      : await signIn(email, password);
-    setLoading(false);
-    if (error) {
-      setError(error);
-    } else if (isSignup) {
+    if (isSignup) {
+      const { error, needsConfirmation } = await signUp(email, password);
+      setLoading(false);
+      if (error) {
+        setError(error);
+        return;
+      }
+      if (needsConfirmation) {
+        setConfirmationSent(true);
+        return;
+      }
       navigate('/onboarding');
     } else {
-      navigate('/annuaire');
+      const { error } = await signIn(email, password);
+      setLoading(false);
+      if (error) {
+        setError(error);
+      } else {
+        navigate('/annuaire');
+      }
     }
   };
+
+  if (confirmationSent) {
+    return (
+      <div className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden px-4 py-12">
+        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary-50 via-white to-secondary-50" />
+        <div className="w-full max-w-md animate-scale-in">
+          <div className="card p-8 text-center md:p-10">
+            <MailCheck size={40} className="mx-auto mb-4 text-primary-600" />
+            <h1 className="font-display text-xl font-semibold text-neutral-900">Vérifiez votre boîte mail</h1>
+            <p className="mt-3 text-sm text-neutral-600">
+              Nous avons envoyé un lien de confirmation à <strong>{email}</strong>. Cliquez dessus pour activer votre
+              compte, vous pourrez ensuite compléter votre profil.
+            </p>
+            <p className="mt-4 text-xs text-neutral-400">
+              Rien reçu ? Vérifiez vos spams, ou{' '}
+              <button onClick={() => setConfirmationSent(false)} className="font-medium text-primary-600 hover:underline">
+                réessayez
+              </button>
+              .
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden px-4 py-12">

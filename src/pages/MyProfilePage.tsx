@@ -26,6 +26,7 @@ import {
   ArrowLeft,
   Settings,
   ShieldCheck,
+  X,
 } from 'lucide-react';
 
 interface ConnectionWithOther extends Connection {
@@ -38,11 +39,14 @@ interface ReviewWithAuthor extends Review {
 
 export function MyProfilePage() {
   const { user, profile, refreshProfile } = useAuth();
-  const { navigate } = useRouter();
+  const { path, navigate } = useRouter();
   const [badges, setBadges] = useState<Badge[]>([]);
   const [reviews, setReviews] = useState<ReviewWithAuthor[]>([]);
   const [connections, setConnections] = useState<ConnectionWithOther[]>([]);
   const [loading, setLoading] = useState(true);
+  // On-site confirmation right after finishing onboarding (see
+  // OnboardingPage's finishOnboarding, which navigates here with this flag).
+  const [showWelcome, setShowWelcome] = useState(() => path.includes('bienvenue=1'));
 
   useEffect(() => {
     if (!user) {
@@ -96,6 +100,25 @@ export function MyProfilePage() {
 
   return (
     <div className="animate-fade-in container-app py-6 max-w-2xl mx-auto">
+      {showWelcome && (
+        <div className="mb-4 flex items-start gap-3 rounded-xl border border-primary-100 bg-primary-50 p-4">
+          <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-primary-600" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-primary-900">Bienvenue, votre inscription est terminée !</p>
+            <p className="mt-0.5 text-xs text-primary-700">Votre profil est prêt, vous pouvez le compléter à tout moment.</p>
+          </div>
+          <button
+            onClick={() => {
+              setShowWelcome(false);
+              navigate('/profil');
+            }}
+            aria-label="Fermer"
+            className="rounded-lg p-1 text-primary-400 hover:bg-primary-100"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
       <div className="mb-6 flex items-center justify-between">
         <button
           onClick={() => navigate('/annuaire')}

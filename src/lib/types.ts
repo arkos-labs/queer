@@ -1,4 +1,4 @@
-export type AccountType = 'particulier' | 'pro' | 'asso';
+export type AccountType = 'particulier' | 'asso';
 export type Civilite = 'Monsieur' | 'Madame' | 'Mx' | 'Iel' | 'Autre';
 export type VerificationStatus = 'none' | 'pending' | 'verified' | 'rejected';
 export type ProfileStatus = 'active' | 'suspended' | 'banned' | 'pending';

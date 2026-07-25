@@ -7,6 +7,7 @@ import { Avatar } from '@/components/Avatar';
 import { avg } from '@/lib/utils';
 import { FALLBACK_CATEGORIES, FALLBACK_SUBCATEGORIES } from '@/lib/taxonomy';
 import { AddPlaceModal } from '@/components/AddPlaceModal';
+import { AnnouncementsBanner } from '@/components/AnnouncementsBanner';
 import {
   Search,
   X,
@@ -241,6 +242,9 @@ export function DirectoryPage() {
 
   return (
     <div className="min-h-full bg-white animate-fade-in">
+      <div className="pt-4">
+        <AnnouncementsBanner />
+      </div>
 
       <section className="bg-white border-b border-slate-100 py-4 shadow-sm overflow-x-auto no-scrollbar flex items-center px-4 space-x-6">
         <button
