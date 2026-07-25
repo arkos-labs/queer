@@ -10,11 +10,15 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [acceptSensitiveData, setAcceptSensitiveData] = useState(false);
 
   const isSignup = mode === 'signup';
+  const canSubmit = !isSignup || (acceptTerms && acceptSensitiveData);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (!canSubmit) return;
     setError(null);
     setLoading(true);
     const { error } = isSignup
@@ -81,6 +85,45 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
               />
             </div>
 
+            {isSignup && (
+              <div className="space-y-2.5 rounded-xl bg-neutral-50 p-4">
+                <label className="flex cursor-pointer items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    checked={acceptTerms}
+                    onChange={(e) => setAcceptTerms(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+                    required
+                  />
+                  <span className="text-xs text-neutral-600">
+                    J'ai lu et j'accepte les{' '}
+                    <a href="#/cgu" target="_blank" rel="noopener noreferrer" className="font-medium text-primary-600 hover:underline">
+                      CGU
+                    </a>{' '}
+                    et la{' '}
+                    <a href="#/confidentialite" target="_blank" rel="noopener noreferrer" className="font-medium text-primary-600 hover:underline">
+                      politique de confidentialité
+                    </a>
+                    .
+                  </span>
+                </label>
+                <label className="flex cursor-pointer items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    checked={acceptSensitiveData}
+                    onChange={(e) => setAcceptSensitiveData(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+                    required
+                  />
+                  <span className="text-xs text-neutral-600">
+                    Je comprends que mon inscription à cet annuaire communautaire implique le traitement de données
+                    relatives à l'orientation sexuelle et/ou à l'identité de genre (catégorie particulière de
+                    données), et j'y consens explicitement (art. 9 du RGPD).
+                  </span>
+                </label>
+              </div>
+            )}
+
             {error && (
               <div className="flex items-start gap-2 rounded-xl bg-error-50 p-3 text-sm text-error-700">
                 <AlertCircle size={16} className="mt-0.5 shrink-0" />
@@ -88,7 +131,7 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
               </div>
             )}
 
-            <button type="submit" disabled={loading} className="btn-primary w-full">
+            <button type="submit" disabled={loading || !canSubmit} className="btn-primary w-full">
               {loading ? 'Veuillez patienter…' : isSignup ? 'Créer mon compte' : 'Se connecter'}
               {!loading && <ArrowRight size={16} />}
             </button>
@@ -114,6 +157,10 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
         </div>
         <p className="mt-6 text-center text-xs text-neutral-400">
           En vous inscrivant, vous acceptez de respecter la charte communautaire de Queer Service.
+          {' '}
+          <a href="#/mentions-legales" target="_blank" rel="noopener noreferrer" className="underline hover:text-neutral-600">
+            Mentions légales
+          </a>
         </p>
       </div>
     </div>

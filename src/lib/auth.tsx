@@ -12,6 +12,10 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  /** Dev-only helper to bypass real auth while Supabase isn't wired up yet.
+   *  Only ever defined in local dev builds (import.meta.env.DEV) — stripped
+   *  out of production builds, never shown to real users. */
+  devLogin?: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -77,9 +81,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) await loadProfile(user.id);
   };
 
+  // Dev-only bypass: lets you click through the app without a real Supabase
+  // project configured. Never included in production builds.
+  const devLogin = import.meta.env.DEV
+    ? () => {
+        const fakeUser = { id: 'dev-123', email: 'dev@test.com' } as User;
+        const fakeProfile: Profile = {
+          id: 'dev-123',
+          display_name: 'Développeur',
+          email: 'dev@test.com',
+          phone: null,
+          civilite: null,
+          pronouns: null,
+          account_type: 'particulier',
+          bio: 'Compte de test (mode développement uniquement).',
+          photo_url: null,
+          city: null,
+          skills: [],
+          needs: [],
+          siret: null,
+          service_category: null,
+          intervention_zone: null,
+          indicative_rates: null,
+          charte_accepted: true,
+          charte_accepted_at: new Date().toISOString(),
+          verification_status: 'none',
+          verified_at: null,
+          profile_status: 'active',
+          is_admin: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        setSession({ user: fakeUser, access_token: 'fake', refresh_token: 'fake' } as Session);
+        setUser(fakeUser);
+        setProfile(fakeProfile);
+      }
+    : undefined;
+
   return (
     <AuthContext.Provider
-      value={{ session, user, profile, loading, signUp, signIn, signOut, refreshProfile }}
+      value={{ session, user, profile, loading, signUp, signIn, signOut, refreshProfile, devLogin }}
     >
       {children}
     </AuthContext.Provider>

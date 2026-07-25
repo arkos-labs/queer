@@ -26,6 +26,7 @@ export interface Profile {
   charte_accepted: boolean;
   charte_accepted_at: string | null;
   verification_status: VerificationStatus;
+  verified_at: string | null;
   profile_status: ProfileStatus;
   is_admin: boolean;
   created_at: string;
@@ -83,6 +84,16 @@ export interface Connection {
   status: ConnectionStatus;
   created_at: string;
   updated_at: string;
+}
+
+export interface Message {
+  id: string;
+  connection_id: string;
+  sender_id: string;
+  body: string;
+  created_at: string;
+  read_at: string | null;
+  sender?: Pick<Profile, 'id' | 'display_name' | 'photo_url'>;
 }
 
 export interface Report {

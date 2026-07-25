@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth';
 import type { Profile, Badge, Review, Connection } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
 import { BadgeList } from '@/components/BadgeChip';
+import { TrustPanel } from '@/components/TrustPanel';
 import { AverageStars } from '@/components/StarRating';
 import { avg, formatDate, timeAgo } from '@/lib/utils';
 import {
@@ -149,6 +150,11 @@ export function MyProfilePage() {
               )}
             </div>
 
+            {/* Trust & safety */}
+            <div className="mt-6">
+              <TrustPanel profile={profile} badges={badges} reviewCount={reviews.length} avgRating={avgRating} />
+            </div>
+
             {/* Reviews received */}
             <div className="card mt-6 p-6 md:p-8">
               <h2 className="font-display text-xl font-semibold text-neutral-900">Avis reçus</h2>
@@ -177,8 +183,17 @@ export function MyProfilePage() {
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="card p-6">
-              <h3 className="font-display text-lg font-semibold text-neutral-900">Mes mises en relation</h3>
-              <p className="mt-1 text-sm text-neutral-500">Vos échanges en cours avec la communauté.</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-lg font-semibold text-neutral-900">Mes mises en relation</h3>
+                  <p className="mt-1 text-sm text-neutral-500">Vos échanges en cours avec la communauté.</p>
+                </div>
+                {connections.length > 0 && (
+                  <button onClick={() => navigate('/messages')} className="shrink-0 text-xs font-medium text-primary-600 hover:underline">
+                    Tout voir
+                  </button>
+                )}
+              </div>
 
               {connections.length === 0 ? (
                 <div className="mt-6 rounded-2xl bg-neutral-50 p-6 text-center">
@@ -191,7 +206,11 @@ export function MyProfilePage() {
               ) : (
                 <div className="mt-5 space-y-3">
                   {connections.map((c) => (
-                    <div key={c.id} className="flex items-center gap-3 rounded-2xl border border-neutral-200 p-3">
+                    <button
+                      key={c.id}
+                      onClick={() => navigate(`/messages/${c.id}`)}
+                      className="flex w-full items-center gap-3 rounded-2xl border border-neutral-200 p-3 text-left hover:border-primary-300 hover:bg-primary-50/30 transition-colors"
+                    >
                       <Avatar name={c.other?.display_name ?? 'Inconnu'} src={c.other?.photo_url} size={40} />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-neutral-900">{c.other?.display_name ?? 'Membre'}</p>
@@ -199,7 +218,7 @@ export function MyProfilePage() {
                         <p className="mt-0.5 text-xs text-neutral-400">{timeAgo(c.created_at)}</p>
                       </div>
                       <StatusBadge status={c.status} />
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}

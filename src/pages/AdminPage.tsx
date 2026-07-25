@@ -7,6 +7,7 @@ import { Avatar } from '@/components/Avatar';
 import { cn, formatDate, timeAgo } from '@/lib/utils';
 import {
   Shield,
+  ShieldCheck,
   Users,
   Flag,
   LayoutGrid,
@@ -110,6 +111,15 @@ function ProfilesTab() {
     if (!error) setProfiles((prev) => prev.map((p) => (p.id === id ? { ...p, profile_status: status } : p)));
   };
 
+  const toggleVerification = async (p: Profile) => {
+    const nowVerified = p.verification_status === 'verified';
+    const patch = nowVerified
+      ? { verification_status: 'none' as const, verified_at: null }
+      : { verification_status: 'verified' as const, verified_at: new Date().toISOString() };
+    const { error } = await supabase.from('profiles').update(patch).eq('id', p.id);
+    if (!error) setProfiles((prev) => prev.map((x) => (x.id === p.id ? { ...x, ...patch } : x)));
+  };
+
   const filtered = filter === 'all' ? profiles : profiles.filter((p) => p.profile_status === filter);
 
   return (
@@ -144,6 +154,11 @@ function ProfilesTab() {
                 <p className="truncate font-medium text-neutral-900">{p.display_name}</p>
                 <p className="truncate text-xs text-neutral-500">{p.email} · {p.account_type} · {p.city ?? '—'}</p>
               </div>
+              {p.verification_status === 'verified' && (
+                <span className="hidden items-center gap-1 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 ring-1 ring-primary-200 sm:inline-flex">
+                  <ShieldCheck size={12} /> Vérifié
+                </span>
+              )}
               <span className={cn(
                 'hidden rounded-full px-2.5 py-1 text-xs font-medium sm:inline-block',
                 p.profile_status === 'active' && 'bg-success-100 text-success-700',
@@ -154,18 +169,29 @@ function ProfilesTab() {
                 {p.profile_status}
               </span>
               <div className="flex gap-1">
+                <button
+                  onClick={() => toggleVerification(p)}
+                  className={cn(
+                    'btn-ghost btn-sm',
+                    p.verification_status === 'verified' ? 'text-primary-600 hover:bg-primary-50' : 'text-neutral-400 hover:bg-neutral-100',
+                  )}
+                  title={p.verification_status === 'verified' ? "Retirer la vérification d'identité" : "Vérifier l'identité"}
+                  aria-label={p.verification_status === 'verified' ? `Retirer la vérification d'identité de ${p.display_name}` : `Vérifier l'identité de ${p.display_name}`}
+                >
+                  <ShieldCheck size={16} />
+                </button>
                 {p.profile_status !== 'active' && (
-                  <button onClick={() => updateStatus(p.id, 'active')} className="btn-ghost btn-sm text-success-600 hover:bg-success-50" title="Activer">
+                  <button onClick={() => updateStatus(p.id, 'active')} className="btn-ghost btn-sm text-success-600 hover:bg-success-50" title="Activer" aria-label={`Activer le profil de ${p.display_name}`}>
                     <CheckCircle2 size={16} />
                   </button>
                 )}
                 {p.profile_status !== 'suspended' && (
-                  <button onClick={() => updateStatus(p.id, 'suspended')} className="btn-ghost btn-sm text-warning-600 hover:bg-warning-50" title="Suspendre">
+                  <button onClick={() => updateStatus(p.id, 'suspended')} className="btn-ghost btn-sm text-warning-600 hover:bg-warning-50" title="Suspendre" aria-label={`Suspendre le profil de ${p.display_name}`}>
                     <Clock size={16} />
                   </button>
                 )}
                 {p.profile_status !== 'banned' && (
-                  <button onClick={() => updateStatus(p.id, 'banned')} className="btn-ghost btn-sm text-error-600 hover:bg-error-50" title="Bannir">
+                  <button onClick={() => updateStatus(p.id, 'banned')} className="btn-ghost btn-sm text-error-600 hover:bg-error-50" title="Bannir" aria-label={`Bannir le profil de ${p.display_name}`}>
                     <XCircle size={16} />
                   </button>
                 )}
@@ -234,12 +260,12 @@ function ReportsTab() {
             </div>
             <div className="flex shrink-0 gap-1">
               {r.status !== 'resolved' && (
-                <button onClick={() => updateStatus(r.id, 'resolved')} className="btn-ghost btn-sm text-success-600 hover:bg-success-50" title="Résoudre">
+                <button onClick={() => updateStatus(r.id, 'resolved')} className="btn-ghost btn-sm text-success-600 hover:bg-success-50" title="Résoudre" aria-label="Marquer ce signalement comme résolu">
                   <CheckCircle2 size={16} />
                 </button>
               )}
               {r.status !== 'dismissed' && (
-                <button onClick={() => updateStatus(r.id, 'dismissed')} className="btn-ghost btn-sm text-neutral-500 hover:bg-neutral-100" title="Écarter">
+                <button onClick={() => updateStatus(r.id, 'dismissed')} className="btn-ghost btn-sm text-neutral-500 hover:bg-neutral-100" title="Écarter" aria-label="Écarter ce signalement">
                   <XCircle size={16} />
                 </button>
               )}
@@ -318,7 +344,7 @@ function CategoriesTab() {
               <p className="font-medium text-neutral-900">{c.label}</p>
               <p className="text-xs text-neutral-400">{c.slug}</p>
             </div>
-            <button onClick={() => removeCategory(c.id)} className="btn-ghost btn-sm text-error-600 hover:bg-error-50" title="Supprimer">
+            <button onClick={() => removeCategory(c.id)} className="btn-ghost btn-sm text-error-600 hover:bg-error-50" title="Supprimer" aria-label={`Supprimer la catégorie ${c.label}`}>
               <Trash2 size={16} />
             </button>
           </div>

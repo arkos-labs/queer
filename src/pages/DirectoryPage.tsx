@@ -1,69 +1,62 @@
 import { useEffect, useMemo, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import type { Category, Subcategory, Profile, Badge } from '@/lib/types';
+import { supabase } from '@/lib/supabase';
+import type { Category, Subcategory, Profile } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
-import { AverageStars } from '@/components/StarRating';
-import { cn } from '@/lib/utils';
-import { getCategoryColor, RAINBOW_GRADIENT } from '@/lib/colors';
+import { avg } from '@/lib/utils';
+import { FALLBACK_CATEGORIES, FALLBACK_SUBCATEGORIES } from '@/lib/taxonomy';
 import {
   Search,
-  MapPin,
-  SlidersHorizontal,
   X,
+  Star,
+  MapPin,
+  Home,
+  HeartPulse,
+  ShoppingBag,
+  Handshake,
   Users,
+  Sparkles,
+  LayoutGrid,
+  ShieldCheck,
   Briefcase,
   Building2,
-  ChevronRight,
-  Check,
-  Sparkles,
-  ShieldCheck,
-  Accessibility,
-  BadgeCheck,
 } from 'lucide-react';
 
-interface DirectoryProfile extends Profile {
-  badges?: Badge[];
-  avg_rating?: number;
-  review_count?: number;
-  subcategory_ids?: string[];
-}
-
-const ICONS: Record<string, typeof Search> = {
-  Wrench: Search,
-  HeartPulse: Search,
-  Scale: Search,
-  Scissors: Search,
-  GraduationCap: Search,
-  PawPrint: Search,
-  Car: Search,
-  Users: Search,
+const CATEGORY_ICONS: Record<string, typeof Home> = {
+  Home,
+  HeartPulse,
+  Briefcase,
+  ShoppingBag,
+  Handshake,
+  Users,
 };
 
-const BADGE_ICONS: Record<string, typeof ShieldCheck> = {
-  ShieldCheck,
-  BadgeCheck,
-  Accessibility,
-  Sparkles,
+interface ProfileWithStats extends Profile {
+  subIds: Set<string>;
+  avgRating: number;
+  reviewCount: number;
+}
+
+const typeMeta: Record<Profile['account_type'], { icon: typeof Users; label: string }> = {
+  particulier: { icon: Users, label: 'Particulier·e' },
+  pro: { icon: Briefcase, label: 'Professionnel·le' },
+  asso: { icon: Building2, label: 'Association' },
 };
 
 export function DirectoryPage() {
   const { navigate } = useRouter();
-  const { user } = useAuth();
-  const [profiles, setProfiles] = useState<DirectoryProfile[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
-  const [loading, setLoading] = useState(true);
-
+  const { user, profile: myProfile } = useAuth();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeSub, setActiveSub] = useState<string | null>(null);
-  const [city, setCity] = useState('');
-  const [accountType, setAccountType] = useState<string | null>(null);
-  const [onlyVerified, setOnlyVerified] = useState(false);
-  const [onlySafe, setOnlySafe] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showSubBar, setShowSubBar] = useState(false);
+
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+  const [profiles, setProfiles] = useState<ProfileWithStats[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -71,446 +64,352 @@ export function DirectoryPage() {
       return;
     }
     let cancelled = false;
-
     const load = async () => {
       setLoading(true);
-      const [catRes, subRes, profRes, pbRes, revRes, pscRes] = await Promise.all([
-        supabase.from('categories').select('*').order('sort_order'),
-        supabase.from('subcategories').select('*').order('sort_order'),
-        supabase
+      setError(null);
+
+      // Categories/subcategories are static reference data: if the request
+      // fails (no Supabase project connected yet, offline…) fall back to
+      // the local taxonomy copy so the theme tabs are always usable.
+      try {
+        const [catRes, subRes] = await Promise.all([
+          supabase.from('categories').select('*').order('sort_order'),
+          supabase.from('subcategories').select('*').order('sort_order'),
+        ]);
+        if (cancelled) return;
+        if (catRes.error || subRes.error || !catRes.data?.length) {
+          setCategories(FALLBACK_CATEGORIES);
+          setSubcategories(FALLBACK_SUBCATEGORIES);
+        } else {
+          setCategories(catRes.data as Category[]);
+          setSubcategories((subRes.data ?? []) as Subcategory[]);
+        }
+      } catch {
+        if (cancelled) return;
+        setCategories(FALLBACK_CATEGORIES);
+        setSubcategories(FALLBACK_SUBCATEGORIES);
+      }
+
+      // Real member data can't be faked — surface a real error if this fails.
+      try {
+        const profRes = await supabase
           .from('profiles')
           .select('*')
-          .neq('id', user.id)
           .eq('profile_status', 'active')
-          .order('created_at', { ascending: false }),
-        supabase.from('profile_badges').select('profile_id, badge:badges(*)'),
-        supabase.from('reviews').select('target_id, rating'),
-        supabase.from('profile_subcategories').select('profile_id, subcategory_id'),
-      ]);
+          .order('created_at', { ascending: false });
+        if (cancelled) return;
 
-      if (cancelled) return;
+        if (profRes.error) {
+          setError(profRes.error.message);
+          setProfiles([]);
+          setLoading(false);
+          return;
+        }
 
-      const cats = catRes.data as Category[];
-      const subs = subRes.data as Subcategory[];
-      const profs = profRes.data as Profile[];
-      const pbs = (pbRes.data ?? []) as unknown as { profile_id: string; badge: Badge }[];
-      const revs = (revRes.data ?? []) as { target_id: string; rating: number }[];
-      const pscs = (pscRes.data ?? []) as { profile_id: string; subcategory_id: string }[];
+        const allProfiles = (profRes.data ?? []) as Profile[];
+        const ids = allProfiles.map((p) => p.id);
 
-      const ratingMap = new Map<string, { sum: number; count: number }>();
-      for (const r of revs) {
-        const cur = ratingMap.get(r.target_id) ?? { sum: 0, count: 0 };
-        cur.sum += r.rating;
-        cur.count += 1;
-        ratingMap.set(r.target_id, cur);
+        const [pscRes, revRes] = await Promise.all([
+          ids.length
+            ? supabase.from('profile_subcategories').select('profile_id, subcategory_id').in('profile_id', ids)
+            : Promise.resolve({ data: [], error: null }),
+          ids.length
+            ? supabase.from('reviews').select('target_id, rating').in('target_id', ids)
+            : Promise.resolve({ data: [], error: null }),
+        ]);
+        if (cancelled) return;
+
+        const subsByProfile = new Map<string, Set<string>>();
+        for (const row of (pscRes.data ?? []) as { profile_id: string; subcategory_id: string }[]) {
+          if (!subsByProfile.has(row.profile_id)) subsByProfile.set(row.profile_id, new Set());
+          subsByProfile.get(row.profile_id)!.add(row.subcategory_id);
+        }
+
+        const ratingsByProfile = new Map<string, number[]>();
+        for (const row of (revRes.data ?? []) as { target_id: string; rating: number }[]) {
+          if (!ratingsByProfile.has(row.target_id)) ratingsByProfile.set(row.target_id, []);
+          ratingsByProfile.get(row.target_id)!.push(row.rating);
+        }
+
+        const withStats: ProfileWithStats[] = allProfiles.map((p) => {
+          const ratings = ratingsByProfile.get(p.id) ?? [];
+          return {
+            ...p,
+            subIds: subsByProfile.get(p.id) ?? new Set(),
+            avgRating: avg(ratings),
+            reviewCount: ratings.length,
+          };
+        });
+
+        setProfiles(withStats);
+        setLoading(false);
+      } catch (e) {
+        if (cancelled) return;
+        setError(e instanceof Error ? e.message : 'Impossible de charger les membres.');
+        setProfiles([]);
+        setLoading(false);
       }
-
-      const badgeMap = new Map<string, Badge[]>();
-      for (const pb of pbs) {
-        const arr = badgeMap.get(pb.profile_id) ?? [];
-        if (pb.badge) arr.push(pb.badge);
-        badgeMap.set(pb.profile_id, arr);
-      }
-
-      const pscMap = new Map<string, Set<string>>();
-      for (const psc of pscs) {
-        const set = pscMap.get(psc.profile_id) ?? new Set<string>();
-        set.add(psc.subcategory_id);
-        pscMap.set(psc.profile_id, set);
-      }
-
-      const enriched: DirectoryProfile[] = profs.map((p) => {
-        const r = ratingMap.get(p.id);
-        const bs = badgeMap.get(p.id) ?? [];
-        return {
-          ...p,
-          badges: bs,
-          avg_rating: r ? r.sum / r.count : 0,
-          review_count: r?.count ?? 0,
-          subcategory_ids: Array.from(pscMap.get(p.id) ?? []),
-        };
-      });
-
-      setCategories(cats);
-      setSubcategories(subs);
-      setProfiles(enriched);
-      setLoading(false);
     };
-
     load();
     return () => {
       cancelled = true;
     };
   }, [user, navigate]);
 
+  const activeCatDef = categories.find((c) => c.id === activeCategory);
+  const subsForActiveCat = subcategories.filter((s) => s.category_id === activeCategory);
+  const subcategoryById = useMemo(() => new Map(subcategories.map((s) => [s.id, s])), [subcategories]);
+
   const filtered = useMemo(() => {
-    let list = [...profiles];
+    let list = profiles.filter((p) => p.id !== myProfile?.id);
+
     if (activeCategory) {
-      const subIds = new Set(
-        subcategories.filter((s) => s.category_id === activeCategory).map((s) => s.id),
-      );
-      list = list.filter((p) => (p.subcategory_ids ?? []).some((sid) => subIds.has(sid)));
+      const subIdsInCat = new Set(subcategories.filter((s) => s.category_id === activeCategory).map((s) => s.id));
+      list = list.filter((p) => Array.from(p.subIds).some((id) => subIdsInCat.has(id)));
     }
+
     if (activeSub) {
-      const sub = subcategories.find((s) => s.id === activeSub);
-      if (sub) list = list.filter((p) => (p.subcategory_ids ?? []).includes(sub.id));
+      list = list.filter((p) => p.subIds.has(activeSub));
     }
-    if (city.trim()) {
-      const q = city.toLowerCase().trim();
-      list = list.filter((p) => p.city?.toLowerCase().includes(q));
-    }
-    if (accountType) list = list.filter((p) => p.account_type === accountType);
-    if (onlyVerified) list = list.filter((p) => p.verification_status === 'verified');
-    if (onlySafe) list = list.filter((p) => p.badges?.some((b) => b.code === 'safe'));
+
     if (search.trim()) {
       const q = search.toLowerCase().trim();
       list = list.filter(
         (p) =>
           p.display_name.toLowerCase().includes(q) ||
-          p.bio?.toLowerCase().includes(q) ||
-          p.skills.some((s) => s.toLowerCase().includes(q)),
+          (p.city ?? '').toLowerCase().includes(q) ||
+          (p.bio ?? '').toLowerCase().includes(q) ||
+          p.skills.some((s) => s.toLowerCase().includes(q)) ||
+          Array.from(p.subIds).some((id) => subcategoryById.get(id)?.label.toLowerCase().includes(q)),
       );
     }
+
     return list;
-  }, [profiles, activeCategory, activeSub, city, accountType, onlyVerified, onlySafe, search, subcategories]);
+  }, [profiles, activeCategory, activeSub, search, subcategories, subcategoryById, myProfile]);
 
-  const activeCat = categories.find((c) => c.id === activeCategory);
-  const subsForActive = subcategories.filter((s) => s.category_id === activeCategory);
-  const activeCatColor = activeCat ? getCategoryColor(activeCat.slug) : null;
-
-  const resetFilters = () => {
-    setActiveCategory(null);
-    setActiveSub(null);
-    setCity('');
-    setAccountType(null);
-    setOnlyVerified(false);
-    setOnlySafe(false);
-    setSearch('');
-  };
-
-  const hasActiveFilters = activeCategory || activeSub || city || accountType || onlyVerified || onlySafe || search;
+  if (!user) return null;
 
   return (
-    <div className="animate-fade-in min-h-full bg-neutral-50">
-      {/* Search header */}
-      <div className="sticky top-14 z-30 border-b border-neutral-200 bg-white/90 backdrop-blur-lg">
-        <div className="container-app py-4">
-          <h1 className="font-display text-2xl font-semibold text-neutral-900">Annuaire</h1>
-
-          {/* Search bar with rainbow underline */}
-          <div className="relative mt-3">
-            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+    <div className="min-h-full bg-white animate-fade-in">
+      {/* Sticky header */}
+      <div className="sticky top-20 z-40 bg-white border-b border-neutral-100 shadow-sm">
+        <div className="px-5 pt-0 pb-3">
+          <div className="relative">
+            <Search size={20} strokeWidth={2.5} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-900" />
+            <label htmlFor="directory-search" className="sr-only">
+              Rechercher un membre, une compétence, une ville
+            </label>
             <input
+              id="directory-search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="input pl-11 pr-10"
-              placeholder="Nom, compétence, service…"
+              placeholder="Montage cuisine, ménage, pet-sitting…"
+              className="w-full rounded-full border border-neutral-200 bg-neutral-50 py-3.5 pl-12 pr-12 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-neutral-900 focus:bg-white focus:ring-1 focus:ring-neutral-900 transition-all shadow-soft"
             />
             {search && (
               <button
                 onClick={() => setSearch('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400"
+                aria-label="Effacer la recherche"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-900"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             )}
-            <div className="mt-1.5 h-1 w-full rounded-full" style={{ background: RAINBOW_GRADIENT }} />
           </div>
-
-          {/* Filter toggle */}
-          <div className="mt-3 flex items-center justify-between">
-            <p className="text-xs text-neutral-500">
-              {filtered.length} résultat{filtered.length > 1 ? 's' : ''}
-              {hasActiveFilters && ' · filtré'}
-            </p>
-            <button
-              onClick={() => setShowFilters((v) => !v)}
-              className={cn(
-                'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition',
-                showFilters ? 'bg-primary-100 text-primary-700' : 'bg-neutral-100 text-neutral-600',
-              )}
-            >
-              <SlidersHorizontal size={13} /> Filtres
-            </button>
-          </div>
-
-          {/* Filters panel */}
-          {showFilters && (
-            <div className="mt-3 space-y-3 rounded-2xl bg-neutral-50 p-4">
-              <div>
-                <label className="label">Ville</label>
-                <div className="relative">
-                  <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-                  <input value={city} onChange={(e) => setCity(e.target.value)} className="input pl-9" placeholder="Ex. Lyon" />
-                </div>
-              </div>
-              <div>
-                <label className="label">Type de compte</label>
-                <select
-                  value={accountType ?? ''}
-                  onChange={(e) => setAccountType(e.target.value || null)}
-                  className="input"
-                >
-                  <option value="">Tous</option>
-                  <option value="particulier">Particulier·e</option>
-                  <option value="pro">Professionnel·le</option>
-                  <option value="asso">Association</option>
-                </select>
-              </div>
-              <div className="flex flex-wrap gap-4">
-                <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
-                  <input
-                    type="checkbox"
-                    checked={onlyVerified}
-                    onChange={(e) => setOnlyVerified(e.target.checked)}
-                    className="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
-                  />
-                  Identité vérifiée
-                </label>
-                <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
-                  <input
-                    type="checkbox"
-                    checked={onlySafe}
-                    onChange={(e) => setOnlySafe(e.target.checked)}
-                    className="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
-                  />
-                  Badge Safe
-                </label>
-              </div>
-              {hasActiveFilters && (
-                <button onClick={resetFilters} className="btn-ghost btn-sm w-full">
-                  <X size={14} /> Réinitialiser les filtres
-                </button>
-              )}
-            </div>
-          )}
         </div>
-      </div>
 
-      {/* Rainbow arc — themes */}
-      <div className="container-app py-5">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-neutral-500">
-          Thèmes
-        </p>
-
-        {/* Arc bands */}
-        <div className="space-y-2.5">
-          {/* "Tout" band */}
+        <div className="flex overflow-x-auto gap-6 px-6 pb-2 snap-x no-scrollbar scroll-smooth">
           <button
             onClick={() => {
               setActiveCategory(null);
               setActiveSub(null);
+              setShowSubBar(false);
             }}
-            className={cn(
-              'flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left transition active:scale-[0.98]',
-              !activeCategory
-                ? 'bg-neutral-900 text-white'
-                : 'bg-white text-neutral-700 shadow-soft',
-            )}
+            className={`flex flex-col items-center gap-2 min-w-fit snap-start pb-2 border-b-2 transition-colors ${
+              !activeCategory ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900 hover:border-neutral-300'
+            }`}
           >
-            <span className="flex items-center gap-3">
-              <span
-                className="flex h-9 w-9 items-center justify-center rounded-xl"
-                style={{ background: RAINBOW_GRADIENT }}
-              >
-                <Sparkles size={16} className="text-white" />
-              </span>
-              <span className="font-display text-sm font-semibold">Tous les thèmes</span>
-            </span>
-            {!activeCategory && <Check size={18} />}
+            <Sparkles size={24} strokeWidth={!activeCategory ? 2.5 : 2} />
+            <span className="text-[11px] font-semibold tracking-wide whitespace-nowrap">Tout</span>
           </button>
 
           {categories.map((c) => {
-            const color = getCategoryColor(c.slug);
-            const Icon = ICONS[c.icon ?? ''] ?? Search;
+            const Icon = CATEGORY_ICONS[c.icon ?? ''] ?? LayoutGrid;
             const isActive = activeCategory === c.id;
             return (
-              <div key={c.id}>
-                <button
-                  onClick={() => {
-                    setActiveCategory(isActive ? null : c.id);
+              <button
+                key={c.id}
+                onClick={() => {
+                  if (isActive) {
+                    setActiveCategory(null);
                     setActiveSub(null);
-                  }}
-                  className={cn(
-                    'flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left transition active:scale-[0.98]',
-                    isActive ? 'text-white shadow-md' : 'bg-white text-neutral-700 shadow-soft',
-                  )}
-                  style={
-                    isActive
-                      ? { background: `linear-gradient(135deg, ${color.from}, ${color.to})` }
-                      : undefined
+                    setShowSubBar(false);
+                  } else {
+                    setActiveCategory(c.id);
+                    setActiveSub(null);
+                    setShowSubBar(true);
                   }
-                >
-                  <span className="flex items-center gap-3">
-                    <span
-                      className="flex h-9 w-9 items-center justify-center rounded-xl"
-                      style={{
-                        background: isActive ? 'rgba(255,255,255,0.25)' : color.solid + '15',
-                      }}
-                    >
-                      <Icon size={16} style={{ color: isActive ? '#fff' : color.solid }} />
-                    </span>
-                    <span className="font-display text-sm font-semibold">{c.label}</span>
-                  </span>
-                  <div className="flex items-center gap-2">
-                    {isActive && <Check size={18} />}
-                    <ChevronRight
-                      size={18}
-                      className={cn('transition', isActive ? 'rotate-90' : 'text-neutral-400')}
-                    />
-                  </div>
-                </button>
-
-                {/* Sub-themes — revealed under the active band */}
-                {isActive && subsForActive.length > 0 && (
-                  <div
-                    className="mt-1.5 ml-3 mr-3 space-y-1.5 rounded-2xl p-3"
-                    style={{ background: color.solid + '08' }}
-                  >
-                    <p className="px-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: color.solid }}>
-                      Sous-thèmes
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {subsForActive.map((s) => {
-                        const subActive = activeSub === s.id;
-                        return (
-                          <button
-                            key={s.id}
-                            onClick={() => setActiveSub(subActive ? null : s.id)}
-                            className={cn(
-                              'rounded-full px-3 py-1.5 text-xs font-medium transition active:scale-95',
-                              subActive
-                                ? 'text-white'
-                                : 'bg-white text-neutral-600 hover:bg-neutral-50',
-                            )}
-                            style={subActive ? { background: color.solid } : undefined}
-                          >
-                            {s.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
+                }}
+                className={`flex flex-col items-center gap-2 min-w-fit snap-start pb-2 border-b-2 transition-colors ${
+                  isActive ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900 hover:border-neutral-300'
+                }`}
+              >
+                <Icon size={24} strokeWidth={isActive ? 2.5 : 2} className="transition-transform active:scale-95" />
+                <span className="text-[11px] font-semibold tracking-wide whitespace-nowrap">{c.label}</span>
+              </button>
             );
           })}
         </div>
 
-        {/* Rainbow divider */}
-        <div className="my-6 h-1 w-full rounded-full" style={{ background: RAINBOW_GRADIENT }} />
-      </div>
-
-      {/* Results */}
-      <div className="container-app pb-8">
-        {loading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="card h-32 animate-pulse bg-neutral-100" />
-            ))}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="card mx-auto max-w-md p-8 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-400">
-              <Search size={26} />
-            </div>
-            <h3 className="font-display text-lg font-semibold text-neutral-900">Aucun résultat</h3>
-            <p className="mt-2 text-sm text-neutral-500">
-              Essayez d'élargir vos filtres ou de réinitialiser la recherche.
-            </p>
-            {hasActiveFilters && (
-              <button onClick={resetFilters} className="btn-outline mt-5">
-                Réinitialiser
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filtered.map((p) => {
-              const pCats = categories.filter((c) =>
-                subcategories
-                  .filter((s) => (p.subcategory_ids ?? []).includes(s.id))
-                  .some((s) => s.category_id === c.id),
-              );
-              const primaryColor = pCats[0] ? getCategoryColor(pCats[0].slug) : null;
+        {activeCategory && activeCatDef && subsForActiveCat.length > 0 && (
+          <div className="border-t border-neutral-100 bg-neutral-50 px-5 py-2.5 flex gap-2 overflow-x-auto no-scrollbar scroll-smooth">
+            <button
+              onClick={() => setActiveSub(null)}
+              className={`flex-shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                !activeSub ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-600 border border-neutral-200 hover:border-neutral-900'
+              }`}
+            >
+              Tout {activeCatDef.label}
+            </button>
+            {subsForActiveCat.map((sub) => {
+              const isSubActive = activeSub === sub.id;
               return (
                 <button
-                  key={p.id}
-                  onClick={() => navigate(`/profil/${p.id}`)}
-                  className="card group flex w-full items-start gap-3 p-4 text-left transition active:scale-[0.98]"
+                  key={sub.id}
+                  onClick={() => setActiveSub(isSubActive ? null : sub.id)}
+                  className={`flex-shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                    isSubActive ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-600 border border-neutral-200 hover:border-neutral-900'
+                  }`}
                 >
-                  <Avatar name={p.display_name} src={p.photo_url} size={48} />
-                  <div className="min-w-0 flex-1">
-                    <h3 className="truncate font-display text-base font-semibold text-neutral-900">
-                      {p.display_name}
-                    </h3>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
-                      <span className="inline-flex items-center gap-1">
-                        {p.account_type === 'particulier' && <Users size={11} />}
-                        {p.account_type === 'pro' && <Briefcase size={11} />}
-                        {p.account_type === 'asso' && <Building2 size={11} />}
-                        {p.account_type === 'particulier'
-                          ? 'Particulier·e'
-                          : p.account_type === 'pro'
-                            ? 'Professionnel·le'
-                            : 'Association'}
-                      </span>
-                      {p.city && (
-                        <span className="inline-flex items-center gap-1">
-                          <MapPin size={11} /> {p.city}
-                        </span>
-                      )}
-                    </div>
-                    {p.avg_rating !== undefined && p.avg_rating > 0 && (
-                      <div className="mt-1.5">
-                        <AverageStars value={p.avg_rating} count={p.review_count ?? 0} size={13} />
-                      </div>
-                    )}
-                    {p.skills.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {p.skills.slice(0, 3).map((s) => (
-                          <span
-                            key={s}
-                            className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-600"
-                          >
-                            {s}
-                          </span>
-                        ))}
-                        {p.skills.length > 3 && (
-                          <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-400">
-                            +{p.skills.length - 3}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    {p.badges && p.badges.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {p.badges.map((b) => {
-                          const BIcon = BADGE_ICONS[b.icon ?? ''] ?? ShieldCheck;
-                          return (
-                            <span
-                              key={b.id}
-                              className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-medium text-primary-700"
-                            >
-                              <BIcon size={11} /> {b.label}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                  {primaryColor && (
-                    <span
-                      className="mt-1 h-8 w-1.5 flex-shrink-0 rounded-full"
-                      style={{ background: primaryColor.solid }}
-                    />
-                  )}
+                  {sub.label}
                 </button>
               );
             })}
           </div>
         )}
       </div>
+
+      {/* Results count */}
+      <div className="px-6 pt-5 pb-2 flex items-center justify-between">
+        <p className="text-sm text-neutral-500">
+          {!loading && (
+            <>
+              <span className="font-semibold text-neutral-900">{filtered.length}</span>{' '}
+              membre{filtered.length > 1 ? 's' : ''}
+              {activeCategory && activeCatDef && (
+                <span>
+                  {' '}
+                  en <span className="font-semibold text-neutral-900">{activeCatDef.label}</span>
+                </span>
+              )}
+            </>
+          )}
+        </p>
+      </div>
+
+      {error && (
+        <div className="mx-6 mb-4 rounded-xl bg-warning-50 p-3 text-sm text-warning-800">
+          {error.toLowerCase().includes('fetch')
+            ? "Impossible de joindre le serveur : aucun projet Supabase n'est encore connecté. Les thèmes ci-dessus restent consultables ; les membres s'afficheront une fois le backend branché."
+            : error}
+        </div>
+      )}
+
+      {/* Feed */}
+      <div className="px-6 pb-24 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
+        {loading ? (
+          Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex flex-col gap-3">
+              <div className="aspect-square rounded-2xl bg-neutral-100 animate-pulse" />
+              <div className="h-3 w-2/3 rounded bg-neutral-100 animate-pulse" />
+              <div className="h-3 w-1/3 rounded bg-neutral-100 animate-pulse" />
+            </div>
+          ))
+        ) : filtered.length === 0 ? (
+          <div className="col-span-full py-20 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-neutral-100">
+              <Search size={28} className="text-neutral-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-neutral-900">Aucun résultat</h3>
+            <p className="mt-1 text-sm text-neutral-500">Essayez un autre mot-clé ou changez de catégorie.</p>
+          </div>
+        ) : (
+          filtered.map((p) => {
+            const meta = typeMeta[p.account_type];
+            return (
+              <button
+                key={p.id}
+                className="group flex flex-col gap-3 text-left"
+                onClick={() => navigate(`/profil/${p.id}`)}
+              >
+                <div className="relative aspect-square overflow-hidden rounded-2xl bg-neutral-100">
+                  {p.photo_url ? (
+                    <img
+                      src={p.photo_url}
+                      alt={p.display_name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-neutral-100">
+                      <Avatar name={p.display_name} size={72} />
+                    </div>
+                  )}
+
+                  {p.verification_status === 'verified' && (
+                    <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-md shadow-sm flex items-center gap-1">
+                      <ShieldCheck size={10} /> Vérifié
+                    </div>
+                  )}
+
+                  {p.account_type !== 'particulier' && (
+                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-neutral-900 text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
+                      <meta.icon size={10} /> {meta.label}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-semibold text-neutral-900 text-[15px] truncate pr-2">{p.display_name}</h3>
+                    {p.reviewCount > 0 && (
+                      <div className="flex items-center gap-1 text-[14px] flex-shrink-0">
+                        <Star size={12} className="fill-neutral-900 text-neutral-900" />
+                        <span className="font-semibold">{p.avgRating.toFixed(1)}</span>
+                        <span className="text-neutral-400 text-xs">({p.reviewCount})</span>
+                      </div>
+                    )}
+                  </div>
+                  {p.city && (
+                    <p className="text-neutral-500 text-[15px] truncate flex items-center gap-1">
+                      <MapPin size={12} /> {p.city}
+                    </p>
+                  )}
+
+                  {p.skills.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {p.skills.slice(0, 3).map((s) => (
+                        <span key={s} className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-600">
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {p.indicative_rates && (
+                    <div className="mt-1.5 text-[15px] font-semibold text-neutral-900">{p.indicative_rates}</div>
+                  )}
+                </div>
+              </button>
+            );
+          })
+        )}
+      </div>
+
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   );
 }

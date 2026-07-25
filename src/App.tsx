@@ -10,6 +10,10 @@ import { ProfileEditPage } from '@/pages/ProfileEditPage';
 import { MyProfilePage } from '@/pages/MyProfilePage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { AdminPage } from '@/pages/AdminPage';
+import { MessagesPage } from '@/pages/MessagesPage';
+import { MessageThreadPage } from '@/pages/MessageThreadPage';
+import { LegalPage, type LegalSlug } from '@/pages/LegalPage';
+import { CookieBanner } from '@/components/CookieBanner';
 
 function Routes() {
   const { path, navigate } = useRouter();
@@ -28,7 +32,7 @@ function Routes() {
   }
 
   // Protect authenticated routes
-  const protectedRoutes = ['directory', 'profile', 'my-profile', 'profile-edit', 'settings', 'admin'];
+  const protectedRoutes = ['directory', 'profile', 'my-profile', 'profile-edit', 'settings', 'admin', 'messages', 'message-thread'];
   if (protectedRoutes.includes(name) && !user) {
     navigate('/connexion');
     return null;
@@ -61,6 +65,12 @@ function Routes() {
       return <SettingsPage />;
     case 'admin':
       return <AdminPage />;
+    case 'messages':
+      return <MessagesPage />;
+    case 'message-thread':
+      return <MessageThreadPage id={params.id} />;
+    case 'legal':
+      return <LegalPage slug={params.slug as LegalSlug} />;
     default:
       return <LandingPage />;
   }
@@ -73,6 +83,7 @@ export default function App() {
         <Layout>
           <Routes />
         </Layout>
+        <CookieBanner />
       </RouterProvider>
     </AuthProvider>
   );

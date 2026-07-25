@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth';
 import type { Profile, Badge, Review } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
 import { BadgeList } from '@/components/BadgeChip';
+import { TrustPanel } from '@/components/TrustPanel';
 import { StarRating, AverageStars } from '@/components/StarRating';
 import { avg, formatDate, timeAgo } from '@/lib/utils';
 import {
@@ -73,24 +74,59 @@ export function ProfileDetailPage({ id }: { id: string }) {
 
   const sendContact = async () => {
     if (!user || !target || !contactMsg.trim()) return;
-    setActionLoading(true);
-    const { error } = await supabase.from('connections').insert({
-      user_a: user.id,
-      user_b: target.id,
-      service_label: contactMsg.trim().slice(0, 200),
-      status: 'pending',
-    });
-    setActionLoading(false);
-    if (error) {
-      setActionDone('Erreur: ' + error.message);
+    if (!profile?.charte_accepted) {
+      setActionDone("Acceptez d'abord la charte de respect depuis votre profil pour pouvoir écrire.");
       return;
     }
-    setActionDone('Votre message a bien été envoyé.');
+    setActionLoading(true);
+
+    // Reuse an existing conversation between the two members if there is one.
+    const { data: existing, error: findErr } = await supabase
+      .from('connections')
+      .select('*')
+      .or(`and(user_a.eq.${user.id},user_b.eq.${target.id}),and(user_a.eq.${target.id},user_b.eq.${user.id})`)
+      .maybeSingle();
+
+    if (findErr) {
+      setActionLoading(false);
+      setActionDone('Erreur: ' + findErr.message);
+      return;
+    }
+
+    let connectionId = existing?.id as string | undefined;
+
+    if (!connectionId) {
+      const { data: created, error: connErr } = await supabase
+        .from('connections')
+        .insert({
+          user_a: user.id,
+          user_b: target.id,
+          service_label: contactMsg.trim().slice(0, 200),
+          status: 'pending',
+        })
+        .select()
+        .single();
+      if (connErr) {
+        setActionLoading(false);
+        setActionDone('Erreur: ' + connErr.message);
+        return;
+      }
+      connectionId = created.id as string;
+    }
+
+    const { error: msgErr } = await supabase
+      .from('messages')
+      .insert({ connection_id: connectionId, sender_id: user.id, body: contactMsg.trim() });
+
+    setActionLoading(false);
+    if (msgErr) {
+      setActionDone('Erreur: ' + msgErr.message);
+      return;
+    }
+
+    setContactOpen(false);
     setContactMsg('');
-    setTimeout(() => {
-      setContactOpen(false);
-      setActionDone(null);
-    }, 2000);
+    navigate(`/messages/${connectionId}`);
   };
 
   const sendReport = async () => {
@@ -253,12 +289,11 @@ export function ProfileDetailPage({ id }: { id: string }) {
                   </div>
                 </div>
               )}
+            </div>
 
-              {target.account_type !== 'particulier' && (
-                <p className="mt-6 rounded-xl bg-neutral-50 p-3 text-xs text-neutral-500">
-                  Les recommandations communautaires ne constituent pas une certification professionnelle officielle.
-                </p>
-              )}
+            {/* Trust & safety */}
+            <div className="mt-6">
+              <TrustPanel profile={target} badges={badges} reviewCount={reviews.length} avgRating={avgRating} />
             </div>
 
             {/* Reviews */}
@@ -384,12 +419,12 @@ export function ProfileDetailPage({ id }: { id: string }) {
 
 function Modal({ children, onClose, title }: { children: React.ReactNode; onClose: () => void; title: string }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm animate-fade-in" onClick={onClose} />
       <div className="card relative z-10 w-full max-w-md animate-scale-in p-6">
         <div className="flex items-center justify-between">
-          <h3 className="font-display text-lg font-semibold text-neutral-900">{title}</h3>
-          <button onClick={onClose} className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-100">
+          <h3 id="modal-title" className="font-display text-lg font-semibold text-neutral-900">{title}</h3>
+          <button onClick={onClose} aria-label="Fermer" className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-100">
             <X size={18} />
           </button>
         </div>

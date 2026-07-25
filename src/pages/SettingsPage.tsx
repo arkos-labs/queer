@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import { Download, Trash2, AlertTriangle, X, ShieldCheck, FileText } from 'lucide-react';
+import { Download, Trash2, AlertTriangle, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight } from 'lucide-react';
 
 export function SettingsPage() {
   const { user, profile, signOut } = useAuth();
@@ -136,17 +136,48 @@ export function SettingsPage() {
           </div>
         </div>
 
+        {/* Legal */}
+        <div className="card overflow-hidden p-0">
+          <div className="flex items-start gap-4 p-6 md:p-8 md:pb-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-600">
+              <Scale size={20} />
+            </div>
+            <div>
+              <h2 className="font-display text-lg font-semibold text-neutral-900">Informations légales</h2>
+              <p className="mt-1 text-sm text-neutral-600">Mentions légales, conditions d'utilisation et politiques de la plateforme.</p>
+            </div>
+          </div>
+          <nav className="border-t border-neutral-100">
+            {([
+              { to: '/mentions-legales', label: 'Mentions légales', icon: FileText },
+              { to: '/cgu', label: "Conditions Générales d'Utilisation", icon: Scale },
+              { to: '/confidentialite', label: 'Politique de confidentialité', icon: ShieldCheck },
+              { to: '/cookies', label: 'Politique de cookies', icon: Cookie },
+            ] as const).map((l) => (
+              <button
+                key={l.to}
+                onClick={() => navigate(l.to)}
+                className="flex w-full items-center gap-3 border-b border-neutral-100 px-6 py-3.5 text-left text-sm text-neutral-700 last:border-0 hover:bg-neutral-50 md:px-8"
+              >
+                <l.icon size={16} className="shrink-0 text-neutral-400" />
+                <span className="flex-1">{l.label}</span>
+                <ChevronRight size={16} className="shrink-0 text-neutral-300" />
+              </button>
+            ))}
+          </nav>
+        </div>
+
         {error && <div className="rounded-xl bg-error-50 p-3 text-sm text-error-700">{error}</div>}
       </div>
 
       {/* Delete confirm modal */}
       {deleteOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
           <div className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm animate-fade-in" onClick={() => setDeleteOpen(false)} />
           <div className="card relative z-10 w-full max-w-md animate-scale-in p-6">
             <div className="flex items-center justify-between">
-              <h3 className="font-display text-lg font-semibold text-neutral-900">Confirmer la suppression</h3>
-              <button onClick={() => setDeleteOpen(false)} className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-100">
+              <h3 id="delete-modal-title" className="font-display text-lg font-semibold text-neutral-900">Confirmer la suppression</h3>
+              <button onClick={() => setDeleteOpen(false)} aria-label="Fermer" className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-100">
                 <X size={18} />
               </button>
             </div>
@@ -168,7 +199,13 @@ function ConfirmInput({ onConfirm, loading }: { onConfirm: () => void; loading: 
   const [val, setVal] = useState('');
   return (
     <div className="mt-3">
-      <input value={val} onChange={(e) => setVal(e.target.value)} className="input" placeholder="supprimer" />
+      <input
+        value={val}
+        onChange={(e) => setVal(e.target.value)}
+        className="input"
+        placeholder="supprimer"
+        aria-label="Tapez supprimer pour confirmer la suppression du compte"
+      />
       <div className="mt-4 flex justify-end gap-2">
         <button onClick={onConfirm} disabled={val !== 'supprimer' || loading} className="btn bg-error-600 text-white hover:bg-error-700 disabled:opacity-50">
           {loading ? 'Suppression…' : 'Supprimer définitivement'}

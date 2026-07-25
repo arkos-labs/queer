@@ -4,6 +4,7 @@ import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import type { Category, Subcategory, AccountType, Civilite } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { FALLBACK_CATEGORIES, FALLBACK_SUBCATEGORIES } from '@/lib/taxonomy';
 import { ArrowLeft, Save, X, Plus, CheckCircle2 } from 'lucide-react';
 
 export function ProfileEditPage() {
@@ -42,15 +43,26 @@ export function ProfileEditPage() {
     }
     let cancelled = false;
     const load = async () => {
-      const [catRes, subRes, pscRes] = await Promise.all([
-        supabase.from('categories').select('*').order('sort_order'),
-        supabase.from('subcategories').select('*').order('sort_order'),
-        supabase.from('profile_subcategories').select('subcategory_id').eq('profile_id', user.id),
-      ]);
-      if (cancelled) return;
-      setCategories(catRes.data as Category[]);
-      setSubcategories(subRes.data as Subcategory[]);
-      setSelectedSubs(new Set((pscRes.data ?? []).map((x: { subcategory_id: string }) => x.subcategory_id)));
+      try {
+        const [catRes, subRes, pscRes] = await Promise.all([
+          supabase.from('categories').select('*').order('sort_order'),
+          supabase.from('subcategories').select('*').order('sort_order'),
+          supabase.from('profile_subcategories').select('subcategory_id').eq('profile_id', user.id),
+        ]);
+        if (cancelled) return;
+        if (catRes.error || subRes.error || !catRes.data?.length) {
+          setCategories(FALLBACK_CATEGORIES);
+          setSubcategories(FALLBACK_SUBCATEGORIES);
+        } else {
+          setCategories(catRes.data as Category[]);
+          setSubcategories((subRes.data ?? []) as Subcategory[]);
+        }
+        setSelectedSubs(new Set((pscRes.data ?? []).map((x: { subcategory_id: string }) => x.subcategory_id)));
+      } catch {
+        if (cancelled) return;
+        setCategories(FALLBACK_CATEGORIES);
+        setSubcategories(FALLBACK_SUBCATEGORIES);
+      }
       if (profile) {
         setForm({
           display_name: profile.display_name,

@@ -48,6 +48,8 @@ export function parseRoute(path: string): { name: string; params: Record<string,
   if (parts.length === 0) return { name: 'home', params: {} };
   const [first, second] = parts;
   if (first === 'annuaire') return { name: 'directory', params: {} };
+  if (first === 'messages' && second) return { name: 'message-thread', params: { id: second } };
+  if (first === 'messages') return { name: 'messages', params: {} };
   if (first === 'profil' && second === 'modifier') return { name: 'profile-edit', params: {} };
   if (first === 'profil' && second) return { name: 'profile', params: { id: second } };
   if (first === 'profil') return { name: 'my-profile', params: {} };
@@ -56,5 +58,9 @@ export function parseRoute(path: string): { name: string; params: Record<string,
   if (first === 'onboarding') return { name: 'onboarding', params: {} };
   if (first === 'parametres') return { name: 'settings', params: {} };
   if (first === 'admin') return { name: 'admin', params: {} };
+  if (first === 'mentions-legales') return { name: 'legal', params: { slug: 'mentions-legales' } };
+  if (first === 'cgu') return { name: 'legal', params: { slug: 'cgu' } };
+  if (first === 'confidentialite') return { name: 'legal', params: { slug: 'confidentialite' } };
+  if (first === 'cookies') return { name: 'legal', params: { slug: 'cookies' } };
   return { name: 'home', params: {} };
 }

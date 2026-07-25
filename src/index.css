@@ -33,7 +33,7 @@
   min-height: 100dvh;
 }
 .mobile-status-bar {
-  @apply sticky top-0 z-40 flex h-14 items-center justify-between border-b border-neutral-200/70 bg-white/85 px-4 backdrop-blur-lg;
+  @apply sticky top-0 z-50 flex h-20 items-center justify-between border-b border-white/10 bg-neutral-950/90 px-4 backdrop-blur-lg;
 }
 .mobile-content {
   @apply flex-1 overflow-x-hidden pb-20;
@@ -94,6 +94,30 @@
   .section-title {
     @apply font-display text-3xl font-semibold text-neutral-900 sm:text-4xl;
   }
+}
+
+/* Visible keyboard focus ring (WCAG 2.4.7) — only shown for keyboard navigation */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid theme('colors.primary.600');
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 
 /* Hide scrollbar for mobile app feel */
