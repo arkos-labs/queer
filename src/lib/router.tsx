@@ -1,0 +1,60 @@
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+
+interface RouterContextValue {
+  path: string;
+  navigate: (to: string) => void;
+}
+
+const RouterContext = createContext<RouterContextValue | undefined>(undefined);
+
+function currentPath() {
+  const hash = window.location.hash.replace(/^#/, '');
+  return hash || '/';
+}
+
+export function RouterProvider({ children }: { children: ReactNode }) {
+  const [path, setPath] = useState(currentPath());
+
+  useEffect(() => {
+    const onHash = () => {
+      setPath(currentPath());
+      window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    };
+    window.addEventListener('hashchange', onHash);
+    if (!window.location.hash) window.location.hash = '/';
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  const navigate = (to: string) => {
+    window.location.hash = to;
+  };
+
+  return (
+    <RouterContext.Provider value={{ path, navigate }}>
+      {children}
+    </RouterContext.Provider>
+  );
+}
+
+export function useRouter() {
+  const ctx = useContext(RouterContext);
+  if (!ctx) throw new Error('useRouter must be used within RouterProvider');
+  return ctx;
+}
+
+export function parseRoute(path: string): { name: string; params: Record<string, string> } {
+  const clean = path.split('?')[0];
+  const parts = clean.split('/').filter(Boolean);
+  if (parts.length === 0) return { name: 'home', params: {} };
+  const [first, second] = parts;
+  if (first === 'annuaire') return { name: 'directory', params: {} };
+  if (first === 'profil' && second === 'modifier') return { name: 'profile-edit', params: {} };
+  if (first === 'profil' && second) return { name: 'profile', params: { id: second } };
+  if (first === 'profil') return { name: 'my-profile', params: {} };
+  if (first === 'connexion') return { name: 'signin', params: {} };
+  if (first === 'inscription') return { name: 'signup', params: {} };
+  if (first === 'onboarding') return { name: 'onboarding', params: {} };
+  if (first === 'parametres') return { name: 'settings', params: {} };
+  if (first === 'admin') return { name: 'admin', params: {} };
+  return { name: 'home', params: {} };
+}

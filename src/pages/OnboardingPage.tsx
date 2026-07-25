@@ -1,0 +1,249 @@
+import { useState, type FormEvent } from 'react';
+import { useAuth } from '@/lib/auth';
+import { useRouter } from '@/lib/router';
+import { supabase } from '@/lib/supabase';
+import type { AccountType, Civilite } from '@/lib/types';
+import { Heart, ShieldCheck, ArrowRight, ArrowLeft, CheckCircle2, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+const civilites: { value: Civilite; label: string }[] = [
+  { value: 'Monsieur', label: 'Monsieur' },
+  { value: 'Madame', label: 'Madame' },
+  { value: 'Iel', label: 'Iel' },
+];
+
+const accountTypes: { value: AccountType; label: string; desc: string; icon: string }[] = [
+  { value: 'particulier', label: 'Particulier·e', desc: 'Je propose et/ou je cherche des services entre membres.', icon: '🤝' },
+  { value: 'pro', label: 'Professionnel·le', desc: 'Je suis praticien·ne ou commerçant·e et je souhaite être recommandé·e.', icon: '💼' },
+  { value: 'asso', label: 'Association / structure', desc: 'Structure partenaire, association LGBTQI+ ou centre de santé.', icon: '🏳️‍🌈' },
+];
+
+const chartePoints = [
+  'Je m\'engage à respecter chaque membre, quelle que soit son identité ou son expression de genre.',
+  'Je n\'utilise pas de langage discriminant, haineux ou stigmatisant.',
+  'Je respecte les pronoms et civilités choisies par chacun·e.',
+  'Je ne harcèle ni ne démarche de façon abusive.',
+  'Je comprends que tout manquement peut entraîner une suspension de mon compte.',
+];
+
+export function OnboardingPage() {
+  const { user, refreshProfile } = useAuth();
+  const { navigate } = useRouter();
+  const [step, setStep] = useState(0);
+  const [displayName, setDisplayName] = useState('');
+  const [civilite, setCivilite] = useState<Civilite | null>(null);
+  const [pronouns, setPronouns] = useState('');
+  const [accountType, setAccountType] = useState<AccountType>('particulier');
+  const [charteAccepted, setCharteAccepted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!user) {
+    navigate('/connexion');
+    return null;
+  }
+
+  const finishOnboarding = async () => {
+    setLoading(true);
+    setError(null);
+    const { error } = await supabase.from('profiles').upsert({
+      id: user.id,
+      display_name: displayName,
+      email: user.email,
+      civilite,
+      pronouns: pronouns || null,
+      account_type: accountType,
+      charte_accepted: true,
+      charte_accepted_at: new Date().toISOString(),
+      profile_status: 'active',
+    });
+    setLoading(false);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    await refreshProfile();
+    navigate('/profil');
+  };
+
+  const next = () => setStep((s) => s + 1);
+  const back = () => setStep((s) => Math.max(0, s - 1));
+
+  const canProceed = step === 0 ? displayName.trim().length > 0 : step === 2 ? charteAccepted : true;
+
+  return (
+    <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-neutral-50 px-4 py-12">
+      <div className="absolute -right-20 top-0 -z-10 h-72 w-72 rounded-full bg-primary-200/40 blur-3xl" />
+      <div className="absolute -left-20 bottom-0 -z-10 h-72 w-72 rounded-full bg-secondary-200/30 blur-3xl" />
+
+      <div className="mx-auto max-w-xl">
+        {/* Progress */}
+        <div className="mb-8 flex items-center justify-center gap-2">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className={cn(
+                'h-2 rounded-full transition-all duration-300',
+                i === step ? 'w-10 bg-primary-600' : i < step ? 'w-8 bg-primary-400' : 'w-8 bg-neutral-200',
+              )}
+            />
+          ))}
+        </div>
+
+        <div className="card animate-scale-in p-8 md:p-10">
+          {step === 0 && (
+            <div>
+              <div className="mb-6 text-center">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
+                  <Sparkles size={22} />
+                </div>
+                <h2 className="font-display text-2xl font-semibold text-neutral-900">Bienvenue, qui es-tu ?</h2>
+                <p className="mt-2 text-sm text-neutral-500">Choisis ton nom d'affichage, ta civilité et tes pronoms.</p>
+              </div>
+
+              <div className="space-y-5">
+                <div>
+                  <label className="label">Nom affiché publiquement</label>
+                  <input
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    className="input"
+                    placeholder="Ex. Alex Martin"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="label">Civilité</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {civilites.map((c) => (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => setCivilite(c.value)}
+                        className={cn(
+                          'rounded-xl border px-3 py-3 text-sm font-medium transition',
+                          civilite === c.value
+                            ? 'border-primary-500 bg-primary-50 text-primary-700'
+                            : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300',
+                        )}
+                      >
+                        {c.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="label">Pronoms (optionnel)</label>
+                  <input
+                    value={pronouns}
+                    onChange={(e) => setPronouns(e.target.value)}
+                    className="input"
+                    placeholder="Ex. iel / elle / il / ils / elles"
+                  />
+                  <p className="mt-1.5 text-xs text-neutral-400">Personnalisable au-delà de M./Mme/Iel.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 1 && (
+            <div>
+              <div className="mb-6 text-center">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary-50 text-secondary-600">
+                  <Heart size={22} fill="currentColor" />
+                </div>
+                <h2 className="font-display text-2xl font-semibold text-neutral-900">Ton rôle dans la communauté</h2>
+                <p className="mt-2 text-sm text-neutral-500">Tu pourras toujours modifier cela plus tard.</p>
+              </div>
+
+              <div className="space-y-3">
+                {accountTypes.map((t) => (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => setAccountType(t.value)}
+                    className={cn(
+                      'flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition',
+                      accountType === t.value
+                        ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-200'
+                        : 'border-neutral-200 bg-white hover:border-neutral-300',
+                    )}
+                  >
+                    <span className="text-2xl">{t.icon}</span>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-neutral-900">{t.label}</span>
+                        {accountType === t.value && <CheckCircle2 size={16} className="text-primary-600" />}
+                      </div>
+                      <p className="mt-0.5 text-sm text-neutral-500">{t.desc}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div>
+              <div className="mb-6 text-center">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-50 text-accent-600">
+                  <ShieldCheck size={22} />
+                </div>
+                <h2 className="font-display text-2xl font-semibold text-neutral-900">Charte de respect</h2>
+                <p className="mt-2 text-sm text-neutral-500">
+                  L'acceptation de la charte conditionne l'accès à la messagerie et aux échanges.
+                </p>
+              </div>
+
+              <div className="space-y-3 rounded-2xl bg-neutral-50 p-5">
+                {chartePoints.map((p, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-primary-500" />
+                    <span className="text-sm text-neutral-700">{p}</span>
+                  </div>
+                ))}
+              </div>
+
+              <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-2xl border border-neutral-200 p-4 transition hover:bg-neutral-50">
+                <input
+                  type="checkbox"
+                  checked={charteAccepted}
+                  onChange={(e) => setCharteAccepted(e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+                />
+                <span className="text-sm font-medium text-neutral-800">
+                  J'ai lu et j'accepte la charte de respect de Queer Service.
+                </span>
+              </label>
+            </div>
+          )}
+
+          {error && (
+            <div className="mt-4 rounded-xl bg-error-50 p-3 text-sm text-error-700">{error}</div>
+          )}
+
+          <div className="mt-8 flex items-center justify-between">
+            <button
+              onClick={step === 0 ? () => navigate('/') : back}
+              className="btn-ghost"
+            >
+              <ArrowLeft size={16} /> {step === 0 ? 'Annuler' : 'Retour'}
+            </button>
+            {step < 2 ? (
+              <button onClick={next} disabled={!canProceed} className="btn-primary">
+                Continuer <ArrowRight size={16} />
+              </button>
+            ) : (
+              <button onClick={finishOnboarding} disabled={!canProceed || loading} className="btn-primary">
+                {loading ? 'Enregistrement…' : 'Finaliser mon inscription'}
+                {!loading && <ArrowRight size={16} />}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
