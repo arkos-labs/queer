@@ -16,6 +16,7 @@ import { ResourcesPage } from '@/pages/ResourcesPage';
 import { PlaceDetailPage } from '@/pages/PlaceDetailPage';
 import { LegalPage, type LegalSlug } from '@/pages/LegalPage';
 import { CookieBanner } from '@/components/CookieBanner';
+import { InstallPWABanner } from '@/components/InstallPWABanner';
 
 function Routes() {
   const { path, navigate } = useRouter();
@@ -89,6 +90,7 @@ export default function App() {
         <Layout>
           <Routes />
         </Layout>
+        <InstallPWABanner />
         <CookieBanner />
       </RouterProvider>
     </AuthProvider>

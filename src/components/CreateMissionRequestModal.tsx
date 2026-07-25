@@ -41,7 +41,7 @@ export function CreateMissionRequestModal({ onClose, onSuccess }: CreateMissionR
     setLoading(false);
 
     if (insertErr) {
-      setError("Erreur lors de la publication de l'annonce.");
+      setError(insertErr.message || "Erreur lors de la publication de l'annonce.");
     } else {
       onSuccess();
     }
