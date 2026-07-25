@@ -3,14 +3,74 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import type { Resource } from '@/lib/types';
 import { FALLBACK_RESOURCES } from '@/lib/resourcesFallback';
-import { ArrowLeft, Phone, ExternalLink, Clock, ChevronDown, BookOpen, LifeBuoy } from 'lucide-react';
+import { ArrowLeft, Phone, ExternalLink, Clock, ChevronDown, BookOpen, LifeBuoy, MessageCircle } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 
 export function ResourcesPage() {
   const { navigate } = useRouter();
+  const { user } = useAuth();
   const [resources, setResources] = useState<Resource[]>(FALLBACK_RESOURCES);
   const [loading, setLoading] = useState(true);
   const [openGuide, setOpenGuide] = useState<string | null>(null);
+  const [contactingSupport, setContactingSupport] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const contactSupport = async () => {
+    if (!user) {
+      navigate('/connexion');
+      return;
+    }
+    setContactingSupport(true);
+    setError(null);
+    try {
+      const { data: adminData, error: adminErr } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('is_admin', true)
+        .limit(1)
+        .maybeSingle();
+
+      if (adminErr || !adminData) {
+        throw new Error('Impossible de trouver un administrateur à contacter.');
+      }
+      
+      const adminId = adminData.id;
+      if (adminId === user.id) {
+        throw new Error('Vous êtes déjà administrateur.');
+      }
+
+      const { data: existing, error: findErr } = await supabase
+        .from('connections')
+        .select('id')
+        .or(`and(user_a.eq.${user.id},user_b.eq.${adminId}),and(user_a.eq.${adminId},user_b.eq.${user.id})`)
+        .maybeSingle();
+
+      if (findErr) throw findErr;
+
+      let connId = existing?.id;
+      if (!connId) {
+        const { data: created, error: createErr } = await supabase
+          .from('connections')
+          .insert({
+            user_a: user.id,
+            user_b: adminId,
+            service_label: 'Support Queer Service',
+            status: 'accepted',
+          })
+          .select('id')
+          .single();
+        if (createErr) throw createErr;
+        connId = created.id;
+      }
+      
+      navigate(`/messages/${connId}`);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setContactingSupport(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -132,10 +192,21 @@ export function ResourcesPage() {
         </section>
 
         {!loading && (
-          <p className="text-center text-xs text-neutral-400">
-            Vous gérez une association ou une structure et souhaitez être ajouté·e à cette page ? Contactez l'équipe
-            depuis les mentions légales.
-          </p>
+          <div className="card p-6 text-center mt-12 bg-neutral-50/50">
+            <h2 className="font-display text-lg font-semibold text-neutral-900">Besoin d'autre chose ?</h2>
+            <p className="mt-2 text-sm text-neutral-600 mb-6">
+              Vous avez un problème technique, une question, ou vous gérez une association qui devrait figurer sur cette page ?
+            </p>
+            <button
+              onClick={contactSupport}
+              disabled={contactingSupport}
+              className="btn-primary mx-auto"
+            >
+              <MessageCircle size={18} />
+              {contactingSupport ? 'Ouverture...' : 'Contacter l\'équipe'}
+            </button>
+            {error && <p className="mt-3 text-sm text-error-600">{error}</p>}
+          </div>
         )}
       </div>
     </div>

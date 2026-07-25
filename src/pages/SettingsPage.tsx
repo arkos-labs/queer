@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase, edgeFunctionErrorMessage } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import { Download, Trash2, AlertTriangle, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight, LifeBuoy, CreditCard, CheckCircle2, Clock, LogOut, UserCheck, Upload, XCircle } from 'lucide-react';
+import { Download, Trash2, AlertTriangle, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight, LifeBuoy, CreditCard, CheckCircle2, Clock, LogOut, UserCheck, Upload, XCircle, MessageCircle } from 'lucide-react';
 
 export function SettingsPage() {
   const { user, profile, signOut, refreshProfile } = useAuth();
@@ -18,6 +18,60 @@ export function SettingsPage() {
   const [signingOut, setSigningOut] = useState(false);
   const [uploadingId, setUploadingId] = useState(false);
   const [idError, setIdError] = useState<string | null>(null);
+  const [contactingSupport, setContactingSupport] = useState(false);
+
+  const contactSupport = async () => {
+    if (!user) return;
+    setContactingSupport(true);
+    setError(null);
+    try {
+      const { data: adminData, error: adminErr } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('is_admin', true)
+        .limit(1)
+        .maybeSingle();
+
+      if (adminErr || !adminData) {
+        throw new Error('Impossible de trouver un administrateur à contacter.');
+      }
+      
+      const adminId = adminData.id;
+      if (adminId === user.id) {
+        throw new Error('Vous êtes déjà administrateur.');
+      }
+
+      const { data: existing, error: findErr } = await supabase
+        .from('connections')
+        .select('id')
+        .or(`and(user_a.eq.${user.id},user_b.eq.${adminId}),and(user_a.eq.${adminId},user_b.eq.${user.id})`)
+        .maybeSingle();
+
+      if (findErr) throw findErr;
+
+      let connId = existing?.id;
+      if (!connId) {
+        const { data: created, error: createErr } = await supabase
+          .from('connections')
+          .insert({
+            user_a: user.id,
+            user_b: adminId,
+            service_label: 'Support Queer Service',
+            status: 'accepted',
+          })
+          .select('id')
+          .single();
+        if (createErr) throw createErr;
+        connId = created.id;
+      }
+      
+      navigate(`/messages/${connId}`);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setContactingSupport(false);
+    }
+  };
 
   useEffect(() => {
     // Coming back from the Stripe onboarding flow — pull the account's
@@ -171,6 +225,24 @@ export function SettingsPage() {
           <div className="flex-1">
             <h2 className="font-display text-lg font-semibold text-neutral-900">Besoin d'aide ?</h2>
             <p className="mt-1 text-sm text-neutral-600">Numéros d'écoute et guides pratiques, gratuits et confidentiels.</p>
+          </div>
+          <ChevronRight size={18} className="shrink-0 text-neutral-300" />
+        </button>
+
+        {/* Contact Support */}
+        <button
+          onClick={contactSupport}
+          disabled={contactingSupport}
+          className="card flex w-full items-center gap-4 p-6 text-left hover:shadow-md transition-shadow md:p-8"
+        >
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
+            <MessageCircle size={20} />
+          </div>
+          <div className="flex-1">
+            <h2 className="font-display text-lg font-semibold text-neutral-900">Contacter l'équipe</h2>
+            <p className="mt-1 text-sm text-neutral-600">
+              {contactingSupport ? 'Ouverture de la messagerie...' : 'Un problème, une question ? Écrivez-nous directement dans l\'application.'}
+            </p>
           </div>
           <ChevronRight size={18} className="shrink-0 text-neutral-300" />
         </button>
