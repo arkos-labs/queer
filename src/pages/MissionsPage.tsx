@@ -4,8 +4,9 @@ import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
 import { Avatar } from '@/components/Avatar';
 import { CreateMissionRequestModal } from '@/components/CreateMissionRequestModal';
+import { ApplyToMissionModal } from '@/components/ApplyToMissionModal';
 import { timeAgo } from '@/lib/utils';
-import { ArrowLeft, Megaphone, PlusCircle, ChevronRight, Clock } from 'lucide-react';
+import { ArrowLeft, Megaphone, PlusCircle, Send, Clock } from 'lucide-react';
 
 interface MissionRequest {
   id: string;
@@ -31,6 +32,7 @@ export function MissionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [applyTarget, setApplyTarget] = useState<MissionRequest | null>(null);
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -109,36 +111,36 @@ export function MissionsPage() {
         ) : (
           <div className="space-y-3">
             {requests.map((req) => (
-              <div key={req.id} className="card p-5 transition-shadow hover:shadow-md">
-                <div className="flex items-start gap-3">
-                  <Avatar name={req.profiles?.display_name ?? '?'} src={req.profiles?.photo_url} size={40} />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <h2 className="font-display text-lg font-semibold text-neutral-900">{req.title}</h2>
-                      {req.budget && (
-                        <span className="shrink-0 rounded-full border border-primary-100 bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700">
-                          {req.budget}
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-1 text-sm text-neutral-600 whitespace-pre-line">{req.description}</p>
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-400">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-medium text-neutral-600">{req.profiles?.display_name ?? 'Membre'}</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1"><Clock size={11} /> {timeAgo(req.created_at)}</span>
-                      </div>
-                      {user && user.id !== req.created_by && (
-                        <button
-                          onClick={() => navigate(`/profil/${req.created_by}`)}
-                          className="flex items-center gap-1 font-medium text-primary-600 hover:underline"
-                        >
-                          Proposer mes services <ChevronRight size={13} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
+              <div key={req.id} className="card p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <button
+                    onClick={() => navigate(`/profil/${req.created_by}`)}
+                    className="flex min-w-0 items-center gap-2 text-left"
+                  >
+                    <Avatar name={req.profiles?.display_name ?? '?'} src={req.profiles?.photo_url} size={28} />
+                    <span className="truncate text-sm text-neutral-500">
+                      <span className="font-medium text-neutral-700">{req.profiles?.display_name ?? 'Membre'}</span>
+                      {' · '}
+                      <span className="inline-flex items-center gap-1"><Clock size={11} className="inline" /> {timeAgo(req.created_at)}</span>
+                    </span>
+                  </button>
+                  {req.budget && (
+                    <span className="shrink-0 rounded-full border border-primary-100 bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700">
+                      {req.budget}
+                    </span>
+                  )}
                 </div>
+
+                <h2 className="mt-3 font-display text-lg font-semibold text-neutral-900">{req.title}</h2>
+                <p className="mt-1 text-sm text-neutral-600 whitespace-pre-line">{req.description}</p>
+
+                {user && user.id !== req.created_by ? (
+                  <button onClick={() => setApplyTarget(req)} className="btn-primary mt-4 w-full">
+                    <Send size={15} /> Postuler
+                  </button>
+                ) : user && user.id === req.created_by ? (
+                  <p className="mt-4 text-center text-xs font-medium text-neutral-400">Votre annonce</p>
+                ) : null}
               </div>
             ))}
           </div>
@@ -146,6 +148,12 @@ export function MissionsPage() {
       </div>
 
       {showModal && <CreateMissionRequestModal onClose={() => setShowModal(false)} onSuccess={handleSuccess} />}
+      {applyTarget && (
+        <ApplyToMissionModal
+          mission={{ id: applyTarget.id, title: applyTarget.title, created_by: applyTarget.created_by }}
+          onClose={() => setApplyTarget(null)}
+        />
+      )}
     </div>
   );
 }

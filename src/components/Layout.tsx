@@ -2,7 +2,7 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
-import { Heart, Compass, User as UserIcon, Settings, Shield, MessageCircle, LifeBuoy } from 'lucide-react';
+import { Heart, Compass, User as UserIcon, Settings, Shield, MessageCircle, LifeBuoy, LogOut } from 'lucide-react';
 import { Avatar } from '@/components/Avatar';
 import { cn } from '@/lib/utils';
 
@@ -20,8 +20,9 @@ function Logo({ onClick }: { onClick: () => void }) {
 
 export function Layout({ children }: { children: ReactNode }) {
   const { path, navigate } = useRouter();
-  const { user, profile } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [unread, setUnread] = useState(0);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const go = (to: string) => navigate(to);
 
@@ -94,16 +95,41 @@ export function Layout({ children }: { children: ReactNode }) {
             </button>
 
             {user && profile ? (
-              <button
-                onClick={() => go('/profil')}
-                className="h-9 w-9 rounded-full bg-orange-500 flex items-center justify-center text-sm font-bold border-2 border-white/30 overflow-hidden relative shadow-sm"
-              >
-                {profile.photo_url ? (
-                  <img src={profile.photo_url} className="w-full h-full object-cover" alt="" />
-                ) : (
-                  profile.display_name.substring(0, 2).toUpperCase()
+              <div className="relative">
+                <button
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="h-9 w-9 rounded-full bg-orange-500 flex items-center justify-center text-sm font-bold border-2 border-white/30 overflow-hidden relative shadow-sm transition-transform active:scale-95"
+                >
+                  {profile.photo_url ? (
+                    <img src={profile.photo_url} className="w-full h-full object-cover" alt="" />
+                  ) : (
+                    profile.display_name.substring(0, 2).toUpperCase()
+                  )}
+                </button>
+                
+                {showProfileMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
+                    <div className="absolute right-0 mt-2 w-48 rounded-xl bg-white shadow-xl ring-1 ring-black/5 z-50 overflow-hidden animate-slide-up origin-top-right">
+                      <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
+                        <p className="text-[13px] font-semibold text-slate-900 truncate">{profile.display_name}</p>
+                      </div>
+                      <button 
+                        onClick={() => { setShowProfileMenu(false); go('/profil'); }} 
+                        className="w-full text-left px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 border-b border-slate-100 flex items-center gap-2 transition-colors"
+                      >
+                        <UserIcon size={16} className="text-slate-400" /> Voir mon profil
+                      </button>
+                      <button 
+                        onClick={async () => { setShowProfileMenu(false); await signOut(); go('/'); }} 
+                        className="w-full text-left px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                      >
+                        <LogOut size={16} className="text-red-500" /> Se déconnecter
+                      </button>
+                    </div>
+                  </>
                 )}
-              </button>
+              </div>
             ) : !isLanding ? (
               <button onClick={() => go('/connexion')} className="px-3 py-1.5 rounded-full text-xs font-semibold text-white/90 bg-white/10 hover:bg-white/20 transition-colors">
                 Co.
