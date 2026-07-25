@@ -162,6 +162,7 @@ export function MissionsPage() {
             setApplyTarget(detailTarget);
             setDetailTarget(null);
           }}
+          onDelete={handleSuccess}
         />
       )}
       {applyTarget && (

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, PUBLIC_PROFILE_COLUMNS } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import type { Profile, Badge, Review, Connection } from '@/lib/types';
@@ -75,7 +75,7 @@ export function MyProfilePage() {
       const otherIds = Array.from(new Set(conns.map((c) => (c.user_a === user.id ? c.user_b : c.user_a))));
       let otherMap = new Map<string, Profile>();
       if (otherIds.length > 0) {
-        const { data: others } = await supabase.from('profiles').select('*').in('id', otherIds);
+        const { data: others } = await supabase.from('profiles').select(PUBLIC_PROFILE_COLUMNS).in('id', otherIds);
         for (const o of (others ?? []) as Profile[]) otherMap.set(o.id, o);
       }
       setConnections(conns.map((c) => ({ ...c, other: otherMap.get(c.user_a === user.id ? c.user_b : c.user_a) })));

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, PUBLIC_PROFILE_COLUMNS } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import type { Connection, Message, Profile } from '@/lib/types';
@@ -50,7 +50,7 @@ export function MessagesPage() {
         const connIds = connections.map((c) => c.id);
 
         const [othersRes, msgsRes] = await Promise.all([
-          otherIds.length ? supabase.from('profiles').select('*').in('id', otherIds) : Promise.resolve({ data: [], error: null }),
+          otherIds.length ? supabase.from('profiles').select(PUBLIC_PROFILE_COLUMNS).in('id', otherIds) : Promise.resolve({ data: [], error: null }),
           connIds.length
             ? supabase.from('messages').select('*').in('connection_id', connIds).order('created_at', { ascending: true })
             : Promise.resolve({ data: [], error: null }),

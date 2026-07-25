@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
+import { supabase, PUBLIC_PROFILE_COLUMNS } from '@/lib/supabase';
 import type { Category, Subcategory, Profile, Place } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
 import { avg } from '@/lib/utils';
@@ -101,7 +101,7 @@ export function DirectoryPage() {
       try {
         const profRes = await supabase
           .from('profiles')
-          .select('*')
+          .select(PUBLIC_PROFILE_COLUMNS)
           .eq('profile_status', 'active')
           .order('created_at', { ascending: false });
         if (cancelled) return;

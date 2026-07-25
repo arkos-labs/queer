@@ -1,6 +1,8 @@
-import { X, Send, Clock } from 'lucide-react';
+import { useState } from 'react';
+import { X, Send, Clock, Trash2 } from 'lucide-react';
 import { Avatar } from '@/components/Avatar';
 import { timeAgo } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
 
@@ -21,11 +23,26 @@ interface MissionDetailModalProps {
   mission: MissionRequest;
   onClose: () => void;
   onApply: () => void;
+  onDelete?: () => void;
 }
 
-export function MissionDetailModal({ mission, onClose, onApply }: MissionDetailModalProps) {
+export function MissionDetailModal({ mission, onClose, onApply, onDelete }: MissionDetailModalProps) {
   const { user } = useAuth();
   const { navigate } = useRouter();
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!window.confirm('Voulez-vous vraiment supprimer cette annonce ? Cette action est irréversible.')) return;
+    setDeleting(true);
+    const { error } = await supabase.from('mission_requests').delete().eq('id', mission.id);
+    setDeleting(false);
+    if (!error) {
+      onClose();
+      if (onDelete) onDelete();
+    } else {
+      alert('Erreur lors de la suppression : ' + error.message);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col md:items-center md:justify-center bg-neutral-900/40 backdrop-blur-sm p-4 animate-fade-in" role="dialog" aria-modal="true">
@@ -79,9 +96,13 @@ export function MissionDetailModal({ mission, onClose, onApply }: MissionDetailM
               <Send size={18} /> Contacter & proposer un tarif
             </button>
           ) : user && user.id === mission.created_by ? (
-            <p className="text-center text-sm font-medium text-neutral-500 bg-neutral-100 py-2.5 rounded-xl">
-              Ceci est votre annonce
-            </p>
+            <button 
+              onClick={handleDelete}
+              disabled={deleting}
+              className="btn-outline w-full py-3 text-[15px] border-error-200 text-error-600 hover:bg-error-50 flex items-center justify-center gap-2"
+            >
+              <Trash2 size={18} /> {deleting ? 'Suppression...' : 'Supprimer mon annonce'}
+            </button>
           ) : (
             <button onClick={() => navigate('/connexion')} className="btn-primary w-full py-3 text-[15px]">
               Se connecter pour postuler

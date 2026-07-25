@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, PUBLIC_PROFILE_COLUMNS } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import type { Profile, Badge, Review } from '@/lib/types';
@@ -58,7 +58,7 @@ export function ProfileDetailPage({ id }: { id: string }) {
     const load = async () => {
       setLoading(true);
       const [profRes, pbRes, revRes] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', id).maybeSingle(),
+        supabase.from('profiles').select(PUBLIC_PROFILE_COLUMNS).eq('id', id).maybeSingle(),
         supabase.from('profile_badges').select('badge:badges(*)').eq('profile_id', id),
         supabase
           .from('reviews')

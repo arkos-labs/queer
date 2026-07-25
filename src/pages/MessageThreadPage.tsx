@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { supabase, edgeFunctionErrorMessage } from '@/lib/supabase';
+import { supabase, edgeFunctionErrorMessage, PUBLIC_PROFILE_COLUMNS } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import type { Connection, Message, Profile, Payment } from '@/lib/types';
@@ -71,7 +71,7 @@ export function MessageThreadPage({ id }: { id: string }) {
 
         const otherId = conn.user_a === user.id ? conn.user_b : conn.user_a;
         const [otherRes, msgsRes, payRes, reviewRes] = await Promise.all([
-          supabase.from('profiles').select('*').eq('id', otherId).maybeSingle(),
+          supabase.from('profiles').select(PUBLIC_PROFILE_COLUMNS).eq('id', otherId).maybeSingle(),
           supabase.from('messages').select('*').eq('connection_id', id).order('created_at', { ascending: true }),
           supabase
             .from('payments')
