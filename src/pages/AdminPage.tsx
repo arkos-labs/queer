@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import type { Profile, Report, Category, Place, PlaceReview } from '@/lib/types';
+import type { Profile, Report, Category, Place, PlaceReview, Badge } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
 import { StarRating } from '@/components/StarRating';
 import { cn, formatDate, timeAgo } from '@/lib/utils';
@@ -96,20 +96,54 @@ function ProfilesTab() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'suspended' | 'banned'>('all');
+  const [badges, setBadges] = useState<Badge[]>([]);
+  const [profileBadges, setProfileBadges] = useState<Record<string, Set<string>>>({});
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
-      const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+      const [profRes, badgeRes, pbRes] = await Promise.all([
+        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+        supabase.from('badges').select('*').order('label'),
+        supabase.from('profile_badges').select('profile_id, badge_id'),
+      ]);
       if (!cancelled) {
-        setProfiles((data ?? []) as Profile[]);
+        setProfiles((profRes.data ?? []) as Profile[]);
+        setBadges((badgeRes.data ?? []) as Badge[]);
+        const byProfile: Record<string, Set<string>> = {};
+        for (const row of (pbRes.data ?? []) as { profile_id: string; badge_id: string }[]) {
+          if (!byProfile[row.profile_id]) byProfile[row.profile_id] = new Set();
+          byProfile[row.profile_id].add(row.badge_id);
+        }
+        setProfileBadges(byProfile);
         setLoading(false);
       }
     };
     load();
     return () => { cancelled = true; };
   }, []);
+
+  const toggleBadge = async (profileId: string, badgeId: string) => {
+    const has = profileBadges[profileId]?.has(badgeId);
+    if (has) {
+      const { error } = await supabase.from('profile_badges').delete().eq('profile_id', profileId).eq('badge_id', badgeId);
+      if (error) return;
+      setProfileBadges((prev) => {
+        const next = new Set(prev[profileId]);
+        next.delete(badgeId);
+        return { ...prev, [profileId]: next };
+      });
+    } else {
+      const { error } = await supabase.from('profile_badges').insert({ profile_id: profileId, badge_id: badgeId, source_rule: 'admin' });
+      if (error) return;
+      setProfileBadges((prev) => {
+        const next = new Set(prev[profileId]);
+        next.add(badgeId);
+        return { ...prev, [profileId]: next };
+      });
+    }
+  };
 
   const updateStatus = async (id: string, status: Profile['profile_status']) => {
     const { error } = await supabase.from('profiles').update({ profile_status: status, updated_at: new Date().toISOString() }).eq('id', id);
@@ -153,54 +187,78 @@ function ProfilesTab() {
       ) : (
         <div className="space-y-3">
           {filtered.map((p) => (
-            <div key={p.id} className="card flex items-center gap-4 p-4">
-              <Avatar name={p.display_name} src={p.photo_url} size={44} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-neutral-900">{p.display_name}</p>
-                <p className="truncate text-xs text-neutral-500">{p.email} · {p.account_type} · {p.city ?? '—'}</p>
-              </div>
-              {p.verification_status === 'verified' && (
-                <span className="hidden items-center gap-1 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 ring-1 ring-primary-200 sm:inline-flex">
-                  <ShieldCheck size={12} /> Vérifié
+            <div key={p.id} className="card p-4">
+              <div className="flex items-center gap-4">
+                <Avatar name={p.display_name} src={p.photo_url} size={44} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-neutral-900">{p.display_name}</p>
+                  <p className="truncate text-xs text-neutral-500">{p.email} · {p.account_type} · {p.city ?? '—'}</p>
+                </div>
+                {p.verification_status === 'verified' && (
+                  <span className="hidden items-center gap-1 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 ring-1 ring-primary-200 sm:inline-flex">
+                    <ShieldCheck size={12} /> Vérifié
+                  </span>
+                )}
+                <span className={cn(
+                  'hidden rounded-full px-2.5 py-1 text-xs font-medium sm:inline-block',
+                  p.profile_status === 'active' && 'bg-success-100 text-success-700',
+                  p.profile_status === 'pending' && 'bg-warning-100 text-warning-700',
+                  p.profile_status === 'suspended' && 'bg-neutral-200 text-neutral-700',
+                  p.profile_status === 'banned' && 'bg-error-100 text-error-700',
+                )}>
+                  {p.profile_status}
                 </span>
-              )}
-              <span className={cn(
-                'hidden rounded-full px-2.5 py-1 text-xs font-medium sm:inline-block',
-                p.profile_status === 'active' && 'bg-success-100 text-success-700',
-                p.profile_status === 'pending' && 'bg-warning-100 text-warning-700',
-                p.profile_status === 'suspended' && 'bg-neutral-200 text-neutral-700',
-                p.profile_status === 'banned' && 'bg-error-100 text-error-700',
-              )}>
-                {p.profile_status}
-              </span>
-              <div className="flex gap-1">
-                <button
-                  onClick={() => toggleVerification(p)}
-                  className={cn(
-                    'btn-ghost btn-sm',
-                    p.verification_status === 'verified' ? 'text-primary-600 hover:bg-primary-50' : 'text-neutral-400 hover:bg-neutral-100',
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => toggleVerification(p)}
+                    className={cn(
+                      'btn-ghost btn-sm',
+                      p.verification_status === 'verified' ? 'text-primary-600 hover:bg-primary-50' : 'text-neutral-400 hover:bg-neutral-100',
+                    )}
+                    title={p.verification_status === 'verified' ? "Retirer la vérification d'identité" : "Vérifier l'identité"}
+                    aria-label={p.verification_status === 'verified' ? `Retirer la vérification d'identité de ${p.display_name}` : `Vérifier l'identité de ${p.display_name}`}
+                  >
+                    <ShieldCheck size={16} />
+                  </button>
+                  {p.profile_status !== 'active' && (
+                    <button onClick={() => updateStatus(p.id, 'active')} className="btn-ghost btn-sm text-success-600 hover:bg-success-50" title="Activer" aria-label={`Activer le profil de ${p.display_name}`}>
+                      <CheckCircle2 size={16} />
+                    </button>
                   )}
-                  title={p.verification_status === 'verified' ? "Retirer la vérification d'identité" : "Vérifier l'identité"}
-                  aria-label={p.verification_status === 'verified' ? `Retirer la vérification d'identité de ${p.display_name}` : `Vérifier l'identité de ${p.display_name}`}
-                >
-                  <ShieldCheck size={16} />
-                </button>
-                {p.profile_status !== 'active' && (
-                  <button onClick={() => updateStatus(p.id, 'active')} className="btn-ghost btn-sm text-success-600 hover:bg-success-50" title="Activer" aria-label={`Activer le profil de ${p.display_name}`}>
-                    <CheckCircle2 size={16} />
-                  </button>
-                )}
-                {p.profile_status !== 'suspended' && (
-                  <button onClick={() => updateStatus(p.id, 'suspended')} className="btn-ghost btn-sm text-warning-600 hover:bg-warning-50" title="Suspendre" aria-label={`Suspendre le profil de ${p.display_name}`}>
-                    <Clock size={16} />
-                  </button>
-                )}
-                {p.profile_status !== 'banned' && (
-                  <button onClick={() => updateStatus(p.id, 'banned')} className="btn-ghost btn-sm text-error-600 hover:bg-error-50" title="Bannir" aria-label={`Bannir le profil de ${p.display_name}`}>
-                    <XCircle size={16} />
-                  </button>
-                )}
+                  {p.profile_status !== 'suspended' && (
+                    <button onClick={() => updateStatus(p.id, 'suspended')} className="btn-ghost btn-sm text-warning-600 hover:bg-warning-50" title="Suspendre" aria-label={`Suspendre le profil de ${p.display_name}`}>
+                      <Clock size={16} />
+                    </button>
+                  )}
+                  {p.profile_status !== 'banned' && (
+                    <button onClick={() => updateStatus(p.id, 'banned')} className="btn-ghost btn-sm text-error-600 hover:bg-error-50" title="Bannir" aria-label={`Bannir le profil de ${p.display_name}`}>
+                      <XCircle size={16} />
+                    </button>
+                  )}
+                </div>
               </div>
+              {badges.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-1.5 border-t border-neutral-100 pt-3">
+                  {badges.map((b) => {
+                    const active = profileBadges[p.id]?.has(b.id);
+                    return (
+                      <button
+                        key={b.id}
+                        onClick={() => toggleBadge(p.id, b.id)}
+                        title={b.description ?? b.label}
+                        className={cn(
+                          'rounded-full border px-2.5 py-1 text-xs font-medium transition',
+                          active
+                            ? 'border-primary-300 bg-primary-50 text-primary-700'
+                            : 'border-neutral-200 text-neutral-500 hover:border-neutral-300',
+                        )}
+                      >
+                        {b.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           ))}
         </div>

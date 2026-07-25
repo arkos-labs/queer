@@ -33,9 +33,15 @@ Deno.serve(async (req) => {
     const { data: { user }, error: userErr } = await userClient.auth.getUser();
     if (userErr || !user) return json({ error: "Non authentifié." }, 401);
 
-    const { connection_id, amount, description } = await req.json().catch(() => ({}));
+    const { connection_id, amount, description, scheduled_at } = await req.json().catch(() => ({}));
     if (!connection_id || typeof amount !== "number" || !Number.isFinite(amount) || amount < 100) {
       return json({ error: "Paramètres invalides (montant minimum 1€)." }, 400);
+    }
+    let scheduledAtIso: string | null = null;
+    if (scheduled_at) {
+      const d = new Date(scheduled_at);
+      if (Number.isNaN(d.getTime())) return json({ error: "Date de prestation invalide." }, 400);
+      scheduledAtIso = d.toISOString();
     }
 
     const admin = createClient(supabaseUrl, serviceKey);
@@ -101,10 +107,18 @@ Deno.serve(async (req) => {
         stripe_payment_intent_id: null,
         status: "pending",
         proposed_by: user.id,
+        scheduled_at: scheduledAtIso,
       })
       .select()
       .single();
     if (payErr) throw payErr;
+
+    // Send a system message to trigger notifications for the recipient
+    await admin.from("messages").insert({
+      connection_id,
+      sender_id: user.id,
+      body: `J'ai envoyé une proposition de prix de ${(amountCents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}.`,
+    });
 
     return json({ payment_id: payment.id });
   } catch (err) {

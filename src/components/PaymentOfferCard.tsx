@@ -1,8 +1,15 @@
 import { useState } from 'react';
 import type { Connection, Payment } from '@/lib/types';
-import { CreditCard, Handshake, Clock, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import { CreditCard, Handshake, Clock, CheckCircle2, XCircle, AlertTriangle, Calendar } from 'lucide-react';
 
 const formatEuros = (cents: number) => (cents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+
+const formatScheduled = (iso: string) => {
+  const d = new Date(iso);
+  const hour = d.getHours();
+  const slot = hour < 12 ? 'matin' : hour < 18 ? 'après-midi' : 'soir';
+  return `${d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} (${slot})`;
+};
 
 // A price offer rendered inline in the conversation, Vinted-style: shows
 // the current proposed price and, depending on who's turn it is and
@@ -76,6 +83,11 @@ export function PaymentOfferCard({
 
         <p className="mt-2 text-2xl font-bold text-neutral-900">{formatEuros(payment.amount)}</p>
         {payment.description && <p className="mt-0.5 text-sm text-neutral-600">{payment.description}</p>}
+        {payment.scheduled_at && (
+          <p className="mt-1 flex items-center gap-1.5 text-xs text-neutral-500">
+            <Calendar size={13} /> {formatScheduled(payment.scheduled_at)}
+          </p>
+        )}
 
         {/* Negotiation: mission not yet accepted */}
         {connectionStatus === 'pending' && payment.status === 'pending' && noPI && (

@@ -5,7 +5,19 @@ import { useAuth } from '@/lib/auth';
 import type { Category, Subcategory, AccountType, Civilite } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { FALLBACK_CATEGORIES, FALLBACK_SUBCATEGORIES } from '@/lib/taxonomy';
-import { ArrowLeft, Save, X, Plus, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Save, X, Plus, CheckCircle2, Upload } from 'lucide-react';
+import { Avatar } from '@/components/Avatar';
+
+const RATE_UNITS = ['/ heure', '/ jour', '/ prestation', '/ mois'];
+
+const appendUnit = (current: string, unit: string) => {
+  const withoutUnit = RATE_UNITS.reduce(
+    (acc, u) => (acc.endsWith(u) ? acc.slice(0, acc.length - u.length).trimEnd() : acc),
+    current.trim(),
+  );
+  if (!withoutUnit) return withoutUnit;
+  return `${withoutUnit} ${unit}`;
+};
 
 export function ProfileEditPage() {
   const { user, profile, refreshProfile } = useAuth();
@@ -17,6 +29,8 @@ export function ProfileEditPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     display_name: '',
@@ -29,6 +43,7 @@ export function ProfileEditPage() {
     siret: '',
     intervention_zone: '',
     indicative_rates: '',
+    budget_indicatif: '',
     skills: [] as string[],
     needs: [] as string[],
   });
@@ -75,6 +90,7 @@ export function ProfileEditPage() {
           siret: profile.siret ?? '',
           intervention_zone: profile.intervention_zone ?? '',
           indicative_rates: profile.indicative_rates ?? '',
+          budget_indicatif: profile.budget_indicatif ?? '',
           skills: profile.skills,
           needs: profile.needs,
         });
@@ -114,6 +130,31 @@ export function ProfileEditPage() {
   };
   const removeNeed = (s: string) => setForm((f) => ({ ...f, needs: f.needs.filter((x) => x !== s) }));
 
+  const uploadPhoto = async (file: File) => {
+    if (!user) return;
+    if (!file.type.startsWith('image/')) {
+      setPhotoError('Le fichier doit être une image.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError('Image trop lourde (5 Mo maximum).');
+      return;
+    }
+    setUploadingPhoto(true);
+    setPhotoError(null);
+    const ext = file.name.split('.').pop() || 'jpg';
+    const path = `${user.id}/${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+    if (upErr) {
+      setUploadingPhoto(false);
+      setPhotoError(upErr.message);
+      return;
+    }
+    const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+    setForm((f) => ({ ...f, photo_url: data.publicUrl }));
+    setUploadingPhoto(false);
+  };
+
   const save = async () => {
     if (!user) return;
     setSaving(true);
@@ -133,6 +174,7 @@ export function ProfileEditPage() {
       siret: form.siret || null,
       intervention_zone: form.intervention_zone || null,
       indicative_rates: form.indicative_rates || null,
+      budget_indicatif: form.budget_indicatif || null,
       skills: form.skills,
       needs: form.needs,
       charte_accepted: profile?.charte_accepted ?? true,
@@ -204,7 +246,9 @@ export function ProfileEditPage() {
                   <option value="">Non précisée</option>
                   <option value="Monsieur">Monsieur</option>
                   <option value="Madame">Madame</option>
+                  <option value="Mx">Mx</option>
                   <option value="Iel">Iel</option>
+                  <option value="Autre">Autre / je préfère ne pas préciser</option>
                 </select>
               </div>
               <div>
@@ -212,8 +256,26 @@ export function ProfileEditPage() {
                 <input value={form.pronouns} onChange={(e) => setForm({ ...form, pronouns: e.target.value })} className="input" placeholder="iel / elle / il…" />
               </div>
               <div className="sm:col-span-2">
-                <label className="label">Photo (URL)</label>
-                <input value={form.photo_url} onChange={(e) => setForm({ ...form, photo_url: e.target.value })} className="input" placeholder="https://…" />
+                <label className="label">Photo de profil</label>
+                <div className="flex items-center gap-4">
+                  <Avatar name={form.display_name || 'Membre'} src={form.photo_url} size={64} />
+                  <label className="btn-outline cursor-pointer">
+                    <Upload size={16} /> {uploadingPhoto ? 'Envoi…' : 'Choisir une photo'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingPhoto}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) uploadPhoto(file);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                </div>
+                {photoError && <p className="mt-1.5 text-xs text-error-600">{photoError}</p>}
+                <p className="mt-1.5 text-xs text-neutral-400">JPG, PNG, WebP ou GIF, 5 Mo maximum.</p>
               </div>
               <div className="sm:col-span-2">
                 <label className="label">Bio</label>
@@ -328,6 +390,18 @@ export function ProfileEditPage() {
                 className="input"
                 placeholder="Ex. 30€/h, ou 50€ le montage d'un meuble"
               />
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {RATE_UNITS.map((u) => (
+                  <button
+                    key={u}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, indicative_rates: appendUnit(f.indicative_rates, u) }))}
+                    className="rounded-full border border-neutral-200 px-2.5 py-1 text-xs text-neutral-500 hover:border-primary-300 hover:text-primary-600"
+                  >
+                    {u}
+                  </button>
+                ))}
+              </div>
               <p className="mt-1.5 text-xs text-neutral-400">
                 Visible sur votre profil pour que les client·es sachent à quel prix s'attendre avant de demander un devis.
               </p>
@@ -362,6 +436,30 @@ export function ProfileEditPage() {
                 ))}
               </div>
             )}
+            <div className="mt-4">
+              <label className="label">Budget indicatif</label>
+              <input
+                value={form.budget_indicatif}
+                onChange={(e) => setForm({ ...form, budget_indicatif: e.target.value })}
+                className="input"
+                placeholder="Ex. jusqu'à 40€, ou 20€/h"
+              />
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {RATE_UNITS.map((u) => (
+                  <button
+                    key={u}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, budget_indicatif: appendUnit(f.budget_indicatif, u) }))}
+                    className="rounded-full border border-neutral-200 px-2.5 py-1 text-xs text-neutral-500 hover:border-secondary-300 hover:text-secondary-600"
+                  >
+                    {u}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1.5 text-xs text-neutral-400">
+                Indique à quel prix tu recherches ce service — ça aide les prestataires à savoir si leur tarif te correspond.
+              </p>
+            </div>
           </section>
 
           {error && <div className="mt-6 rounded-xl bg-error-50 p-3 text-sm text-error-700">{error}</div>}

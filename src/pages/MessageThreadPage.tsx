@@ -6,8 +6,9 @@ import type { Connection, Message, Profile, Payment } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
 import { PayNowModal } from '@/components/PayNowModal';
 import { PaymentOfferCard } from '@/components/PaymentOfferCard';
+import { ReviewModal } from '@/components/ReviewModal';
 import { formatDate, timeAgo } from '@/lib/utils';
-import { ArrowLeft, Send, CheckCircle2, XCircle, Clock, Flag, CreditCard, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Send, CheckCircle2, XCircle, Clock, Flag, CreditCard, AlertTriangle, Star } from 'lucide-react';
 
 const STATUS_META: Record<Connection['status'], { label: string; cls: string; icon: typeof Clock }> = {
   pending: { label: 'En attente', cls: 'bg-warning-100 text-warning-700', icon: Clock },
@@ -43,6 +44,8 @@ export function MessageThreadPage({ id }: { id: string }) {
   const [payNowLoading, setPayNowLoading] = useState(false);
   const [payNowSecret, setPayNowSecret] = useState<string | null>(null);
   const [cancelPaymentLoading, setCancelPaymentLoading] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [alreadyReviewed, setAlreadyReviewed] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -67,7 +70,7 @@ export function MessageThreadPage({ id }: { id: string }) {
         setConnection(conn);
 
         const otherId = conn.user_a === user.id ? conn.user_b : conn.user_a;
-        const [otherRes, msgsRes, payRes] = await Promise.all([
+        const [otherRes, msgsRes, payRes, reviewRes] = await Promise.all([
           supabase.from('profiles').select('*').eq('id', otherId).maybeSingle(),
           supabase.from('messages').select('*').eq('connection_id', id).order('created_at', { ascending: true }),
           supabase
@@ -77,12 +80,19 @@ export function MessageThreadPage({ id }: { id: string }) {
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle(),
+          supabase
+            .from('reviews')
+            .select('id')
+            .eq('connection_id', id)
+            .eq('author_id', user.id)
+            .maybeSingle(),
         ]);
         if (cancelled) return;
         setOther((otherRes.data ?? null) as Profile | null);
         const msgs = (msgsRes.data ?? []) as Message[];
         setMessages(msgs);
         setPayment((payRes.data ?? null) as Payment | null);
+        setAlreadyReviewed(!!reviewRes.data);
         setLoading(false);
 
         const unreadIds = msgs.filter((m) => m.sender_id !== user.id && !m.read_at).map((m) => m.id);
@@ -261,6 +271,19 @@ export function MessageThreadPage({ id }: { id: string }) {
           }}
         />
       )}
+      {reviewOpen && other && (
+        <ReviewModal
+          targetId={other.id}
+          targetName={other.display_name}
+          connectionId={connection.id}
+          authorId={user.id}
+          onClose={() => setReviewOpen(false)}
+          onDone={() => {
+            setReviewOpen(false);
+            setAlreadyReviewed(true);
+          }}
+        />
+      )}
       {/* Thread header */}
       <div className="sticky top-20 z-40 border-b border-neutral-100 bg-white/95 backdrop-blur-lg">
         <div className="flex items-center gap-3 px-4 py-3">
@@ -344,6 +367,20 @@ export function MessageThreadPage({ id }: { id: string }) {
             </button>
           </div>
         )}
+
+        {connection.status === 'completed' && (
+          <div className="flex flex-wrap items-center gap-2 border-t border-neutral-100 px-4 py-2">
+            {alreadyReviewed ? (
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-500">
+                <Star size={13} className="fill-accent-400 text-accent-400" /> Avis envoyé
+              </span>
+            ) : (
+              <button onClick={() => setReviewOpen(true)} className="btn-outline btn-sm">
+                <Star size={14} /> Laisser un avis
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Messages */}
@@ -391,7 +428,7 @@ export function MessageThreadPage({ id }: { id: string }) {
                               : 'rounded-bl-sm bg-neutral-100 text-neutral-900'
                           }`}
                         >
-                          <p className="whitespace-pre-line">{m.body}</p>
+                          <p className="whitespace-pre-line break-words overflow-hidden">{m.body}</p>
                           <p className={`mt-1 text-[10px] ${mine ? 'text-primary-100' : 'text-neutral-400'}`}>{timeAgo(m.created_at)}</p>
                         </div>
                       </div>

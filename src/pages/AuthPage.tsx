@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
-import { Heart, AlertCircle, ArrowRight } from 'lucide-react';
+import { AlertCircle, ArrowRight } from 'lucide-react';
 
 export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
   const { signIn, signUp } = useAuth();
@@ -43,9 +43,7 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
       <div className="w-full max-w-md animate-scale-in">
         <div className="card p-8 md:p-10">
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-secondary-500 text-white shadow-soft">
-              <Heart size={26} fill="currentColor" />
-            </div>
+            <img src="/logo.png" alt="Queer Service" className="mx-auto mb-4 h-16 w-16 object-contain" />
             <h1 className="font-display text-2xl font-semibold text-neutral-900">
               {isSignup ? 'Rejoignez la communauté' : 'Bon retour parmi nous'}
             </h1>

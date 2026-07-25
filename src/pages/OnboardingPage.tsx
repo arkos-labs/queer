@@ -17,7 +17,9 @@ const intents: { value: Intent; label: string; desc: string; icon: typeof Search
 const civilites: { value: Civilite; label: string }[] = [
   { value: 'Monsieur', label: 'Monsieur' },
   { value: 'Madame', label: 'Madame' },
+  { value: 'Mx', label: 'Mx' },
   { value: 'Iel', label: 'Iel' },
+  { value: 'Autre', label: 'Autre / je préfère ne pas préciser' },
 ];
 
 const accountTypes: { value: AccountType; label: string; desc: string; icon: string }[] = [
@@ -26,12 +28,28 @@ const accountTypes: { value: AccountType; label: string; desc: string; icon: str
   { value: 'asso', label: 'Association / structure', desc: 'Structure partenaire, association LGBTQI+ ou centre de santé.', icon: '🏳️‍🌈' },
 ];
 
+const RATE_UNITS = ['/ heure', '/ jour', '/ prestation', '/ mois'];
+
+const appendUnit = (current: string, unit: string) => {
+  const withoutUnit = RATE_UNITS.reduce(
+    (acc, u) => (acc.endsWith(u) ? acc.slice(0, acc.length - u.length).trimEnd() : acc),
+    current.trim(),
+  );
+  if (!withoutUnit) return withoutUnit;
+  return `${withoutUnit} ${unit}`;
+};
+
 const chartePoints = [
-  'Je m\'engage à respecter chaque membre, quelle que soit son identité ou son expression de genre.',
-  'Je n\'utilise pas de langage discriminant, haineux ou stigmatisant.',
-  'Je respecte les pronoms et civilités choisies par chacun·e.',
-  'Je ne harcèle ni ne démarche de façon abusive.',
-  'Je comprends que tout manquement peut entraîner une suspension de mon compte.',
+  'Je m\'engage à respecter chaque membre, quelle que soit son orientation sexuelle, son identité ou son expression de genre.',
+  'Je n\'utilise pas de langage discriminant, haineux, stigmatisant ou de propos transphobes, homophobes, biphobes ou racistes.',
+  'Je respecte les pronoms et civilités choisies par chacun·e, y compris lorsqu\'ils diffèrent de mes habitudes.',
+  'Je ne harcèle pas, je ne démarche pas de façon abusive ou insistante, et je n\'utilise pas la messagerie à des fins de drague non sollicitée.',
+  'Je décris honnêtement les services que je propose ou que je recherche, et je ne dissimule pas d\'information importante sur le prix ou la prestation.',
+  'Une fois une mission acceptée, je m\'engage à la réaliser sérieusement ou à prévenir au plus vite en cas d\'empêchement.',
+  'Je respecte la vie privée des autres membres : je ne partage pas leurs informations personnelles ou nos échanges en dehors de la plateforme sans leur accord.',
+  'Je privilégie des lieux et horaires sûrs pour les rencontres liées à une prestation, et je respecte le droit de chacun·e à refuser ou interrompre un échange à tout moment.',
+  'Je signale tout comportement contraire à cette charte plutôt que de laisser une situation dégénérer.',
+  'Je comprends que tout manquement à cette charte peut entraîner un avertissement, une suspension ou une suppression définitive de mon compte.',
 ];
 
 export function OnboardingPage() {
@@ -46,6 +64,7 @@ export function OnboardingPage() {
   const [skills, setSkills] = useState<string[]>([]);
   const [needs, setNeeds] = useState<string[]>([]);
   const [indicativeRates, setIndicativeRates] = useState('');
+  const [budgetIndicatif, setBudgetIndicatif] = useState('');
   const [skillInput, setSkillInput] = useState('');
   const [needInput, setNeedInput] = useState('');
   const [charteAccepted, setCharteAccepted] = useState(false);
@@ -85,6 +104,7 @@ export function OnboardingPage() {
       skills,
       needs,
       indicative_rates: indicativeRates.trim() || null,
+      budget_indicatif: budgetIndicatif.trim() || null,
       charte_accepted: true,
       charte_accepted_at: new Date().toISOString(),
       profile_status: 'active',
@@ -147,7 +167,7 @@ export function OnboardingPage() {
 
                 <div>
                   <label className="label">Civilité</label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {civilites.map((c) => (
                       <button
                         key={c.value}
@@ -287,6 +307,18 @@ export function OnboardingPage() {
                       className="input"
                       placeholder="Ex. 30€/h, ou 50€ le montage d'un meuble"
                     />
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {RATE_UNITS.map((u) => (
+                        <button
+                          key={u}
+                          type="button"
+                          onClick={() => setIndicativeRates((v) => appendUnit(v, u))}
+                          className="rounded-full border border-neutral-200 px-2.5 py-1 text-xs text-neutral-500 hover:border-primary-300 hover:text-primary-600"
+                        >
+                          {u}
+                        </button>
+                      ))}
+                    </div>
                     <p className="mt-1.5 text-xs text-neutral-400">
                       Ça donne aux client·es une idée du prix avant qu'iels ne demandent un devis — le prix exact se
                       négocie ensuite pour chaque demande, selon la durée réelle du travail.
@@ -322,6 +354,31 @@ export function OnboardingPage() {
                       ))}
                     </div>
                   )}
+                  <div className="mt-4">
+                    <label className="label">Budget indicatif (optionnel)</label>
+                    <input
+                      value={budgetIndicatif}
+                      onChange={(e) => setBudgetIndicatif(e.target.value)}
+                      className="input"
+                      placeholder="Ex. jusqu'à 40€, ou 20€/h"
+                    />
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {RATE_UNITS.map((u) => (
+                        <button
+                          key={u}
+                          type="button"
+                          onClick={() => setBudgetIndicatif((v) => appendUnit(v, u))}
+                          className="rounded-full border border-neutral-200 px-2.5 py-1 text-xs text-neutral-500 hover:border-secondary-300 hover:text-secondary-600"
+                        >
+                          {u}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="mt-1.5 text-xs text-neutral-400">
+                      Indique à quel prix tu recherches ce service — ça aide les prestataires à savoir si leur tarif
+                      correspond avant de te contacter.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>

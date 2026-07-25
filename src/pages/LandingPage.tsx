@@ -1,7 +1,6 @@
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import {
-  Heart,
   ShieldCheck,
   Users,
   Sparkles,
@@ -77,9 +76,7 @@ export function LandingPage() {
           </div>
         )}
 
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-secondary-500 text-white shadow-soft">
-          <Heart size={22} fill="currentColor" />
-        </div>
+        <img src="/logo.png" alt="Queer Service" className="mx-auto h-14 w-14 object-contain" />
 
         <h1 className="mt-5 text-center font-display text-3xl font-bold leading-tight text-neutral-900">
           Fait pour nous,
@@ -96,7 +93,7 @@ export function LandingPage() {
             Rejoindre la communauté <ArrowRight size={16} />
           </button>
           <button onClick={() => navigate('/connexion')} className="btn-outline w-full">
-            J'ai déjà un compte
+            Se connecter
           </button>
         </div>
       </div>

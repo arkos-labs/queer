@@ -20,7 +20,7 @@ function Logo({ onClick }: { onClick: () => void }) {
 
 export function Layout({ children }: { children: ReactNode }) {
   const { path, navigate } = useRouter();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile } = useAuth();
   const [unread, setUnread] = useState(0);
 
   const go = (to: string) => navigate(to);
@@ -168,8 +168,6 @@ export function Layout({ children }: { children: ReactNode }) {
           </nav>
         )}
 
-        {/* Hidden sign-out trigger — surfaced inside Settings page instead */}
-        <span className="hidden" aria-hidden onClick={() => signOut()} />
       </div>
     </div>
   );

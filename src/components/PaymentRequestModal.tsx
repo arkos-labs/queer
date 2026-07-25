@@ -3,7 +3,14 @@ import { supabase, edgeFunctionErrorMessage } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
 import type { Profile } from '@/lib/types';
-import { X, CreditCard, AlertTriangle, MessageSquare, Loader2 } from 'lucide-react';
+import { X, CreditCard, AlertTriangle, MessageSquare, Loader2, Calendar } from 'lucide-react';
+
+const SLOTS: { value: 'morning' | 'afternoon' | 'evening' | 'exact'; label: string; time: string }[] = [
+  { value: 'morning', label: 'Matin (8h-12h)', time: '09:00' },
+  { value: 'afternoon', label: 'Après-midi (12h-18h)', time: '14:00' },
+  { value: 'evening', label: 'Soir (18h-22h)', time: '19:00' },
+  { value: 'exact', label: 'Heure précise', time: '' },
+];
 
 // This modal only sends a price request — it never asks for a card. The
 // provider has to accept the mission first; card entry then happens from
@@ -13,6 +20,9 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
   const { navigate } = useRouter();
   const [description, setDescription] = useState('');
   const [priceEuros, setPriceEuros] = useState('');
+  const [serviceDate, setServiceDate] = useState('');
+  const [serviceSlot, setServiceSlot] = useState<'morning' | 'afternoon' | 'evening' | 'exact' | ''>('');
+  const [serviceTime, setServiceTime] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,6 +73,14 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
 
   const priceValue = Number(priceEuros.replace(',', '.'));
   const canSubmit = description.trim().length > 0 && priceValue >= 1 && !loading;
+
+  const scheduledAtIso = (() => {
+    if (!serviceDate || !serviceSlot) return null;
+    const time = serviceSlot === 'exact' ? serviceTime : SLOTS.find((s) => s.value === serviceSlot)?.time;
+    if (!time) return null;
+    const d = new Date(`${serviceDate}T${time}:00`);
+    return Number.isNaN(d.getTime()) ? null : d.toISOString();
+  })();
 
   const sendRequest = async () => {
     if (!user || !canSubmit) return;
@@ -142,7 +160,12 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
     }
 
     const { data, error: fnErr } = await supabase.functions.invoke('stripe-request-payment', {
-      body: { connection_id: connId, amount: Math.round(priceValue * 100), description: description.trim() },
+      body: {
+        connection_id: connId,
+        amount: Math.round(priceValue * 100),
+        description: description.trim(),
+        scheduled_at: scheduledAtIso,
+      },
     });
 
     setLoading(false);
@@ -247,6 +270,45 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
                         plus long ou complexe, {target.display_name} pourra vous proposer un autre prix une fois la
                         demande envoyée.
                       </p>
+                    )}
+                  </div>
+                  <div>
+                    <label htmlFor="pr-date" className="mb-1 flex items-center gap-1.5 text-sm font-medium text-neutral-700">
+                      <Calendar size={14} /> Date de la prestation (optionnel)
+                    </label>
+                    <input
+                      id="pr-date"
+                      type="date"
+                      value={serviceDate}
+                      min={new Date().toISOString().slice(0, 10)}
+                      onChange={(e) => setServiceDate(e.target.value)}
+                      className="input"
+                    />
+                    {serviceDate && (
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        {SLOTS.map((s) => (
+                          <button
+                            key={s.value}
+                            type="button"
+                            onClick={() => setServiceSlot(s.value)}
+                            className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
+                              serviceSlot === s.value
+                                ? 'border-primary-500 bg-primary-50 text-primary-700'
+                                : 'border-neutral-200 text-neutral-600 hover:border-neutral-300'
+                            }`}
+                          >
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {serviceSlot === 'exact' && (
+                      <input
+                        type="time"
+                        value={serviceTime}
+                        onChange={(e) => setServiceTime(e.target.value)}
+                        className="input mt-2"
+                      />
                     )}
                   </div>
                 </div>

@@ -1,5 +1,5 @@
 export type AccountType = 'particulier' | 'pro' | 'asso';
-export type Civilite = 'Monsieur' | 'Madame' | 'Iel';
+export type Civilite = 'Monsieur' | 'Madame' | 'Mx' | 'Iel' | 'Autre';
 export type VerificationStatus = 'none' | 'pending' | 'verified' | 'rejected';
 export type ProfileStatus = 'active' | 'suspended' | 'banned' | 'pending';
 export type ConnectionStatus = 'pending' | 'accepted' | 'completed' | 'cancelled';
@@ -23,6 +23,7 @@ export interface Profile {
   service_category: string | null;
   intervention_zone: string | null;
   indicative_rates: string | null;
+  budget_indicatif: string | null;
   charte_accepted: boolean;
   charte_accepted_at: string | null;
   verification_status: VerificationStatus;
@@ -166,6 +167,7 @@ export interface Payment {
   stripe_payment_intent_id: string | null;
   status: PaymentStatus;
   proposed_by: string;
+  scheduled_at: string | null;
   created_at: string;
   updated_at: string;
 }

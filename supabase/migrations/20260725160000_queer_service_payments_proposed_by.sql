@@ -15,3 +15,5 @@ since every payment starts life as a request from the client.
 alter table public.payments add column if not exists proposed_by uuid references public.profiles(id) on delete cascade;
 update public.payments set proposed_by = payer_id where proposed_by is null;
 alter table public.payments alter column proposed_by set not null;
+
+create index if not exists payments_proposed_by_idx on public.payments (proposed_by);

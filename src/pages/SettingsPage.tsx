@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase, edgeFunctionErrorMessage } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import { Download, Trash2, AlertTriangle, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight, LifeBuoy, CreditCard, CheckCircle2, Clock } from 'lucide-react';
+import { Download, Trash2, AlertTriangle, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight, LifeBuoy, CreditCard, CheckCircle2, Clock, LogOut } from 'lucide-react';
 
 export function SettingsPage() {
   const { user, profile, signOut, refreshProfile } = useAuth();
@@ -15,6 +15,7 @@ export function SettingsPage() {
   const [stripeLoading, setStripeLoading] = useState(false);
   const [stripeError, setStripeError] = useState<string | null>(null);
   const [syncingStripe, setSyncingStripe] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     // Coming back from the Stripe onboarding flow — pull the account's
@@ -90,6 +91,12 @@ export function SettingsPage() {
     a.download = `queer-service-donnees-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    await signOut();
+    navigate('/');
   };
 
   const deleteAccount = async () => {
@@ -216,6 +223,22 @@ export function SettingsPage() {
               {exportData && (
                 <p className="mt-3 text-xs text-success-600">Export généré et téléchargé.</p>
               )}
+            </div>
+          </div>
+        </div>
+
+        {/* Sign out */}
+        <div className="card p-6 md:p-8">
+          <div className="flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-600">
+              <LogOut size={20} />
+            </div>
+            <div className="flex-1">
+              <h2 className="font-display text-lg font-semibold text-neutral-900">Se déconnecter</h2>
+              <p className="mt-1 text-sm text-neutral-600">Terminez votre session sur cet appareil.</p>
+              <button onClick={handleSignOut} disabled={signingOut} className="btn-outline mt-4">
+                <LogOut size={16} /> {signingOut ? 'Déconnexion…' : 'Se déconnecter'}
+              </button>
             </div>
           </div>
         </div>

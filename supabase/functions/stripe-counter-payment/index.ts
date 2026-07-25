@@ -84,6 +84,13 @@ Deno.serve(async (req) => {
       .single();
     if (updErr) throw updErr;
 
+    // Send a system message to trigger notifications for the recipient
+    await admin.from("messages").insert({
+      connection_id,
+      sender_id: user.id,
+      body: `J'ai fait une contre-offre à ${(amountCents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}.`,
+    });
+
     return json({ payment: updated });
   } catch (err) {
     console.error(err);

@@ -330,6 +330,11 @@ export function ProfileDetailPage({ id }: { id: string }) {
                       </span>
                     ))}
                   </div>
+                  {target.budget_indicatif && (
+                    <p className="mt-3 text-center text-xs text-neutral-500">
+                      Budget indicatif : <span className="font-medium text-neutral-700">{target.budget_indicatif}</span>
+                    </p>
+                  )}
                 </div>
               )}
             </div>
