@@ -5,6 +5,7 @@ import { LandingPage } from '@/pages/LandingPage';
 import { AuthPage } from '@/pages/AuthPage';
 import { OnboardingPage } from '@/pages/OnboardingPage';
 import { DirectoryPage } from '@/pages/DirectoryPage';
+import { MissionsPage } from '@/pages/MissionsPage';
 import { ProfileDetailPage } from '@/pages/ProfileDetailPage';
 import { ProfileEditPage } from '@/pages/ProfileEditPage';
 import { MyProfilePage } from '@/pages/MyProfilePage';
@@ -35,7 +36,7 @@ function Routes() {
   }
 
   // Protect authenticated routes
-  const protectedRoutes = ['directory', 'profile', 'my-profile', 'profile-edit', 'settings', 'admin', 'messages', 'message-thread', 'place-detail'];
+  const protectedRoutes = ['directory', 'missions', 'profile', 'my-profile', 'profile-edit', 'settings', 'admin', 'messages', 'message-thread', 'place-detail'];
   if (protectedRoutes.includes(name) && !user) {
     navigate('/connexion');
     return null;
@@ -58,6 +59,8 @@ function Routes() {
       return <OnboardingPage />;
     case 'directory':
       return <DirectoryPage />;
+    case 'missions':
+      return <MissionsPage />;
     case 'profile':
       return <ProfileDetailPage id={params.id} />;
     case 'my-profile':

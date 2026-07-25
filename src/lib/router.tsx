@@ -48,6 +48,7 @@ export function parseRoute(path: string): { name: string; params: Record<string,
   if (parts.length === 0) return { name: 'home', params: {} };
   const [first, second] = parts;
   if (first === 'annuaire') return { name: 'directory', params: {} };
+  if (first === 'missions') return { name: 'missions', params: {} };
   if (first === 'lieux' && second) return { name: 'place-detail', params: { id: second } };
   if (first === 'messages' && second) return { name: 'message-thread', params: { id: second } };
   if (first === 'messages') return { name: 'messages', params: {} };
