@@ -26,6 +26,7 @@ import {
   Settings,
   ShieldCheck,
   X,
+  LogOut,
 } from 'lucide-react';
 
 interface ConnectionWithOther extends Connection {
@@ -37,7 +38,7 @@ interface ReviewWithAuthor extends Review {
 }
 
 export function MyProfilePage() {
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile, signOut } = useAuth();
   const { path, navigate } = useRouter();
   const [badges, setBadges] = useState<Badge[]>([]);
   const [reviews, setReviews] = useState<ReviewWithAuthor[]>([]);
@@ -168,9 +169,19 @@ export function MyProfilePage() {
                 </p>
               )}
 
-              <div className="mt-6 flex items-center justify-center gap-3">
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button onClick={() => navigate('/profil/modifier')} className="btn-primary w-full">
                   Modifier mon profil
+                </button>
+                <button 
+                  onClick={async () => {
+                    await signOut();
+                    navigate('/');
+                  }} 
+                  className="btn-outline w-full sm:w-auto text-error-600 hover:bg-error-50 border-error-200"
+                >
+                  <LogOut size={16} />
+                  Se déconnecter
                 </button>
               </div>
 

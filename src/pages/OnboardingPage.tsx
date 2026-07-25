@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import type { AccountType, Civilite } from '@/lib/types';
 import { Heart, ShieldCheck, ArrowRight, ArrowLeft, CheckCircle2, Sparkles, Search, HandHeart, Plus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PriceInput } from '@/components/PriceInput';
 
 type Intent = 'seeking' | 'offering' | 'both';
 
@@ -96,8 +97,8 @@ export function OnboardingPage() {
   const finishOnboarding = async () => {
     setLoading(true);
     setError(null);
-    const finalRates = rateAmount.trim() ? `${rateAmount.trim()} ${rateUnit}` : null;
-    const finalBudget = budgetAmount.trim() ? `${budgetAmount.trim()} ${budgetUnit}` : null;
+    const finalRates = rateAmount.trim() ? `${rateAmount.trim()}€ ${rateUnit}` : null;
+    const finalBudget = budgetAmount.trim() ? `${budgetAmount.trim()}€ ${budgetUnit}` : null;
 
     const { error } = await supabase.from('profiles').upsert({
       id: user.id,
@@ -318,16 +319,16 @@ export function OnboardingPage() {
                   <div className="mt-4">
                     <label className="label">Tes tarifs (optionnel)</label>
                     <div className="flex gap-2 mt-1.5">
-                      <input
+                      <PriceInput
                         value={rateAmount}
-                        onChange={(e) => setRateAmount(e.target.value)}
-                        className="input flex-1"
-                        placeholder="Ex. 30€, ou Entre 20€ et 40€"
+                        onChange={setRateAmount}
+                        placeholder="Ex. 30, ou entre 20 et 40"
+                        className="flex-1"
                       />
                       <select
                         value={rateUnit}
                         onChange={(e) => setRateUnit(e.target.value)}
-                        className="input shrink-0 bg-neutral-50"
+                        className="input w-auto shrink-0 bg-neutral-50"
                       >
                         <option value="/ heure">/ heure</option>
                         <option value="/ jour">/ jour</option>
@@ -372,16 +373,16 @@ export function OnboardingPage() {
                   <div className="mt-4">
                     <label className="label">Budget indicatif (optionnel)</label>
                     <div className="flex gap-2 mt-1.5">
-                      <input
+                      <PriceInput
                         value={budgetAmount}
-                        onChange={(e) => setBudgetAmount(e.target.value)}
-                        className="input flex-1"
-                        placeholder="Ex. 40€"
+                        onChange={setBudgetAmount}
+                        placeholder="Ex. 40"
+                        className="flex-1"
                       />
                       <select
                         value={budgetUnit}
                         onChange={(e) => setBudgetUnit(e.target.value)}
-                        className="input shrink-0 bg-neutral-50"
+                        className="input w-auto shrink-0 bg-neutral-50"
                       >
                         <option value="/ heure">/ heure</option>
                         <option value="/ jour">/ jour</option>

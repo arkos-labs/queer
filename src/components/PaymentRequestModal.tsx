@@ -3,6 +3,7 @@ import { supabase, edgeFunctionErrorMessage } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
 import type { Profile } from '@/lib/types';
+import { PriceInput } from '@/components/PriceInput';
 import { X, CreditCard, AlertTriangle, MessageSquare, Loader2, Calendar } from 'lucide-react';
 
 const SLOTS: { value: 'morning' | 'afternoon' | 'evening' | 'exact'; label: string; time: string }[] = [
@@ -259,15 +260,8 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
                     />
                   </div>
                   <div>
-                    <label htmlFor="pr-price" className="mb-1 block text-sm font-medium text-neutral-700">Prix proposé (€)</label>
-                    <input
-                      id="pr-price"
-                      value={priceEuros}
-                      onChange={(e) => setPriceEuros(e.target.value)}
-                      inputMode="decimal"
-                      className="input"
-                      placeholder="30"
-                    />
+                    <label htmlFor="pr-price" className="mb-1 block text-sm font-medium text-neutral-700">Prix proposé</label>
+                    <PriceInput id="pr-price" value={priceEuros} onChange={setPriceEuros} placeholder="30" />
                     {target.indicative_rates && (
                       <p className="mt-1.5 text-xs text-neutral-400">
                         Tarifs indicatifs de {target.display_name} : {target.indicative_rates}. Si le travail s'avère

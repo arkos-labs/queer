@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Connection, Payment } from '@/lib/types';
+import { PriceInput } from '@/components/PriceInput';
 import { CreditCard, Handshake, Clock, CheckCircle2, XCircle, AlertTriangle, Calendar } from 'lucide-react';
 
 const formatEuros = (cents: number) => (cents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
@@ -98,15 +99,7 @@ export function PaymentOfferCard({
           ) : countering ? (
             <div className="mt-3 space-y-2">
               <label htmlFor="counter-price" className="sr-only">Nouveau prix</label>
-              <input
-                id="counter-price"
-                value={counterPrice}
-                onChange={(e) => setCounterPrice(e.target.value)}
-                inputMode="decimal"
-                className="input"
-                placeholder="Nouveau prix (€)"
-                autoFocus
-              />
+              <PriceInput id="counter-price" value={counterPrice} onChange={setCounterPrice} placeholder="Nouveau prix" autoFocus />
               {counterError && (
                 <p className="flex items-start gap-1.5 text-xs text-error-700">
                   <AlertTriangle size={13} className="mt-0.5 shrink-0" /> {counterError}

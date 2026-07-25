@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
+import { PriceInput } from '@/components/PriceInput';
 import { X, Send, AlertTriangle } from 'lucide-react';
 
 interface CreateMissionRequestModalProps {
@@ -29,7 +30,7 @@ export function CreateMissionRequestModal({ onClose, onSuccess }: CreateMissionR
     setLoading(true);
     setError(null);
 
-    const finalBudget = budgetAmount.trim() ? `${budgetAmount.trim()} ${budgetUnit}` : null;
+    const finalBudget = budgetAmount.trim() ? `${budgetAmount.trim()}€ ${budgetUnit}` : null;
 
     const { error: insertErr } = await supabase.from('mission_requests').insert({
       created_by: user.id,
@@ -99,19 +100,17 @@ export function CreateMissionRequestModal({ onClose, onSuccess }: CreateMissionR
                 Budget proposé <span className="text-neutral-400 font-normal">(optionnel)</span>
               </label>
               <div className="flex gap-2">
-                <input
+                <PriceInput
                   id="budgetAmount"
-                  type="text"
                   value={budgetAmount}
-                  onChange={(e) => setBudgetAmount(e.target.value)}
-                  placeholder="Ex: 50€, Entre 20€ et 40€..."
-                  className="input flex-1"
-                  maxLength={40}
+                  onChange={setBudgetAmount}
+                  placeholder="Ex: 50, entre 20 et 40…"
+                  className="flex-1"
                 />
                 <select
                   value={budgetUnit}
                   onChange={(e) => setBudgetUnit(e.target.value)}
-                  className="input shrink-0 bg-neutral-50"
+                  className="input w-auto shrink-0 bg-neutral-50"
                 >
                   <option value="/ heure">/ heure</option>
                   <option value="/ jour">/ jour</option>

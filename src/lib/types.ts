@@ -85,6 +85,7 @@ export interface Connection {
   user_b: string;
   service_label: string | null;
   status: ConnectionStatus;
+  mission_request_id: string | null;
   created_at: string;
   updated_at: string;
 }

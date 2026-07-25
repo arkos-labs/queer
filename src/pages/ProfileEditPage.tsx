@@ -7,17 +7,15 @@ import { cn } from '@/lib/utils';
 import { FALLBACK_CATEGORIES, FALLBACK_SUBCATEGORIES } from '@/lib/taxonomy';
 import { ArrowLeft, Save, X, Plus, CheckCircle2, Upload } from 'lucide-react';
 import { Avatar } from '@/components/Avatar';
+import { PriceInput } from '@/components/PriceInput';
 
 const RATE_UNITS = ['/ heure', '/ jour', '/ prestation', '/ mois'];
 
-const appendUnit = (current: string, unit: string) => {
-  const withoutUnit = RATE_UNITS.reduce(
-    (acc, u) => (acc.endsWith(u) ? acc.slice(0, acc.length - u.length).trimEnd() : acc),
-    current.trim(),
-  );
-  if (!withoutUnit) return withoutUnit;
-  return `${withoutUnit} ${unit}`;
-};
+// PriceInput already renders a fixed € sign, so when splitting a stored
+// "30€ / heure"-style string back into amount + unit for editing, strip
+// any trailing € the amount portion might still carry (old data, or a
+// value with no unit at all) — otherwise saving again would double it up.
+const stripEuro = (s: string) => s.replace(/€\s*$/, '').trim();
 
 export function ProfileEditPage() {
   const { user, profile, refreshProfile } = useAuth();
@@ -103,18 +101,18 @@ export function ProfileEditPage() {
           const unitMatch = RATE_UNITS.find(u => profile.indicative_rates!.endsWith(u));
           if (unitMatch) {
             setRateUnit(unitMatch);
-            setRateAmount(profile.indicative_rates.slice(0, -unitMatch.length).trim());
+            setRateAmount(stripEuro(profile.indicative_rates.slice(0, -unitMatch.length)));
           } else {
-            setRateAmount(profile.indicative_rates);
+            setRateAmount(stripEuro(profile.indicative_rates));
           }
         }
         if (profile.budget_indicatif) {
           const unitMatch = RATE_UNITS.find(u => profile.budget_indicatif!.endsWith(u));
           if (unitMatch) {
             setBudgetUnit(unitMatch);
-            setBudgetAmount(profile.budget_indicatif.slice(0, -unitMatch.length).trim());
+            setBudgetAmount(stripEuro(profile.budget_indicatif.slice(0, -unitMatch.length)));
           } else {
-            setBudgetAmount(profile.budget_indicatif);
+            setBudgetAmount(stripEuro(profile.budget_indicatif));
           }
         }
       }
@@ -195,8 +193,8 @@ export function ProfileEditPage() {
       pronouns: form.pronouns || null,
       account_type: form.account_type,
       intervention_zone: form.intervention_zone || null,
-      indicative_rates: rateAmount.trim() ? `${rateAmount.trim()} ${rateUnit}` : null,
-      budget_indicatif: budgetAmount.trim() ? `${budgetAmount.trim()} ${budgetUnit}` : null,
+      indicative_rates: rateAmount.trim() ? `${rateAmount.trim()}€ ${rateUnit}` : null,
+      budget_indicatif: budgetAmount.trim() ? `${budgetAmount.trim()}€ ${budgetUnit}` : null,
       skills: form.skills,
       needs: form.needs,
       charte_accepted: profile?.charte_accepted ?? true,
@@ -401,16 +399,16 @@ export function ProfileEditPage() {
             <div className="mt-4">
               <label className="label">Tarifs indicatifs</label>
               <div className="flex gap-2 mt-1.5">
-                <input
+                <PriceInput
                   value={rateAmount}
-                  onChange={(e) => setRateAmount(e.target.value)}
-                  className="input flex-1"
-                  placeholder="Ex. 30€, ou 50€"
+                  onChange={setRateAmount}
+                  placeholder="Ex. 30, ou 50"
+                  className="flex-1"
                 />
                 <select
                   value={rateUnit}
                   onChange={(e) => setRateUnit(e.target.value)}
-                  className="input shrink-0 bg-neutral-50"
+                  className="input w-auto shrink-0 bg-neutral-50"
                 >
                   <option value="/ heure">/ heure</option>
                   <option value="/ jour">/ jour</option>
@@ -455,16 +453,16 @@ export function ProfileEditPage() {
             <div className="mt-4">
               <label className="label">Budget indicatif</label>
               <div className="flex gap-2 mt-1.5">
-                <input
+                <PriceInput
                   value={budgetAmount}
-                  onChange={(e) => setBudgetAmount(e.target.value)}
-                  className="input flex-1"
-                  placeholder="Ex. 40€"
+                  onChange={setBudgetAmount}
+                  placeholder="Ex. 40"
+                  className="flex-1"
                 />
                 <select
                   value={budgetUnit}
                   onChange={(e) => setBudgetUnit(e.target.value)}
-                  className="input shrink-0 bg-neutral-50"
+                  className="input w-auto shrink-0 bg-neutral-50"
                 >
                   <option value="/ heure">/ heure</option>
                   <option value="/ jour">/ jour</option>
