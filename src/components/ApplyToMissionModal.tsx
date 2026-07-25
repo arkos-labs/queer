@@ -20,6 +20,8 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
   const { user, profile } = useAuth();
   const { navigate } = useRouter();
   const [pitch, setPitch] = useState('');
+  const [rateAmount, setRateAmount] = useState('');
+  const [rateUnit, setRateUnit] = useState('/ prestation');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -73,10 +75,12 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
       await supabase.from('connections').update({ mission_request_id: mission.id }).eq('id', connId);
     }
 
+    const finalRate = rateAmount.trim() ? `\n\nTarif proposé : ${rateAmount.trim()} ${rateUnit}` : '';
+    
     const { error: msgErr } = await supabase.from('messages').insert({
       connection_id: connId,
       sender_id: user.id,
-      body: `Candidature pour « ${mission.title} » : ${pitch.trim()}`,
+      body: `Candidature pour « ${mission.title} » : \n${pitch.trim()}${finalRate}`,
     });
     setLoading(false);
     if (msgErr) {
@@ -101,20 +105,43 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
           </button>
         </div>
         <p className="mt-2 text-sm text-neutral-500">
-          Présentez-vous en quelques mots pour « {mission.title} » : votre expérience, votre disponibilité, ce qui
-          vous démarque. Ce message part directement dans la messagerie, à l'auteur·e de l'annonce.
+          Présentez-vous pour « {mission.title} » : votre expérience, vos questions. Ce message part directement dans la messagerie.
         </p>
-        <div className="mt-4">
-          <label htmlFor="apply-pitch" className="sr-only">Votre message</label>
-          <textarea
-            id="apply-pitch"
-            value={pitch}
-            onChange={(e) => setPitch(e.target.value)}
-            rows={5}
-            className="input"
-            placeholder="Ex. Bonjour, j'ai déjà monté plusieurs meubles IKEA, je suis disponible ce weekend…"
-            autoFocus
-          />
+        <div className="mt-4 space-y-4">
+          <div>
+            <label htmlFor="apply-pitch" className="label">Votre message</label>
+            <textarea
+              id="apply-pitch"
+              value={pitch}
+              onChange={(e) => setPitch(e.target.value)}
+              rows={4}
+              className="input mt-1"
+              placeholder="Ex. Bonjour, je suis disponible ce weekend, est-ce que ça vous conviendrait ?"
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="label">Proposer un tarif (optionnel)</label>
+            <div className="flex gap-2 mt-1">
+              <input
+                value={rateAmount}
+                onChange={(e) => setRateAmount(e.target.value)}
+                className="input flex-1"
+                placeholder="Ex. 50€"
+              />
+              <select
+                value={rateUnit}
+                onChange={(e) => setRateUnit(e.target.value)}
+                className="input shrink-0 bg-neutral-50"
+              >
+                <option value="/ heure">/ heure</option>
+                <option value="/ jour">/ jour</option>
+                <option value="/ mois">/ mois</option>
+                <option value="/ prestation">/ prestation</option>
+              </select>
+            </div>
+            <p className="mt-1.5 text-xs text-neutral-400">Ce tarif sera inclus dans votre message à l'auteur·e.</p>
+          </div>
         </div>
         {error && (
           <div className="mt-4 flex items-start gap-2 rounded-xl bg-warning-50 p-3 text-sm text-warning-800">

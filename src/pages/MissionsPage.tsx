@@ -5,6 +5,7 @@ import { useRouter } from '@/lib/router';
 import { Avatar } from '@/components/Avatar';
 import { CreateMissionRequestModal } from '@/components/CreateMissionRequestModal';
 import { ApplyToMissionModal } from '@/components/ApplyToMissionModal';
+import { MissionDetailModal } from '@/components/MissionDetailModal';
 import { timeAgo } from '@/lib/utils';
 import { ArrowLeft, Megaphone, PlusCircle, Send, Clock } from 'lucide-react';
 
@@ -32,6 +33,7 @@ export function MissionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [detailTarget, setDetailTarget] = useState<MissionRequest | null>(null);
   const [applyTarget, setApplyTarget] = useState<MissionRequest | null>(null);
 
   const fetchRequests = async () => {
@@ -111,7 +113,11 @@ export function MissionsPage() {
         ) : (
           <div className="space-y-3">
             {requests.map((req) => (
-              <div key={req.id} className="card p-4">
+              <div 
+                key={req.id} 
+                onClick={() => setDetailTarget(req)}
+                className="card p-4 cursor-pointer hover:border-primary-300 hover:shadow-md transition-all group"
+              >
                 <div className="flex items-start justify-between gap-2">
                   <button
                     onClick={() => navigate(`/profil/${req.created_by}`)}
@@ -135,7 +141,7 @@ export function MissionsPage() {
                 <p className="mt-1 text-sm text-neutral-600 whitespace-pre-line">{req.description}</p>
 
                 {user && user.id !== req.created_by ? (
-                  <button onClick={() => setApplyTarget(req)} className="btn-primary mt-4 w-full">
+                  <button onClick={(e) => { e.stopPropagation(); setApplyTarget(req); }} className="btn-primary mt-4 w-full group-hover:scale-[1.01] transition-transform">
                     <Send size={15} /> Postuler
                   </button>
                 ) : user && user.id === req.created_by ? (
@@ -148,6 +154,16 @@ export function MissionsPage() {
       </div>
 
       {showModal && <CreateMissionRequestModal onClose={() => setShowModal(false)} onSuccess={handleSuccess} />}
+      {detailTarget && (
+        <MissionDetailModal 
+          mission={detailTarget} 
+          onClose={() => setDetailTarget(null)}
+          onApply={() => {
+            setApplyTarget(detailTarget);
+            setDetailTarget(null);
+          }}
+        />
+      )}
       {applyTarget && (
         <ApplyToMissionModal
           mission={{ id: applyTarget.id, title: applyTarget.title, created_by: applyTarget.created_by }}
