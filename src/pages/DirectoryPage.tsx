@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
-import type { Category, Subcategory, Profile } from '@/lib/types';
+import type { Category, Subcategory, Profile, Place } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
 import { avg } from '@/lib/utils';
 import { FALLBACK_CATEGORIES, FALLBACK_SUBCATEGORIES } from '@/lib/taxonomy';
+import { AddPlaceModal } from '@/components/AddPlaceModal';
 import {
   Search,
   X,
@@ -21,6 +22,8 @@ import {
   ShieldCheck,
   Briefcase,
   Building2,
+  LifeBuoy,
+  Plus,
 } from 'lucide-react';
 
 const CATEGORY_ICONS: Record<string, typeof Home> = {
@@ -57,6 +60,10 @@ export function DirectoryPage() {
   const [profiles, setProfiles] = useState<ProfileWithStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [places, setPlaces] = useState<Place[]>([]);
+  const [placesLoading, setPlacesLoading] = useState(false);
+  const [addPlaceOpen, setAddPlaceOpen] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -160,6 +167,40 @@ export function DirectoryPage() {
   const subsForActiveCat = subcategories.filter((s) => s.category_id === activeCategory);
   const subcategoryById = useMemo(() => new Map(subcategories.map((s) => [s.id, s])), [subcategories]);
 
+  const isShoppingTheme = activeCatDef?.slug === 'shopping-bonnes-adresses';
+
+  const loadPlaces = async () => {
+    setPlacesLoading(true);
+    const { data } = await supabase
+      .from('places')
+      .select('*, subcategory:subcategories(id, label)')
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false });
+    setPlaces((data ?? []) as Place[]);
+    setPlacesLoading(false);
+  };
+
+  useEffect(() => {
+    if (isShoppingTheme) loadPlaces();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isShoppingTheme]);
+
+  const filteredPlaces = useMemo(() => {
+    if (!isShoppingTheme) return [];
+    let list = places;
+    if (activeSub) list = list.filter((p) => p.subcategory_id === activeSub);
+    if (search.trim()) {
+      const q = search.toLowerCase().trim();
+      list = list.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          (p.city ?? '').toLowerCase().includes(q) ||
+          (p.description ?? '').toLowerCase().includes(q),
+      );
+    }
+    return list;
+  }, [places, isShoppingTheme, activeSub, search]);
+
   const filtered = useMemo(() => {
     let list = profiles.filter((p) => p.id !== myProfile?.id);
 
@@ -187,79 +228,66 @@ export function DirectoryPage() {
     return list;
   }, [profiles, activeCategory, activeSub, search, subcategories, subcategoryById, myProfile]);
 
+  useEffect(() => {
+    const handleSearch = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      setSearch(customEvent.detail);
+    };
+    window.addEventListener('directory-search', handleSearch);
+    return () => window.removeEventListener('directory-search', handleSearch);
+  }, []);
+
   if (!user) return null;
 
   return (
     <div className="min-h-full bg-white animate-fade-in">
-      {/* Sticky header */}
-      <div className="sticky top-20 z-40 bg-white border-b border-neutral-100 shadow-sm">
-        <div className="px-5 pt-0 pb-3">
-          <div className="relative">
-            <Search size={20} strokeWidth={2.5} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-900" />
-            <label htmlFor="directory-search" className="sr-only">
-              Rechercher un membre, une compétence, une ville
-            </label>
-            <input
-              id="directory-search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Montage cuisine, ménage, pet-sitting…"
-              className="w-full rounded-full border border-neutral-200 bg-neutral-50 py-3.5 pl-12 pr-12 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-neutral-900 focus:bg-white focus:ring-1 focus:ring-neutral-900 transition-all shadow-soft"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch('')}
-                aria-label="Effacer la recherche"
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-900"
-              >
-                <X size={18} />
-              </button>
-            )}
+
+      <section className="bg-white border-b border-slate-100 py-4 shadow-sm overflow-x-auto no-scrollbar flex items-center px-4 space-x-6">
+        <button
+          onClick={() => {
+            setActiveCategory(null);
+            setActiveSub(null);
+            setShowSubBar(false);
+          }}
+          className={`flex flex-col items-center space-y-2 min-w-fit cursor-pointer ${
+            !activeCategory ? 'border-b-2 border-slate-900 pb-1' : 'opacity-60 hover:opacity-100 transition-opacity'
+          }`}
+        >
+          <div className={`p-2 rounded-xl ${!activeCategory ? 'bg-slate-100' : ''}`}>
+            <Sparkles size={24} className={!activeCategory ? 'text-slate-900' : ''} />
           </div>
-        </div>
+          <span className={`text-xs whitespace-nowrap ${!activeCategory ? 'font-semibold' : 'font-medium'}`}>Tout</span>
+        </button>
 
-        <div className="flex overflow-x-auto gap-6 px-6 pb-2 snap-x no-scrollbar scroll-smooth">
-          <button
-            onClick={() => {
-              setActiveCategory(null);
-              setActiveSub(null);
-              setShowSubBar(false);
-            }}
-            className={`flex flex-col items-center gap-2 min-w-fit snap-start pb-2 border-b-2 transition-colors ${
-              !activeCategory ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900 hover:border-neutral-300'
-            }`}
-          >
-            <Sparkles size={24} strokeWidth={!activeCategory ? 2.5 : 2} />
-            <span className="text-[11px] font-semibold tracking-wide whitespace-nowrap">Tout</span>
-          </button>
-
-          {categories.map((c) => {
-            const Icon = CATEGORY_ICONS[c.icon ?? ''] ?? LayoutGrid;
-            const isActive = activeCategory === c.id;
-            return (
-              <button
-                key={c.id}
-                onClick={() => {
-                  if (isActive) {
-                    setActiveCategory(null);
-                    setActiveSub(null);
-                    setShowSubBar(false);
-                  } else {
-                    setActiveCategory(c.id);
-                    setActiveSub(null);
-                    setShowSubBar(true);
-                  }
-                }}
-                className={`flex flex-col items-center gap-2 min-w-fit snap-start pb-2 border-b-2 transition-colors ${
-                  isActive ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-500 hover:text-neutral-900 hover:border-neutral-300'
-                }`}
-              >
-                <Icon size={24} strokeWidth={isActive ? 2.5 : 2} className="transition-transform active:scale-95" />
-                <span className="text-[11px] font-semibold tracking-wide whitespace-nowrap">{c.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        {categories.map((c) => {
+          const Icon = CATEGORY_ICONS[c.icon ?? ''] ?? LayoutGrid;
+          const isActive = activeCategory === c.id;
+          return (
+            <button
+              key={c.id}
+              onClick={() => {
+                if (isActive) {
+                  setActiveCategory(null);
+                  setActiveSub(null);
+                  setShowSubBar(false);
+                } else {
+                  setActiveCategory(c.id);
+                  setActiveSub(null);
+                  setShowSubBar(true);
+                }
+              }}
+              className={`flex flex-col items-center space-y-2 min-w-fit cursor-pointer ${
+                isActive ? 'border-b-2 border-slate-900 pb-1' : 'opacity-60 hover:opacity-100 transition-opacity'
+              }`}
+            >
+              <div className={`p-2 rounded-xl ${isActive ? 'bg-slate-100' : ''}`}>
+                <Icon size={24} className={isActive ? 'text-slate-900' : ''} />
+              </div>
+              <span className={`text-xs whitespace-nowrap ${isActive ? 'font-semibold' : 'font-medium'}`}>{c.label}</span>
+            </button>
+          );
+        })}
+      </section>
 
         {activeCategory && activeCatDef && subsForActiveCat.length > 0 && (
           <div className="border-t border-neutral-100 bg-neutral-50 px-5 py-2.5 flex gap-2 overflow-x-auto no-scrollbar scroll-smooth">
@@ -287,8 +315,6 @@ export function DirectoryPage() {
             })}
           </div>
         )}
-      </div>
-
       {/* Results count */}
       <div className="px-6 pt-5 pb-2 flex items-center justify-between">
         <p className="text-sm text-neutral-500">
@@ -305,7 +331,56 @@ export function DirectoryPage() {
             </>
           )}
         </p>
+        {isShoppingTheme && (
+          <button onClick={() => setAddPlaceOpen(true)} className="btn-secondary btn-sm shrink-0">
+            <Plus size={14} /> Proposer un lieu
+          </button>
+        )}
       </div>
+
+      {isShoppingTheme && (
+        <div className="px-6 pb-2">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-400">
+            Lieux recommandés par la communauté
+          </h2>
+          {placesLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-28 rounded-2xl bg-neutral-100 animate-pulse" />)}
+            </div>
+          ) : filteredPlaces.length === 0 ? (
+            <p className="mb-2 text-sm text-neutral-400">Aucun lieu recommandé pour le moment. Soyez le premier à en proposer un !</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredPlaces.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => navigate(`/lieux/${p.id}`)}
+                  className="group flex gap-3 rounded-2xl border border-neutral-100 p-3 text-left hover:border-neutral-300 transition-colors"
+                >
+                  <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-neutral-100">
+                    {p.photo_url ? (
+                      <img src={p.photo_url} alt={p.name} className="h-full w-full object-cover" loading="lazy" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-neutral-300">
+                        <MapPin size={20} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold text-neutral-900 text-sm">{p.name}</p>
+                    {p.subcategory?.label && <p className="text-xs text-neutral-400">{p.subcategory.label}</p>}
+                    {p.city && (
+                      <p className="mt-1 flex items-center gap-1 text-xs text-neutral-500">
+                        <MapPin size={11} /> {p.city}
+                      </p>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {error && (
         <div className="mx-6 mb-4 rounded-xl bg-warning-50 p-3 text-sm text-warning-800">
@@ -315,15 +390,27 @@ export function DirectoryPage() {
         </div>
       )}
 
-      {/* Feed */}
-      <div className="px-6 pb-24 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
+      {activeCatDef?.slug === 'communaute-vie-lgbtq' && (
+        <button
+          onClick={() => navigate('/ressources')}
+          className="mx-6 mb-4 flex w-[calc(100%-3rem)] items-center gap-3 rounded-2xl bg-primary-50 p-4 text-left hover:bg-primary-100 transition-colors"
+        >
+          <LifeBuoy size={20} className="shrink-0 text-primary-600" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-primary-800">Numéros utiles &amp; guides</span>
+            <span className="block text-xs text-primary-600">Associations, lignes d'écoute, ressources pratiques.</span>
+          </span>
+        </button>
+      )}
+
+      <main className="p-3 pb-24 grid grid-cols-3 gap-3" data-purpose="provider-directory">
         {loading ? (
-          Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="flex flex-col gap-3">
-              <div className="aspect-square rounded-2xl bg-neutral-100 animate-pulse" />
-              <div className="h-3 w-2/3 rounded bg-neutral-100 animate-pulse" />
-              <div className="h-3 w-1/3 rounded bg-neutral-100 animate-pulse" />
-            </div>
+          Array.from({ length: 9 }).map((_, i) => (
+            <article key={i} className="bg-white rounded-[24px] p-3 shadow-sm border border-slate-100 flex flex-col items-center gap-2">
+              <div className="w-14 h-14 rounded-full bg-neutral-100 animate-pulse" />
+              <div className="h-2.5 w-3/4 rounded bg-neutral-100 animate-pulse mt-1" />
+              <div className="h-2 w-1/2 rounded bg-neutral-100 animate-pulse" />
+            </article>
           ))
         ) : filtered.length === 0 ? (
           <div className="col-span-full py-20 text-center">
@@ -335,76 +422,73 @@ export function DirectoryPage() {
           </div>
         ) : (
           filtered.map((p) => {
-            const meta = typeMeta[p.account_type];
             return (
-              <button
+              <article
                 key={p.id}
-                className="group flex flex-col gap-3 text-left"
                 onClick={() => navigate(`/profil/${p.id}`)}
+                className="bg-white rounded-[24px] p-3 shadow-sm border border-slate-100 flex flex-col items-center text-center relative group hover:shadow-md transition-all cursor-pointer min-h-[220px]"
               >
-                <div className="relative aspect-square overflow-hidden rounded-2xl bg-neutral-100">
-                  {p.photo_url ? (
-                    <img
-                      src={p.photo_url}
-                      alt={p.display_name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-neutral-100">
-                      <Avatar name={p.display_name} size={72} />
-                    </div>
-                  )}
-
-                  {p.verification_status === 'verified' && (
-                    <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-md shadow-sm flex items-center gap-1">
-                      <ShieldCheck size={10} /> Vérifié
-                    </div>
-                  )}
-
-                  {p.account_type !== 'particulier' && (
-                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-neutral-900 text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
-                      <meta.icon size={10} /> {meta.label}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-col">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-semibold text-neutral-900 text-[15px] truncate pr-2">{p.display_name}</h3>
-                    {p.reviewCount > 0 && (
-                      <div className="flex items-center gap-1 text-[14px] flex-shrink-0">
-                        <Star size={12} className="fill-neutral-900 text-neutral-900" />
-                        <span className="font-semibold">{p.avgRating.toFixed(1)}</span>
-                        <span className="text-neutral-400 text-xs">({p.reviewCount})</span>
-                      </div>
+                <div className="relative mb-3 mt-1">
+                  <div className="w-[60px] h-[60px] rounded-full bg-[#10b981] text-white flex items-center justify-center text-lg font-bold">
+                    {p.photo_url ? (
+                      <img src={p.photo_url} alt="" className="w-full h-full object-cover rounded-full" loading="lazy" />
+                    ) : (
+                      p.display_name.substring(0, 2).toUpperCase()
                     )}
                   </div>
-                  {p.city && (
-                    <p className="text-neutral-500 text-[15px] truncate flex items-center gap-1">
-                      <MapPin size={12} /> {p.city}
-                    </p>
-                  )}
-
-                  {p.skills.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {p.skills.slice(0, 3).map((s) => (
-                        <span key={s} className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-600">
-                          {s}
-                        </span>
-                      ))}
+                  
+                  {p.verification_status === 'verified' && (
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-1.5 py-0.5 rounded-full shadow-sm border border-emerald-100 flex items-center z-10 whitespace-nowrap">
+                      <span className="text-[7px] font-bold text-[#10b981] uppercase tracking-wider">
+                        VÉRIFIÉ
+                      </span>
                     </div>
                   )}
-
-                  {p.indicative_rates && (
-                    <div className="mt-1.5 text-[15px] font-semibold text-neutral-900">{p.indicative_rates}</div>
+                </div>
+                
+                <h3 className="font-bold text-slate-900 text-[11px] line-clamp-1 w-full px-0.5">{p.display_name}</h3>
+                
+                <div className="flex items-center gap-1 text-[10px] font-bold text-slate-900 mt-0.5">
+                  <Star size={10} className="text-yellow-400 fill-yellow-400" />
+                  {p.avgRating > 0 ? (
+                    <span>{p.avgRating.toFixed(1)} <span className="font-normal text-slate-400">({p.reviewCount})</span></span>
+                  ) : (
+                    <span className="font-normal text-slate-400">-</span>
                   )}
                 </div>
-              </button>
+                
+                <div className="flex items-center text-slate-500 text-[9px] mt-0.5 mb-2 truncate max-w-full px-0.5 gap-0.5">
+                  <MapPin size={10} /> {p.city || 'Partout'}
+                </div>
+                
+                <div className="flex flex-col gap-1.5 w-full items-center mt-1">
+                  {p.skills.slice(0, 2).map((s) => (
+                    <span key={s} className="bg-slate-50 text-[9px] px-2 py-0.5 rounded-full text-slate-600 border border-slate-100 truncate w-[90%]">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+
+                {p.indicative_rates && (
+                  <div className="mt-auto pt-2 w-full flex justify-center">
+                    <span className="bg-slate-50 text-[10px] font-bold text-slate-900 px-2.5 py-1 rounded-full border border-slate-100 truncate max-w-full">
+                      {p.indicative_rates}
+                    </span>
+                  </div>
+                )}
+              </article>
             );
           })
         )}
-      </div>
+      </main>
+
+      {addPlaceOpen && (
+        <AddPlaceModal
+          subcategories={subsForActiveCat}
+          onClose={() => setAddPlaceOpen(false)}
+          onSubmitted={loadPlaces}
+        />
+      )}
 
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }

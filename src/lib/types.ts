@@ -29,6 +29,9 @@ export interface Profile {
   verified_at: string | null;
   profile_status: ProfileStatus;
   is_admin: boolean;
+  stripe_account_id: string | null;
+  stripe_charges_enabled: boolean;
+  stripe_payouts_enabled: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -86,6 +89,21 @@ export interface Connection {
   updated_at: string;
 }
 
+export type ResourceType = 'numero_utile' | 'guide';
+
+export interface Resource {
+  id: string;
+  type: ResourceType;
+  slug: string;
+  title: string;
+  description: string;
+  content: string | null;
+  phone: string | null;
+  url: string | null;
+  hours: string | null;
+  sort_order: number;
+}
+
 export interface Message {
   id: string;
   connection_id: string;
@@ -94,6 +112,62 @@ export interface Message {
   created_at: string;
   read_at: string | null;
   sender?: Pick<Profile, 'id' | 'display_name' | 'photo_url'>;
+}
+
+export type ModerationStatus = 'pending' | 'approved' | 'rejected';
+
+export interface Place {
+  id: string;
+  submitted_by: string;
+  subcategory_id: string | null;
+  name: string;
+  description: string | null;
+  address: string | null;
+  city: string | null;
+  photo_url: string | null;
+  status: ModerationStatus;
+  flagged: boolean;
+  rejection_reason: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  submitter?: Pick<Profile, 'id' | 'display_name' | 'photo_url'>;
+  subcategory?: Pick<Subcategory, 'id' | 'label'>;
+}
+
+export interface PlaceReview {
+  id: string;
+  place_id: string;
+  author_id: string;
+  rating: number;
+  comment: string | null;
+  status: ModerationStatus;
+  flagged: boolean;
+  rejection_reason: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  author?: Pick<Profile, 'id' | 'display_name' | 'photo_url'>;
+  place?: Pick<Place, 'id' | 'name'>;
+}
+
+export type PaymentStatus = 'pending' | 'authorized' | 'captured' | 'canceled' | 'failed' | 'refunded';
+
+export interface Payment {
+  id: string;
+  connection_id: string;
+  payer_id: string;
+  payee_id: string;
+  description: string | null;
+  amount: number;
+  currency: string;
+  platform_fee_amount: number;
+  stripe_payment_intent_id: string | null;
+  status: PaymentStatus;
+  proposed_by: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Report {

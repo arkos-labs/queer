@@ -1,6 +1,7 @@
 import type { Profile, Badge as BadgeType } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
-import { ShieldCheck, ShieldQuestion } from 'lucide-react';
+import { ShieldCheck, Info, CheckCircle2, Handshake, Star, Clock, Heart } from 'lucide-react';
+import { ReactNode } from 'react';
 
 interface TrustPanelProps {
   profile: Profile;
@@ -10,27 +11,26 @@ interface TrustPanelProps {
 }
 
 function Row({
-  emoji,
+  icon,
   label,
   ok,
   detail,
+  color = 'bg-neutral-100 text-neutral-600',
 }: {
-  emoji: string;
+  icon: ReactNode;
   label: string;
   ok: boolean | null;
   detail: string;
+  color?: string;
 }) {
   return (
-    <div className="flex items-start gap-3 py-2.5">
-      <span className="mt-0.5 text-base leading-none">{emoji}</span>
+    <div className="flex items-start gap-3 py-3">
+      <span className={'flex h-9 w-9 shrink-0 items-center justify-center rounded-full ' + color}>
+        {icon}
+      </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-neutral-800">{label}</p>
-        <p
-          className={
-            'mt-0.5 text-xs ' +
-            (ok === true ? 'text-success-600' : ok === false ? 'text-neutral-400' : 'text-neutral-500')
-          }
-        >
+        <p className="text-[15px] font-bold text-neutral-900">{label}</p>
+        <p className="mt-0.5 text-[13px] text-neutral-500">
           {detail}
         </p>
       </div>
@@ -43,74 +43,78 @@ export function TrustPanel({ profile, badges, reviewCount, avgRating }: TrustPan
   const isVerified = profile.verification_status === 'verified';
 
   return (
-    <div className="card p-6 md:p-8">
-      <div className="flex items-center gap-2">
-        <ShieldCheck size={18} className="text-primary-600" />
-        <h3 className="font-display text-base font-semibold text-neutral-900">Confiance &amp; sécurité</h3>
+    <div className="card p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <ShieldCheck size={20} className="text-primary-700" />
+        <h3 className="font-display text-lg font-bold text-neutral-900">Confiance & sécurité</h3>
       </div>
 
-      <div className="mt-2 divide-y divide-neutral-100">
+      <div className="flex flex-col gap-2">
         <Row
-          emoji="✅"
-          label="Identité du professionnel vérifiée"
+          icon={<CheckCircle2 size={18} />}
+          color="bg-success-50 text-success-600"
+          label="Identité vérifiée"
           ok={isVerified ? true : profile.verification_status === 'rejected' ? false : null}
           detail={
             isVerified
-              ? 'Identité vérifiée par notre équipe.'
+              ? 'Identité vérifiée par notre équipe'
               : profile.verification_status === 'pending'
-                ? 'Vérification en cours.'
+                ? 'Vérification en cours'
                 : profile.verification_status === 'rejected'
-                  ? 'Vérification refusée.'
-                  : 'Pas encore vérifiée.'
+                  ? 'Vérification refusée'
+                  : 'Pas encore vérifiée'
           }
         />
 
         <Row
-          emoji="🏳️‍🌈"
-          label="Engagement à respecter la charte d'inclusion"
+          icon={<Handshake size={18} />}
+          color="bg-yellow-50 text-yellow-600"
+          label="Charte d'inclusion"
           ok={profile.charte_accepted}
           detail={
             profile.charte_accepted
-              ? `Charte acceptée${profile.charte_accepted_at ? ' le ' + formatDate(profile.charte_accepted_at) : ''}.`
-              : 'Charte non acceptée.'
+              ? `Acceptée${profile.charte_accepted_at ? ' le ' + formatDate(profile.charte_accepted_at) : ''}`
+              : 'Non acceptée'
           }
         />
 
         <Row
-          emoji="⭐"
-          label="Notes et avis de la communauté"
+          icon={<Star size={18} />}
+          color="bg-success-50 text-success-600"
+          label="Notes de la communauté"
           ok={reviewCount > 0 ? true : null}
           detail={
             reviewCount > 0
-              ? `${avgRating.toFixed(1)} / 5 sur ${reviewCount} avis.`
-              : 'Aucun avis pour le moment.'
+              ? `${avgRating.toFixed(1)} / 5 sur ${reviewCount} avis`
+              : 'Aucun avis pour le moment'
           }
         />
 
         <Row
-          emoji="📅"
-          label="Dernière vérification du profil"
+          icon={<Clock size={18} />}
+          color="bg-blue-50 text-blue-600"
+          label="Dernière vérification"
           ok={!!profile.verified_at}
-          detail={profile.verified_at ? formatDate(profile.verified_at) : 'Jamais vérifié.'}
+          detail={profile.verified_at ? formatDate(profile.verified_at) : 'Jamais vérifiée'}
         />
 
-        <Row
-          emoji="🛡️"
-          label='Badge "Safe" communautaire'
-          ok={hasSafeBadge}
-          detail={
-            hasSafeBadge
-              ? 'Attribué automatiquement après plusieurs retours positifs.'
-              : 'Attribué automatiquement à partir de 3 avis avec une moyenne ≥ 4★.'
-          }
-        />
+        {hasSafeBadge && (
+          <Row
+            icon={<Heart size={18} />}
+            color="bg-rose-50 text-rose-600"
+            label='Badge "Safe" communautaire'
+            ok={true}
+            detail="Attribué après plusieurs retours positifs"
+          />
+        )}
       </div>
 
-      <p className="mt-3 flex items-start gap-1.5 text-xs text-neutral-400">
-        <ShieldQuestion size={13} className="mt-0.5 shrink-0" />
-        Ces indicateurs sont des repères communautaires et ne remplacent pas une vérification professionnelle
-        officielle.
-      </p>
+      <div className="mt-5 rounded-xl bg-indigo-50/80 p-4 text-[13px] text-indigo-800 flex items-start gap-2.5">
+        <Info size={16} className="shrink-0 mt-0.5" />
+        <p className="leading-snug">
+          Ces indicateurs sont des repères communautaires et ne remplacent pas une vérification professionnelle officielle.
+        </p>
+      </div>
     </div>
   );
 }

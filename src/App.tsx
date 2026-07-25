@@ -12,6 +12,8 @@ import { SettingsPage } from '@/pages/SettingsPage';
 import { AdminPage } from '@/pages/AdminPage';
 import { MessagesPage } from '@/pages/MessagesPage';
 import { MessageThreadPage } from '@/pages/MessageThreadPage';
+import { ResourcesPage } from '@/pages/ResourcesPage';
+import { PlaceDetailPage } from '@/pages/PlaceDetailPage';
 import { LegalPage, type LegalSlug } from '@/pages/LegalPage';
 import { CookieBanner } from '@/components/CookieBanner';
 
@@ -32,7 +34,7 @@ function Routes() {
   }
 
   // Protect authenticated routes
-  const protectedRoutes = ['directory', 'profile', 'my-profile', 'profile-edit', 'settings', 'admin', 'messages', 'message-thread'];
+  const protectedRoutes = ['directory', 'profile', 'my-profile', 'profile-edit', 'settings', 'admin', 'messages', 'message-thread', 'place-detail'];
   if (protectedRoutes.includes(name) && !user) {
     navigate('/connexion');
     return null;
@@ -69,6 +71,10 @@ function Routes() {
       return <MessagesPage />;
     case 'message-thread':
       return <MessageThreadPage id={params.id} />;
+    case 'resources':
+      return <ResourcesPage />;
+    case 'place-detail':
+      return <PlaceDetailPage id={params.id} />;
     case 'legal':
       return <LegalPage slug={params.slug as LegalSlug} />;
     default:

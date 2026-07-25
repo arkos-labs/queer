@@ -109,6 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           verified_at: null,
           profile_status: 'active',
           is_admin: true,
+          stripe_account_id: null,
+          stripe_charges_enabled: false,
+          stripe_payouts_enabled: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };

@@ -23,7 +23,7 @@ export function Avatar({
 }: {
   name: string;
   src?: string | null;
-  size?: number;
+  size?: number | string;
   className?: string;
 }) {
   const initials = name
@@ -35,26 +35,30 @@ export function Avatar({
     .toUpperCase();
   const grad = palette[hashIndex(name, palette.length)];
 
+  const isFull = size === 'full';
+  const width = isFull ? '100%' : size;
+  const height = isFull ? '100%' : size;
+
   if (src) {
     return (
       <img
         src={src}
         alt={name}
-        style={{ width: size, height: size }}
+        style={{ width, height }}
         className={cn('rounded-full object-cover ring-2 ring-white shadow-soft', className)}
       />
     );
   }
   return (
     <div
-      style={{ width: size, height: size }}
+      style={{ width, height }}
       className={cn(
         'flex items-center justify-center rounded-full bg-gradient-to-br text-white ring-2 ring-white shadow-soft',
         grad,
         className,
       )}
     >
-      {initials || <User size={size * 0.5} />}
+      {initials || <User size={isFull ? '50%' : (typeof size === 'number' ? size * 0.5 : 24)} />}
     </div>
   );
 }

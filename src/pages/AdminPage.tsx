@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import type { Profile, Report, Category } from '@/lib/types';
+import type { Profile, Report, Category, Place, PlaceReview } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
+import { StarRating } from '@/components/StarRating';
 import { cn, formatDate, timeAgo } from '@/lib/utils';
 import {
   Shield,
@@ -17,9 +18,11 @@ import {
   Trash2,
   Plus,
   X,
+  MapPin,
+  AlertTriangle,
 } from 'lucide-react';
 
-type Tab = 'profiles' | 'reports' | 'categories';
+type Tab = 'profiles' | 'reports' | 'categories' | 'places';
 
 export function AdminPage() {
   const { user, profile } = useAuth();
@@ -60,6 +63,7 @@ export function AdminPage() {
           <div className="mt-5 flex gap-1 overflow-x-auto">
             {([
               { id: 'profiles' as Tab, label: 'Profils', icon: Users },
+              { id: 'places' as Tab, label: 'Lieux', icon: MapPin },
               { id: 'reports' as Tab, label: 'Signalements', icon: Flag },
               { id: 'categories' as Tab, label: 'Catégories', icon: LayoutGrid },
             ]).map((t) => (
@@ -80,6 +84,7 @@ export function AdminPage() {
 
       <div className="container-app py-8">
         {tab === 'profiles' && <ProfilesTab />}
+        {tab === 'places' && <PlacesTab />}
         {tab === 'reports' && <ReportsTab />}
         {tab === 'categories' && <CategoriesTab />}
       </div>
@@ -192,6 +197,206 @@ function ProfilesTab() {
                 )}
                 {p.profile_status !== 'banned' && (
                   <button onClick={() => updateStatus(p.id, 'banned')} className="btn-ghost btn-sm text-error-600 hover:bg-error-50" title="Bannir" aria-label={`Bannir le profil de ${p.display_name}`}>
+                    <XCircle size={16} />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface PlaceWithJoins extends Omit<Place, 'submitter' | 'subcategory'> {
+  submitter?: Pick<Profile, 'display_name'>;
+  subcategory?: { label: string };
+}
+interface PlaceReviewWithJoins extends Omit<PlaceReview, 'author' | 'place'> {
+  author?: Pick<Profile, 'display_name'>;
+  place?: { name: string };
+}
+
+function PlacesTab() {
+  const { user } = useAuth();
+  const [subTab, setSubTab] = useState<'places' | 'reviews'>('places');
+  const [places, setPlaces] = useState<PlaceWithJoins[]>([]);
+  const [placeReviews, setPlaceReviews] = useState<PlaceReviewWithJoins[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      const [placesRes, reviewsRes] = await Promise.all([
+        supabase
+          .from('places')
+          .select('*, submitter:profiles!places_submitted_by_fkey(display_name), subcategory:subcategories(label)')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('place_reviews')
+          .select('*, author:profiles!place_reviews_author_id_fkey(display_name), place:places(name)')
+          .order('created_at', { ascending: false }),
+      ]);
+      if (!cancelled) {
+        setPlaces((placesRes.data ?? []) as PlaceWithJoins[]);
+        setPlaceReviews((reviewsRes.data ?? []) as PlaceReviewWithJoins[]);
+        setLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  const decidePlace = async (p: PlaceWithJoins, status: 'approved' | 'rejected') => {
+    let rejection_reason: string | null = null;
+    if (status === 'rejected') {
+      rejection_reason = window.prompt('Motif du rejet (facultatif) :', p.rejection_reason ?? '') ?? '';
+      if (rejection_reason === '') rejection_reason = null;
+    }
+    const patch = { status, reviewed_by: user?.id ?? null, reviewed_at: new Date().toISOString(), rejection_reason };
+    const { error } = await supabase.from('places').update(patch).eq('id', p.id);
+    if (!error) setPlaces((prev) => prev.map((x) => (x.id === p.id ? { ...x, ...patch } : x)));
+  };
+
+  const decideReview = async (r: PlaceReviewWithJoins, status: 'approved' | 'rejected') => {
+    let rejection_reason: string | null = null;
+    if (status === 'rejected') {
+      rejection_reason = window.prompt('Motif du rejet (facultatif) :', r.rejection_reason ?? '') ?? '';
+      if (rejection_reason === '') rejection_reason = null;
+    }
+    const patch = { status, reviewed_by: user?.id ?? null, reviewed_at: new Date().toISOString(), rejection_reason };
+    const { error } = await supabase.from('place_reviews').update(patch).eq('id', r.id);
+    if (!error) setPlaceReviews((prev) => prev.map((x) => (x.id === r.id ? { ...x, ...patch } : x)));
+  };
+
+  const filteredPlaces = filter === 'all' ? places : places.filter((p) => p.status === filter);
+  const filteredReviews = filter === 'all' ? placeReviews : placeReviews.filter((r) => r.status === filter);
+
+  const statusPill = (status: string) => (
+    <span className={cn(
+      'rounded-full px-2.5 py-1 text-xs font-medium',
+      status === 'approved' && 'bg-success-100 text-success-700',
+      status === 'pending' && 'bg-warning-100 text-warning-700',
+      status === 'rejected' && 'bg-error-100 text-error-700',
+    )}>
+      {status === 'approved' ? 'Approuvé' : status === 'pending' ? 'En attente' : 'Rejeté'}
+    </span>
+  );
+
+  return (
+    <div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex gap-1">
+          {(['places', 'reviews'] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setSubTab(t)}
+              className={cn(
+                'rounded-full px-4 py-1.5 text-sm font-medium transition',
+                subTab === t ? 'bg-primary-600 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200',
+              )}
+            >
+              {t === 'places' ? `Lieux (${places.length})` : `Avis sur les lieux (${placeReviews.length})`}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          {(['all', 'pending', 'approved', 'rejected'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={cn(
+                'rounded-full px-3.5 py-1.5 text-xs font-medium transition',
+                filter === f ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200',
+              )}
+            >
+              {f === 'all' ? 'Tous' : f === 'pending' ? 'En attente' : f === 'approved' ? 'Approuvés' : 'Rejetés'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => <div key={i} className="card h-24 animate-pulse bg-neutral-100" />)}
+        </div>
+      ) : subTab === 'places' ? (
+        filteredPlaces.length === 0 ? (
+          <div className="card p-10 text-center text-sm text-neutral-500">Aucun lieu dans cette catégorie.</div>
+        ) : (
+          <div className="space-y-3">
+            {filteredPlaces.map((p) => (
+              <div key={p.id} className="card flex items-start gap-4 p-4">
+                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-neutral-100">
+                  {p.photo_url ? (
+                    <img src={p.photo_url} alt={p.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-neutral-300"><MapPin size={20} /></div>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="truncate font-medium text-neutral-900">{p.name}</p>
+                    {p.flagged && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-error-50 px-2 py-0.5 text-[11px] font-medium text-error-700" title="Signalé par le filtre automatique">
+                        <AlertTriangle size={10} /> Filtré
+                      </span>
+                    )}
+                  </div>
+                  <p className="truncate text-xs text-neutral-500">
+                    {p.subcategory?.label ?? '—'} · {[p.address, p.city].filter(Boolean).join(', ') || '—'} · proposé par {p.submitter?.display_name ?? '—'}
+                  </p>
+                  {p.rejection_reason && <p className="mt-1 text-xs text-neutral-400 italic">Motif : {p.rejection_reason}</p>}
+                </div>
+                {statusPill(p.status)}
+                <div className="flex gap-1">
+                  {p.status !== 'approved' && (
+                    <button onClick={() => decidePlace(p, 'approved')} className="btn-ghost btn-sm text-success-600 hover:bg-success-50" title="Approuver" aria-label={`Approuver le lieu ${p.name}`}>
+                      <CheckCircle2 size={16} />
+                    </button>
+                  )}
+                  {p.status !== 'rejected' && (
+                    <button onClick={() => decidePlace(p, 'rejected')} className="btn-ghost btn-sm text-error-600 hover:bg-error-50" title="Rejeter" aria-label={`Rejeter le lieu ${p.name}`}>
+                      <XCircle size={16} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      ) : filteredReviews.length === 0 ? (
+        <div className="card p-10 text-center text-sm text-neutral-500">Aucun avis dans cette catégorie.</div>
+      ) : (
+        <div className="space-y-3">
+          {filteredReviews.map((r) => (
+            <div key={r.id} className="card flex items-start gap-4 p-4">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="truncate font-medium text-neutral-900">{r.place?.name ?? '—'}</p>
+                  <StarRating value={r.rating} size={12} />
+                  {r.flagged && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-error-50 px-2 py-0.5 text-[11px] font-medium text-error-700" title="Signalé par le filtre automatique">
+                      <AlertTriangle size={10} /> Filtré
+                    </span>
+                  )}
+                </div>
+                <p className="truncate text-xs text-neutral-500">par {r.author?.display_name ?? '—'} · {timeAgo(r.created_at)}</p>
+                {r.comment && <p className="mt-1 text-sm text-neutral-600">{r.comment}</p>}
+                {r.rejection_reason && <p className="mt-1 text-xs text-neutral-400 italic">Motif : {r.rejection_reason}</p>}
+              </div>
+              {statusPill(r.status)}
+              <div className="flex gap-1">
+                {r.status !== 'approved' && (
+                  <button onClick={() => decideReview(r, 'approved')} className="btn-ghost btn-sm text-success-600 hover:bg-success-50" title="Approuver" aria-label="Approuver cet avis">
+                    <CheckCircle2 size={16} />
+                  </button>
+                )}
+                {r.status !== 'rejected' && (
+                  <button onClick={() => decideReview(r, 'rejected')} className="btn-ghost btn-sm text-error-600 hover:bg-error-50" title="Rejeter" aria-label="Rejeter cet avis">
                     <XCircle size={16} />
                   </button>
                 )}

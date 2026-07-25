@@ -1,22 +1,64 @@
-import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useEffect, useState } from 'react';
+import { supabase, edgeFunctionErrorMessage } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import { Download, Trash2, AlertTriangle, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight } from 'lucide-react';
+import { Download, Trash2, AlertTriangle, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight, LifeBuoy, CreditCard, CheckCircle2, Clock } from 'lucide-react';
 
 export function SettingsPage() {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, refreshProfile } = useAuth();
   const { navigate } = useRouter();
   const [exporting, setExporting] = useState(false);
   const [exportData, setExportData] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [stripeLoading, setStripeLoading] = useState(false);
+  const [stripeError, setStripeError] = useState<string | null>(null);
+  const [syncingStripe, setSyncingStripe] = useState(false);
+
+  useEffect(() => {
+    // Coming back from the Stripe onboarding flow — pull the account's
+    // current charges_enabled/payouts_enabled directly from Stripe (more
+    // reliable than waiting on a webhook) then refresh the local profile.
+    if (window.location.hash.includes('stripe=return')) {
+      supabase.functions.invoke('stripe-sync-account').finally(() => refreshProfile());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!user) {
     navigate('/connexion');
     return null;
   }
+
+  const startStripeOnboarding = async () => {
+    setStripeLoading(true);
+    setStripeError(null);
+    const base = window.location.origin + window.location.pathname;
+    const { data, error: fnErr } = await supabase.functions.invoke('stripe-connect-onboarding', {
+      body: {
+        return_url: `${base}#/parametres?stripe=return`,
+        refresh_url: `${base}#/parametres?stripe=refresh`,
+      },
+    });
+    setStripeLoading(false);
+    if (fnErr) {
+      setStripeError(await edgeFunctionErrorMessage(fnErr, "Impossible de démarrer la configuration des paiements. Réessayez plus tard."));
+      return;
+    }
+    if (!data?.url) {
+      setStripeError("Impossible de démarrer la configuration des paiements. Réessayez plus tard.");
+      return;
+    }
+    window.location.href = data.url;
+  };
+
+  const syncStripeStatus = async () => {
+    setSyncingStripe(true);
+    await supabase.functions.invoke('stripe-sync-account');
+    await refreshProfile();
+    setSyncingStripe(false);
+  };
 
   const exportMyData = async () => {
     setExporting(true);
@@ -76,6 +118,21 @@ export function SettingsPage() {
       </div>
 
       <div className="container-app max-w-3xl py-8 space-y-6">
+        {/* Help */}
+        <button
+          onClick={() => navigate('/ressources')}
+          className="card flex w-full items-center gap-4 p-6 text-left hover:shadow-md transition-shadow md:p-8"
+        >
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-secondary-50 text-secondary-600">
+            <LifeBuoy size={20} />
+          </div>
+          <div className="flex-1">
+            <h2 className="font-display text-lg font-semibold text-neutral-900">Besoin d'aide ?</h2>
+            <p className="mt-1 text-sm text-neutral-600">Numéros d'écoute et guides pratiques, gratuits et confidentiels.</p>
+          </div>
+          <ChevronRight size={18} className="shrink-0 text-neutral-300" />
+        </button>
+
         {/* Privacy */}
         <div className="card p-6 md:p-8">
           <div className="flex items-start gap-4">
@@ -91,6 +148,52 @@ export function SettingsPage() {
               <p className="mt-2 text-sm text-neutral-600">
                 Vos données sont hébergées en Union Européenne, chiffrées au repos et en transit.
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Payments */}
+        <div className="card p-6 md:p-8">
+          <div className="flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
+              <CreditCard size={20} />
+            </div>
+            <div className="flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="font-display text-lg font-semibold text-neutral-900">Recevoir des paiements</h2>
+                {profile?.stripe_charges_enabled ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-success-100 px-2.5 py-1 text-xs font-medium text-success-700">
+                    <CheckCircle2 size={12} /> Activé
+                  </span>
+                ) : profile?.stripe_account_id ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-warning-100 px-2.5 py-1 text-xs font-medium text-warning-700">
+                    <Clock size={12} /> Configuration en cours
+                  </span>
+                ) : null}
+              </div>
+              <p className="mt-1 text-sm text-neutral-600">
+                Activez les paiements pour pouvoir être payé·e directement dans l'app quand un membre vous demande un
+                service payant (ex. montage de meuble). Géré par Stripe : vos coordonnées bancaires et votre pièce
+                d'identité ne transitent jamais par Queer Service.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <button onClick={startStripeOnboarding} disabled={stripeLoading} className="btn-outline">
+                  <CreditCard size={16} />
+                  {stripeLoading
+                    ? 'Redirection…'
+                    : profile?.stripe_charges_enabled
+                      ? 'Gérer mon compte de paiement'
+                      : profile?.stripe_account_id
+                        ? 'Continuer la configuration'
+                        : 'Activer les paiements'}
+                </button>
+                {profile?.stripe_account_id && !profile?.stripe_charges_enabled && (
+                  <button onClick={syncStripeStatus} disabled={syncingStripe} className="btn-ghost text-sm">
+                    {syncingStripe ? 'Vérification…' : 'Rafraîchir le statut'}
+                  </button>
+                )}
+              </div>
+              {stripeError && <p className="mt-3 text-sm text-error-600">{stripeError}</p>}
             </div>
           </div>
         </div>

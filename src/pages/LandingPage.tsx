@@ -158,6 +158,9 @@ export function LandingPage() {
       <footer className="border-t border-neutral-100 px-6 py-8 pb-24 text-center">
         <p className="text-xs text-neutral-400">© {new Date().getFullYear()} Queer Service</p>
         <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5">
+          <a href="#/ressources" className="text-xs font-medium text-primary-600 hover:underline">
+            Ressources &amp; numéros d'aide
+          </a>
           <a href="#/mentions-legales" className="text-xs text-neutral-400 hover:text-primary-600 hover:underline">
             Mentions légales
           </a>

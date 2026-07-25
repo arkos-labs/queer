@@ -7,6 +7,7 @@ import { Avatar } from '@/components/Avatar';
 import { BadgeList } from '@/components/BadgeChip';
 import { TrustPanel } from '@/components/TrustPanel';
 import { StarRating, AverageStars } from '@/components/StarRating';
+import { PaymentRequestModal } from '@/components/PaymentRequestModal';
 import { avg, formatDate, timeAgo } from '@/lib/utils';
 import {
   MapPin,
@@ -15,13 +16,20 @@ import {
   Users,
   Mail,
   Phone,
+  Clock,
+  Calendar,
   ArrowLeft,
   Flag,
   Send,
   X,
   ShieldCheck,
   MessageCircle,
+  MessageSquare,
+  Settings,
+  CreditCard,
 } from 'lucide-react';
+
+const PAYMENTS_ENABLED = !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
 interface ReviewWithAuthor extends Review {
   author?: { id: string; display_name: string; photo_url: string | null };
@@ -35,6 +43,7 @@ export function ProfileDetailPage({ id }: { id: string }) {
   const [reviews, setReviews] = useState<ReviewWithAuthor[]>([]);
   const [loading, setLoading] = useState(true);
   const [contactOpen, setContactOpen] = useState(false);
+  const [paymentOpen, setPaymentOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [contactMsg, setContactMsg] = useState('');
   const [reportReason, setReportReason] = useState('');
@@ -180,193 +189,217 @@ export function ProfileDetailPage({ id }: { id: string }) {
   }[target.account_type];
 
   return (
-    <div className="animate-fade-in">
-      {/* Cover */}
-      <div className="h-40 bg-gradient-to-br from-primary-500 via-primary-600 to-secondary-500 sm:h-48" />
-
-      <div className="container-app">
-        <button onClick={() => navigate('/annuaire')} className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-primary-600">
-          <ArrowLeft size={16} /> Annuaire
+    <div className="animate-fade-in container-app py-6">
+      <div className="mb-6 flex items-center justify-between">
+        <button
+          onClick={() => navigate('/annuaire')}
+          aria-label="Retour à l'annuaire"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100"
+        >
+          <ArrowLeft size={20} />
         </button>
+        <h1 className="font-display text-lg font-semibold text-neutral-900">Profil</h1>
+        {isSelf ? (
+          <button
+            onClick={() => navigate('/parametres')}
+            aria-label="Réglages"
+            title="Réglages"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100"
+          >
+            <Settings size={20} />
+          </button>
+        ) : (
+          <button
+            onClick={() => setReportOpen(true)}
+            aria-label="Signaler ce profil"
+            title="Signaler ce profil"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-400 hover:bg-error-50 hover:text-error-600"
+          >
+            <Flag size={18} />
+          </button>
+        )}
+      </div>
 
-        <div className="-mt-24 grid gap-6 lg:grid-cols-3">
-          {/* Main */}
-          <div className="lg:col-span-2">
-            <div className="card p-6 md:p-8">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                <Avatar name={target.display_name} src={target.photo_url} size={96} className="ring-4 ring-white" />
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="font-display text-2xl font-semibold text-neutral-900">{target.display_name}</h1>
-                    {target.verification_status === 'verified' && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 ring-1 ring-primary-200">
-                        <ShieldCheck size={12} /> Identité vérifiée
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-neutral-500">
-                    <span className="inline-flex items-center gap-1.5">
-                      <typeMeta.icon size={14} /> {typeMeta.label}
-                    </span>
-                    {target.civilite && <span>· {target.civilite}</span>}
-                    {target.pronouns && <span>· {target.pronouns}</span>}
-                    {target.city && (
-                      <span className="inline-flex items-center gap-1.5">
-                        · <MapPin size={14} /> {target.city}
-                      </span>
-                    )}
-                  </div>
-                  {reviews.length > 0 && (
-                    <div className="mt-3">
-                      <AverageStars value={avgRating} count={reviews.length} />
-                    </div>
-                  )}
+      <div className="flex flex-col gap-6">
+          {/* Main Card */}
+          <div className="card overflow-hidden pb-8 pt-8">
+            <div className="flex justify-center relative">
+              <Avatar name={target.display_name} src={target.photo_url} size={112} className="bg-primary-600 text-white" />
+              {target.verification_status === 'verified' && (
+                <div className="absolute bottom-0 right-1/2 translate-x-12 translate-y-1 rounded-full bg-white p-0.5 shadow-sm">
+                  <ShieldCheck size={20} className="text-emerald-500 fill-emerald-50" />
                 </div>
+              )}
+            </div>
+            
+            <div className="px-6 mt-6 text-center">
+              <h1 className="font-display text-3xl font-bold text-neutral-900">{target.display_name}</h1>
+              {typeMeta && (
+                <span className="mt-2 inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">
+                  {typeMeta.label}
+                </span>
+              )}
+
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-neutral-500">
+                {target.city && (
+                  <span className="inline-flex items-center gap-1"><MapPin size={13} className="text-error-500" /> {target.city}</span>
+                )}
               </div>
 
               {target.bio && (
-                <div className="mt-6">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">À propos</h3>
-                  <p className="mt-2 whitespace-pre-line text-neutral-700">{target.bio}</p>
-                </div>
+                <p className="mt-6 text-[15px] italic text-neutral-600 leading-relaxed whitespace-pre-line px-2">
+                  "{target.bio}"
+                </p>
+              )}
+
+              <div className="mt-6 flex items-center justify-center gap-3">
+                {isSelf ? (
+                   <button onClick={() => navigate('/profil/modifier')} className="btn-primary w-full">
+                     Modifier mon profil
+                   </button>
+                ) : (
+                  <>
+                    <button onClick={() => setContactOpen(true)} className="btn-primary flex-1 font-semibold text-[15px]">
+                       <MessageSquare size={18} className="mr-1.5" /> Message
+                    </button>
+                    {target.phone ? (
+                      <a
+                        href={`tel:${target.phone}`}
+                        aria-label={`Appeler ${target.display_name}`}
+                        title="Appeler"
+                        className="inline-flex h-[44px] w-[56px] shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-700 transition-colors hover:bg-neutral-200"
+                      >
+                        <Phone size={18} />
+                      </a>
+                    ) : (
+                      <span
+                        aria-hidden
+                        title="Téléphone non renseigné"
+                        className="inline-flex h-[44px] w-[56px] shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-300"
+                      >
+                        <Phone size={18} />
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {!isSelf && PAYMENTS_ENABLED && (
+                target.stripe_charges_enabled ? (
+                  <div className="mt-4">
+                    {target.indicative_rates && (
+                      <p className="mb-2 text-center text-xs text-neutral-500">
+                        Tarifs indicatifs de {target.display_name} : <span className="font-medium text-neutral-700">{target.indicative_rates}</span>
+                      </p>
+                    )}
+                    <button
+                      onClick={() => setPaymentOpen(true)}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-3 text-[15px] font-semibold text-white shadow-sm hover:bg-primary-700 transition-colors"
+                    >
+                      <CreditCard size={18} /> Demander un devis
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-4 flex items-center gap-2 rounded-xl bg-neutral-50 px-4 py-3 text-left text-xs text-neutral-500">
+                    <CreditCard size={16} className="shrink-0 text-neutral-400" />
+                    <span>{target.display_name} n'a pas encore activé les paiements en ligne. Contactez-le·la par message pour convenir d'un prix.</span>
+                  </div>
+                )
               )}
 
               {target.skills.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">Compétences proposées</h3>
-                  <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-8">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-400 mb-3">Compétences proposées</h3>
+                  <div className="flex flex-wrap justify-center gap-2">
                     {target.skills.map((s) => (
-                      <span key={s} className="rounded-full bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700">
+                      <span key={s} className="rounded-md bg-neutral-50 px-3 py-1.5 text-xs font-medium text-neutral-700 border border-neutral-200">
                         {s}
                       </span>
                     ))}
                   </div>
                 </div>
               )}
-
+              
               {target.needs.length > 0 && (
                 <div className="mt-6">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">Recherche</h3>
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 mb-3">Recherche</h3>
+                  <div className="flex flex-wrap justify-center gap-2">
                     {target.needs.map((s) => (
-                      <span key={s} className="rounded-full bg-secondary-50 px-3 py-1.5 text-sm font-medium text-secondary-700">
+                      <span key={s} className="rounded-md bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 border border-secondary-100">
                         {s}
                       </span>
                     ))}
                   </div>
                 </div>
               )}
-
-              {/* Pro fields */}
-              {target.account_type !== 'particulier' && (
-                <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  {target.siret && (
-                    <div>
-                      <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">SIRET</h3>
-                      <p className="mt-1 text-sm text-neutral-700">{target.siret}</p>
-                    </div>
-                  )}
-                  {target.intervention_zone && (
-                    <div>
-                      <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">Zone d'intervention</h3>
-                      <p className="mt-1 text-sm text-neutral-700">{target.intervention_zone}</p>
-                    </div>
-                  )}
-                  {target.indicative_rates && (
-                    <div>
-                      <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">Tarifs indicatifs</h3>
-                      <p className="mt-1 text-sm text-neutral-700">{target.indicative_rates}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {badges.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">Badges</h3>
-                  <div className="mt-3">
-                    <BadgeList badges={badges} />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Trust & safety */}
-            <div className="mt-6">
-              <TrustPanel profile={target} badges={badges} reviewCount={reviews.length} avgRating={avgRating} />
-            </div>
-
-            {/* Reviews */}
-            <div className="card mt-6 p-6 md:p-8">
-              <div className="flex items-center justify-between">
-                <h2 className="font-display text-xl font-semibold text-neutral-900">Avis de la communauté</h2>
-                {reviews.length > 0 && <AverageStars value={avgRating} count={reviews.length} />}
-              </div>
-
-              {reviews.length === 0 ? (
-                <p className="mt-4 text-sm text-neutral-500">Aucun avis pour le moment. Soyez le premier à partager votre expérience.</p>
-              ) : (
-                <div className="mt-5 space-y-5">
-                  {reviews.map((r) => (
-                    <div key={r.id} className="border-b border-neutral-100 pb-5 last:border-0">
-                      <div className="flex items-center gap-3">
-                        <Avatar name={r.author?.display_name ?? 'Anonyme'} src={r.author?.photo_url} size={36} />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-neutral-900">{r.author?.display_name ?? 'Anonyme'}</p>
-                          <p className="text-xs text-neutral-400">{timeAgo(r.created_at)}</p>
-                        </div>
-                        <StarRating value={r.rating} size={14} />
-                      </div>
-                      {r.comment && <p className="mt-3 text-sm text-neutral-700">{r.comment}</p>}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="card sticky top-20 p-6">
-              {isSelf ? (
-                <div className="text-center">
-                  <p className="text-sm text-neutral-500">C'est votre profil public.</p>
-                  <button onClick={() => navigate('/profil/modifier')} className="btn-primary mt-4 w-full">
-                    Modifier mon profil
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <h3 className="font-display text-lg font-semibold text-neutral-900">Contacter {target.display_name.split(' ')[0]}</h3>
-                  <p className="mt-1 text-sm text-neutral-500">Lancez une mise en relation. Le respect de la charte s'applique.</p>
 
-                  <button onClick={() => setContactOpen(true)} className="btn-primary mt-5 w-full">
-                    <MessageCircle size={16} /> Envoyer un message
-                  </button>
-                  <button onClick={() => setReportOpen(true)} className="btn-ghost mt-2 w-full text-error-600 hover:bg-error-50">
-                    <Flag size={16} /> Signaler ce profil
-                  </button>
 
-                  {target.email && (
-                    <a href={`mailto:${target.email}`} className="mt-4 flex items-center gap-2 text-sm text-neutral-600 hover:text-primary-600">
-                      <Mail size={14} /> {target.email}
-                    </a>
-                  )}
-                  {target.phone && (
-                    <a href={`tel:${target.phone}`} className="mt-2 flex items-center gap-2 text-sm text-neutral-600 hover:text-primary-600">
-                      <Phone size={14} /> {target.phone}
-                    </a>
-                  )}
-
-                  <div className="mt-6 border-t border-neutral-100 pt-4 text-xs text-neutral-400">
-                    Membre depuis le {formatDate(target.created_at)}
+          {/* Pro fields if applicable */}
+          {target.account_type !== 'particulier' && (
+            <div className="card p-6">
+              <h2 className="font-display text-lg font-semibold text-neutral-900 mb-4">Informations Pro</h2>
+              <div className="flex flex-col gap-4 text-sm text-neutral-600">
+                {target.siret && (
+                  <div>
+                    <span className="block text-xs text-neutral-400 mb-1">SIRET</span>
+                    <span className="font-medium text-neutral-900">{target.siret}</span>
                   </div>
-                </>
-              )}
+                )}
+                {target.intervention_zone && (
+                  <div>
+                    <span className="block text-xs text-neutral-400 mb-1">Zone d'intervention</span>
+                    <span className="font-medium text-neutral-900">{target.intervention_zone}</span>
+                  </div>
+                )}
+              </div>
             </div>
+          )}
+
+          <TrustPanel profile={target} badges={badges} reviewCount={reviews.length} avgRating={avgRating} />
+
+          {/* Avis de la communauté */}
+          <div className="card p-6">
+            <h2 className="mb-4 font-display text-lg font-bold text-neutral-900">Avis de la communauté</h2>
+            {reviews.length === 0 ? (
+              <div className="py-8 text-center">
+                <p className="text-sm text-neutral-500">Aucun avis pour le moment. Soyez le premier à partager votre expérience.</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {reviews.map((r) => (
+                  <div key={r.id} className="border-b border-neutral-100 pb-6 last:border-0 last:pb-0">
+                    <div className="flex gap-4">
+                      <Avatar name={r.author?.display_name ?? 'Anonyme'} src={r.author?.photo_url} size={44} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[15px] font-bold text-neutral-900 truncate pr-2">{r.author?.display_name ?? 'Anonyme'}</p>
+                          <p className="text-[13px] font-medium text-neutral-400 shrink-0">{timeAgo(r.created_at)}</p>
+                        </div>
+                        <div className="mt-0.5">
+                          <StarRating value={r.rating} size={13} />
+                        </div>
+                        {r.comment && <p className="mt-2.5 text-[15px] text-neutral-700 leading-relaxed">{r.comment}</p>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Badges obtenus */}
+          <div className="card p-6">
+            <h2 className="mb-4 font-display text-lg font-bold text-neutral-900">Badges obtenus</h2>
+            {badges.length === 0 ? (
+              <p className="text-sm text-neutral-500">Aucun badge pour le moment.</p>
+            ) : (
+              <BadgeList badges={badges} className="gap-2" />
+            )}
           </div>
         </div>
-      </div>
 
       {/* Contact modal */}
       {contactOpen && (
@@ -412,6 +445,11 @@ export function ProfileDetailPage({ id }: { id: string }) {
             </button>
           </div>
         </Modal>
+      )}
+
+      {/* Paid service request */}
+      {paymentOpen && (
+        <PaymentRequestModal target={target} onClose={() => setPaymentOpen(false)} />
       )}
     </div>
   );

@@ -255,10 +255,6 @@ export function ProfileEditPage() {
                   <label className="label">Zone d'intervention</label>
                   <input value={form.intervention_zone} onChange={(e) => setForm({ ...form, intervention_zone: e.target.value })} className="input" />
                 </div>
-                <div className="sm:col-span-2">
-                  <label className="label">Tarifs indicatifs</label>
-                  <input value={form.indicative_rates} onChange={(e) => setForm({ ...form, indicative_rates: e.target.value })} className="input" placeholder="Ex. 30€/h" />
-                </div>
               </div>
             </section>
           )}
@@ -324,6 +320,18 @@ export function ProfileEditPage() {
                 ))}
               </div>
             )}
+            <div className="mt-4">
+              <label className="label">Tarifs indicatifs</label>
+              <input
+                value={form.indicative_rates}
+                onChange={(e) => setForm({ ...form, indicative_rates: e.target.value })}
+                className="input"
+                placeholder="Ex. 30€/h, ou 50€ le montage d'un meuble"
+              />
+              <p className="mt-1.5 text-xs text-neutral-400">
+                Visible sur votre profil pour que les client·es sachent à quel prix s'attendre avant de demander un devis.
+              </p>
+            </div>
           </section>
 
           {/* Needs */}

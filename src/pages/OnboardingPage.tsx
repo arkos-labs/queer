@@ -1,10 +1,18 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
 import { supabase } from '@/lib/supabase';
 import type { AccountType, Civilite } from '@/lib/types';
-import { Heart, ShieldCheck, ArrowRight, ArrowLeft, CheckCircle2, Sparkles } from 'lucide-react';
+import { Heart, ShieldCheck, ArrowRight, ArrowLeft, CheckCircle2, Sparkles, Search, HandHeart, Plus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+type Intent = 'seeking' | 'offering' | 'both';
+
+const intents: { value: Intent; label: string; desc: string; icon: typeof Search }[] = [
+  { value: 'seeking', label: 'Je cherche un service', desc: 'J\'ai besoin d\'aide pour quelque chose.', icon: Search },
+  { value: 'offering', label: 'Je propose un service', desc: 'J\'ai des compétences à offrir à la communauté.', icon: HandHeart },
+  { value: 'both', label: 'Les deux', desc: 'Je cherche et je propose selon les moments.', icon: Heart },
+];
 
 const civilites: { value: Civilite; label: string }[] = [
   { value: 'Monsieur', label: 'Monsieur' },
@@ -34,6 +42,12 @@ export function OnboardingPage() {
   const [civilite, setCivilite] = useState<Civilite | null>(null);
   const [pronouns, setPronouns] = useState('');
   const [accountType, setAccountType] = useState<AccountType>('particulier');
+  const [intent, setIntent] = useState<Intent | null>(null);
+  const [skills, setSkills] = useState<string[]>([]);
+  const [needs, setNeeds] = useState<string[]>([]);
+  const [indicativeRates, setIndicativeRates] = useState('');
+  const [skillInput, setSkillInput] = useState('');
+  const [needInput, setNeedInput] = useState('');
   const [charteAccepted, setCharteAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +56,21 @@ export function OnboardingPage() {
     navigate('/connexion');
     return null;
   }
+
+  const addSkill = () => {
+    const v = skillInput.trim();
+    if (v && !skills.includes(v)) {
+      setSkills((s) => [...s, v]);
+      setSkillInput('');
+    }
+  };
+  const addNeed = () => {
+    const v = needInput.trim();
+    if (v && !needs.includes(v)) {
+      setNeeds((n) => [...n, v]);
+      setNeedInput('');
+    }
+  };
 
   const finishOnboarding = async () => {
     setLoading(true);
@@ -53,6 +82,9 @@ export function OnboardingPage() {
       civilite,
       pronouns: pronouns || null,
       account_type: accountType,
+      skills,
+      needs,
+      indicative_rates: indicativeRates.trim() || null,
       charte_accepted: true,
       charte_accepted_at: new Date().toISOString(),
       profile_status: 'active',
@@ -69,7 +101,7 @@ export function OnboardingPage() {
   const next = () => setStep((s) => s + 1);
   const back = () => setStep((s) => Math.max(0, s - 1));
 
-  const canProceed = step === 0 ? displayName.trim().length > 0 : step === 2 ? charteAccepted : true;
+  const canProceed = step === 0 ? displayName.trim().length > 0 : step === 2 ? !!intent : step === 3 ? charteAccepted : true;
 
   return (
     <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-neutral-50 px-4 py-12">
@@ -79,7 +111,7 @@ export function OnboardingPage() {
       <div className="mx-auto max-w-xl">
         {/* Progress */}
         <div className="mb-8 flex items-center justify-center gap-2">
-          {[0, 1, 2].map((i) => (
+          {[0, 1, 2, 3].map((i) => (
             <div
               key={i}
               className={cn(
@@ -188,6 +220,116 @@ export function OnboardingPage() {
           {step === 2 && (
             <div>
               <div className="mb-6 text-center">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary-50 text-secondary-600">
+                  <Search size={22} />
+                </div>
+                <h2 className="font-display text-2xl font-semibold text-neutral-900">Que viens-tu faire ici ?</h2>
+                <p className="mt-2 text-sm text-neutral-500">Ça nous aide à personnaliser ton profil. Modifiable à tout moment.</p>
+              </div>
+
+              <div className="space-y-3">
+                {intents.map((t) => (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => setIntent(t.value)}
+                    className={cn(
+                      'flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition',
+                      intent === t.value
+                        ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-200'
+                        : 'border-neutral-200 bg-white hover:border-neutral-300',
+                    )}
+                  >
+                    <t.icon size={20} className="mt-0.5 shrink-0 text-primary-600" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-neutral-900">{t.label}</span>
+                        {intent === t.value && <CheckCircle2 size={16} className="text-primary-600" />}
+                      </div>
+                      <p className="mt-0.5 text-sm text-neutral-500">{t.desc}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {(intent === 'offering' || intent === 'both') && (
+                <div className="mt-5 animate-slide-up">
+                  <label className="label">Ce que tu proposes</label>
+                  <div className="flex gap-2">
+                    <input
+                      value={skillInput}
+                      onChange={(e) => setSkillInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+                      className="input"
+                      placeholder="Ex. Montage de meubles IKEA"
+                    />
+                    <button type="button" onClick={addSkill} className="btn-outline shrink-0">
+                      <Plus size={16} /> Ajouter
+                    </button>
+                  </div>
+                  {skills.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {skills.map((s) => (
+                        <span key={s} className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1.5 text-sm text-primary-700">
+                          {s}
+                          <button type="button" onClick={() => setSkills((arr) => arr.filter((x) => x !== s))} className="text-primary-400 hover:text-primary-700">
+                            <X size={14} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-4">
+                    <label className="label">Tes tarifs (optionnel)</label>
+                    <input
+                      value={indicativeRates}
+                      onChange={(e) => setIndicativeRates(e.target.value)}
+                      className="input"
+                      placeholder="Ex. 30€/h, ou 50€ le montage d'un meuble"
+                    />
+                    <p className="mt-1.5 text-xs text-neutral-400">
+                      Ça donne aux client·es une idée du prix avant qu'iels ne demandent un devis — le prix exact se
+                      négocie ensuite pour chaque demande, selon la durée réelle du travail.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {(intent === 'seeking' || intent === 'both') && (
+                <div className="mt-5 animate-slide-up">
+                  <label className="label">Ce que tu recherches</label>
+                  <div className="flex gap-2">
+                    <input
+                      value={needInput}
+                      onChange={(e) => setNeedInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addNeed())}
+                      className="input"
+                      placeholder="Ex. Aide administrative"
+                    />
+                    <button type="button" onClick={addNeed} className="btn-outline shrink-0">
+                      <Plus size={16} /> Ajouter
+                    </button>
+                  </div>
+                  {needs.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {needs.map((s) => (
+                        <span key={s} className="inline-flex items-center gap-1.5 rounded-full bg-secondary-50 px-3 py-1.5 text-sm text-secondary-700">
+                          {s}
+                          <button type="button" onClick={() => setNeeds((arr) => arr.filter((x) => x !== s))} className="text-secondary-400 hover:text-secondary-700">
+                            <X size={14} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {step === 3 && (
+            <div>
+              <div className="mb-6 text-center">
                 <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-50 text-accent-600">
                   <ShieldCheck size={22} />
                 </div>
@@ -231,7 +373,7 @@ export function OnboardingPage() {
             >
               <ArrowLeft size={16} /> {step === 0 ? 'Annuler' : 'Retour'}
             </button>
-            {step < 2 ? (
+            {step < 3 ? (
               <button onClick={next} disabled={!canProceed} className="btn-primary">
                 Continuer <ArrowRight size={16} />
               </button>

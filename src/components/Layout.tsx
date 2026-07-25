@@ -2,7 +2,7 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
-import { Heart, Compass, User as UserIcon, Settings, Shield, MessageCircle } from 'lucide-react';
+import { Heart, Compass, User as UserIcon, Settings, Shield, MessageCircle, LifeBuoy } from 'lucide-react';
 import { Avatar } from '@/components/Avatar';
 import { cn } from '@/lib/utils';
 
@@ -74,25 +74,58 @@ export function Layout({ children }: { children: ReactNode }) {
     <div className="mobile-shell">
       <div className="mobile-frame">
         {/* Status-bar style top accent */}
-        <div className="mobile-status-bar relative flex items-center justify-end">
-          {/* Centered Logo */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <Logo onClick={() => go(user ? '/annuaire' : '/')} />
+        <div className="sticky top-0 z-50 flex flex-col bg-[#1c1e2b] text-white pt-4 px-4 shadow-md w-full">
+          <div className="flex items-center justify-between pb-4">
+            <button
+              onClick={() => go('/ressources')}
+              className="flex items-center space-x-1 bg-white/10 px-3 py-1.5 rounded-full text-sm font-medium border border-white/20 hover:bg-white/20 transition-colors"
+            >
+              <LifeBuoy size={16} />
+              <span className="">Aide</span>
+            </button>
+
+            <button onClick={() => go(user ? '/annuaire' : '/')} className="flex flex-col items-center cursor-pointer">
+              <img
+                src="/logo.png"
+                alt="Queer Services"
+                className="h-16 w-16 object-contain"
+                style={{ filter: 'brightness(1.2)' }}
+              />
+            </button>
+
+            {user && profile ? (
+              <button
+                onClick={() => go('/profil')}
+                className="h-9 w-9 rounded-full bg-orange-500 flex items-center justify-center text-sm font-bold border-2 border-white/30 overflow-hidden relative shadow-sm"
+              >
+                {profile.photo_url ? (
+                  <img src={profile.photo_url} className="w-full h-full object-cover" alt="" />
+                ) : (
+                  profile.display_name.substring(0, 2).toUpperCase()
+                )}
+              </button>
+            ) : !isLanding ? (
+              <button onClick={() => go('/connexion')} className="px-3 py-1.5 rounded-full text-xs font-semibold text-white/90 bg-white/10 hover:bg-white/20 transition-colors">
+                Co.
+              </button>
+            ) : (
+              <div className="w-9" />
+            )}
           </div>
 
-          {user && profile && (
-            <button
-              onClick={() => go('/profil')}
-              aria-label="Mon profil"
-              className="flex items-center gap-2 rounded-full bg-white/10 hover:bg-white/20 py-0.5 pl-0.5 pr-2.5 transition active:scale-95 z-10 shadow-sm"
-            >
-              <Avatar name={profile.display_name} src={profile.photo_url} size={26} />
-            </button>
-          )}
-          {!user && !isLanding && (
-            <button onClick={() => go('/connexion')} className="z-10 px-4 py-1.5 rounded-full text-xs font-semibold text-white/90 bg-white/10 hover:bg-white/20 transition-colors">
-              Connexion
-            </button>
+          {/* Search bar is rendered in Layout ONLY on the directory page to be sticky at the very top */}
+          {path === '/annuaire' && (
+            <div className="relative pb-2">
+              <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none pb-2">
+                <Compass size={20} className="text-slate-400" />
+              </div>
+              <input
+                type="search"
+                onChange={(e) => window.dispatchEvent(new CustomEvent('directory-search', { detail: e.target.value }))}
+                placeholder="Montage cuisine, ménage, pet-sitting..."
+                className="block w-full pl-12 pr-4 py-3 bg-white text-slate-900 rounded-2xl border-none focus:ring-2 focus:ring-blue-500 shadow-lg text-sm outline-none"
+              />
+            </div>
           )}
         </div>
 
