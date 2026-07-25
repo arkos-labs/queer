@@ -19,8 +19,6 @@ export interface Profile {
   city: string | null;
   skills: string[];
   needs: string[];
-  siret: string | null;
-  service_category: string | null;
   intervention_zone: string | null;
   indicative_rates: string | null;
   budget_indicatif: string | null;
@@ -28,6 +26,7 @@ export interface Profile {
   charte_accepted_at: string | null;
   verification_status: VerificationStatus;
   verified_at: string | null;
+  identity_document_path: string | null;
   profile_status: ProfileStatus;
   is_admin: boolean;
   stripe_account_id: string | null;

@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     const { data: { user }, error: userErr } = await userClient.auth.getUser();
     if (userErr || !user) return json({ error: "Non authentifié." }, 401);
 
-    const { connection_id, amount, description, scheduled_at } = await req.json().catch(() => ({}));
+    const { connection_id, amount, description, scheduled_at, service_date, service_time, service_location } = await req.json().catch(() => ({}));
     if (!connection_id || typeof amount !== "number" || !Number.isFinite(amount) || amount < 100) {
       return json({ error: "Paramètres invalides (montant minimum 1€)." }, 400);
     }
@@ -108,6 +108,9 @@ Deno.serve(async (req) => {
         status: "pending",
         proposed_by: user.id,
         scheduled_at: scheduledAtIso,
+        service_date: service_date || null,
+        service_time: service_time || null,
+        service_location: service_location || null,
       })
       .select()
       .single();

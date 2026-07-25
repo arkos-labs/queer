@@ -40,13 +40,17 @@ export function ProfileEditPage() {
     civilite: '' as Civilite | '',
     pronouns: '',
     account_type: 'particulier' as AccountType,
-    siret: '',
     intervention_zone: '',
     indicative_rates: '',
     budget_indicatif: '',
     skills: [] as string[],
     needs: [] as string[],
   });
+
+  const [rateAmount, setRateAmount] = useState('');
+  const [rateUnit, setRateUnit] = useState('/ heure');
+  const [budgetAmount, setBudgetAmount] = useState('');
+  const [budgetUnit, setBudgetUnit] = useState('/ heure');
 
   const [skillInput, setSkillInput] = useState('');
   const [needInput, setNeedInput] = useState('');
@@ -87,13 +91,32 @@ export function ProfileEditPage() {
           civilite: profile.civilite ?? '',
           pronouns: profile.pronouns ?? '',
           account_type: profile.account_type,
-          siret: profile.siret ?? '',
           intervention_zone: profile.intervention_zone ?? '',
           indicative_rates: profile.indicative_rates ?? '',
           budget_indicatif: profile.budget_indicatif ?? '',
           skills: profile.skills,
           needs: profile.needs,
         });
+
+        // naive split for rates
+        if (profile.indicative_rates) {
+          const unitMatch = RATE_UNITS.find(u => profile.indicative_rates!.endsWith(u));
+          if (unitMatch) {
+            setRateUnit(unitMatch);
+            setRateAmount(profile.indicative_rates.slice(0, -unitMatch.length).trim());
+          } else {
+            setRateAmount(profile.indicative_rates);
+          }
+        }
+        if (profile.budget_indicatif) {
+          const unitMatch = RATE_UNITS.find(u => profile.budget_indicatif!.endsWith(u));
+          if (unitMatch) {
+            setBudgetUnit(unitMatch);
+            setBudgetAmount(profile.budget_indicatif.slice(0, -unitMatch.length).trim());
+          } else {
+            setBudgetAmount(profile.budget_indicatif);
+          }
+        }
       }
       setLoading(false);
     };
@@ -171,10 +194,9 @@ export function ProfileEditPage() {
       civilite: form.civilite || null,
       pronouns: form.pronouns || null,
       account_type: form.account_type,
-      siret: form.siret || null,
       intervention_zone: form.intervention_zone || null,
-      indicative_rates: form.indicative_rates || null,
-      budget_indicatif: form.budget_indicatif || null,
+      indicative_rates: rateAmount.trim() ? `${rateAmount.trim()} ${rateUnit}` : null,
+      budget_indicatif: budgetAmount.trim() ? `${budgetAmount.trim()} ${budgetUnit}` : null,
       skills: form.skills,
       needs: form.needs,
       charte_accepted: profile?.charte_accepted ?? true,
@@ -287,8 +309,8 @@ export function ProfileEditPage() {
           {/* Account type */}
           <section className="mt-8">
             <h2 className="font-display text-lg font-semibold text-neutral-900">Type de compte</h2>
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              {([['particulier', 'Particulier·e'], ['pro', 'Professionnel·le'], ['asso', 'Association']] as [AccountType, string][]).map(([v, l]) => (
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {([['particulier', 'Particulier·e'], ['asso', 'Association']] as [AccountType, string][]).map(([v, l]) => (
                 <button
                   key={v}
                   type="button"
@@ -304,19 +326,13 @@ export function ProfileEditPage() {
             </div>
           </section>
 
-          {/* Pro fields */}
-          {form.account_type !== 'particulier' && (
+          {/* Structure fields */}
+          {form.account_type === 'asso' && (
             <section className="mt-8 animate-slide-up">
-              <h2 className="font-display text-lg font-semibold text-neutral-900">Informations professionnelles</h2>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="label">SIRET (optionnel)</label>
-                  <input value={form.siret} onChange={(e) => setForm({ ...form, siret: e.target.value })} className="input" />
-                </div>
-                <div>
-                  <label className="label">Zone d'intervention</label>
-                  <input value={form.intervention_zone} onChange={(e) => setForm({ ...form, intervention_zone: e.target.value })} className="input" />
-                </div>
+              <h2 className="font-display text-lg font-semibold text-neutral-900">Informations de la structure</h2>
+              <div className="mt-4">
+                <label className="label">Zone d'intervention</label>
+                <input value={form.intervention_zone} onChange={(e) => setForm({ ...form, intervention_zone: e.target.value })} className="input" />
               </div>
             </section>
           )}
@@ -384,23 +400,23 @@ export function ProfileEditPage() {
             )}
             <div className="mt-4">
               <label className="label">Tarifs indicatifs</label>
-              <input
-                value={form.indicative_rates}
-                onChange={(e) => setForm({ ...form, indicative_rates: e.target.value })}
-                className="input"
-                placeholder="Ex. 30€/h, ou 50€ le montage d'un meuble"
-              />
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {RATE_UNITS.map((u) => (
-                  <button
-                    key={u}
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, indicative_rates: appendUnit(f.indicative_rates, u) }))}
-                    className="rounded-full border border-neutral-200 px-2.5 py-1 text-xs text-neutral-500 hover:border-primary-300 hover:text-primary-600"
-                  >
-                    {u}
-                  </button>
-                ))}
+              <div className="flex gap-2 mt-1.5">
+                <input
+                  value={rateAmount}
+                  onChange={(e) => setRateAmount(e.target.value)}
+                  className="input flex-1"
+                  placeholder="Ex. 30€, ou 50€"
+                />
+                <select
+                  value={rateUnit}
+                  onChange={(e) => setRateUnit(e.target.value)}
+                  className="input shrink-0 bg-neutral-50"
+                >
+                  <option value="/ heure">/ heure</option>
+                  <option value="/ jour">/ jour</option>
+                  <option value="/ mois">/ mois</option>
+                  <option value="/ prestation">/ prestation</option>
+                </select>
               </div>
               <p className="mt-1.5 text-xs text-neutral-400">
                 Visible sur votre profil pour que les client·es sachent à quel prix s'attendre avant de demander un devis.
@@ -438,23 +454,23 @@ export function ProfileEditPage() {
             )}
             <div className="mt-4">
               <label className="label">Budget indicatif</label>
-              <input
-                value={form.budget_indicatif}
-                onChange={(e) => setForm({ ...form, budget_indicatif: e.target.value })}
-                className="input"
-                placeholder="Ex. jusqu'à 40€, ou 20€/h"
-              />
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {RATE_UNITS.map((u) => (
-                  <button
-                    key={u}
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, budget_indicatif: appendUnit(f.budget_indicatif, u) }))}
-                    className="rounded-full border border-neutral-200 px-2.5 py-1 text-xs text-neutral-500 hover:border-secondary-300 hover:text-secondary-600"
-                  >
-                    {u}
-                  </button>
-                ))}
+              <div className="flex gap-2 mt-1.5">
+                <input
+                  value={budgetAmount}
+                  onChange={(e) => setBudgetAmount(e.target.value)}
+                  className="input flex-1"
+                  placeholder="Ex. 40€"
+                />
+                <select
+                  value={budgetUnit}
+                  onChange={(e) => setBudgetUnit(e.target.value)}
+                  className="input shrink-0 bg-neutral-50"
+                >
+                  <option value="/ heure">/ heure</option>
+                  <option value="/ jour">/ jour</option>
+                  <option value="/ mois">/ mois</option>
+                  <option value="/ prestation">/ prestation</option>
+                </select>
               </div>
               <p className="mt-1.5 text-xs text-neutral-400">
                 Indique à quel prix tu recherches ce service — ça aide les prestataires à savoir si leur tarif te correspond.

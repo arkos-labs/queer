@@ -12,7 +12,6 @@ import {
   Pencil,
   MapPin,
   Users,
-  Briefcase,
   Building2,
   MessageCircle,
   Mail,
@@ -94,7 +93,6 @@ export function MyProfilePage() {
   const avgRating = avg(reviews.map((r) => r.rating));
   const typeMeta = {
     particulier: { icon: Users, label: 'Particulier·e' },
-    pro: { icon: Briefcase, label: 'Professionnel·le' },
     asso: { icon: Building2, label: 'Association / structure' },
   }[profile.account_type];
 
@@ -152,7 +150,7 @@ export function MyProfilePage() {
             
             <div className="px-6 mt-6 text-center">
               <h1 className="font-display text-3xl font-bold text-neutral-900">{profile.display_name}</h1>
-                {typeMeta && profile.account_type !== 'pro' && (
+                {typeMeta && (
                   <span className="mt-2 inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">
                     {typeMeta.label}
                   </span>
@@ -206,17 +204,11 @@ export function MyProfilePage() {
 
 
 
-          {/* Pro fields if applicable */}
-          {profile.account_type !== 'particulier' && (
+          {/* Additional info if applicable */}
+          {(profile.intervention_zone || profile.indicative_rates) && (
             <div className="card p-6">
-              <h2 className="font-display text-lg font-semibold text-neutral-900 mb-4">Informations Pro</h2>
+              <h2 className="font-display text-lg font-semibold text-neutral-900 mb-4">Informations complémentaires</h2>
               <div className="flex flex-col gap-4 text-sm text-neutral-600">
-                {profile.siret && (
-                  <div>
-                    <span className="block text-xs text-neutral-400 mb-1">SIRET</span>
-                    <span className="font-medium text-neutral-900">{profile.siret}</span>
-                  </div>
-                )}
                 {profile.intervention_zone && (
                   <div>
                     <span className="block text-xs text-neutral-400 mb-1">Zone d'intervention</span>

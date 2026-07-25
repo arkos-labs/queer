@@ -12,7 +12,8 @@ export function CreateMissionRequestModal({ onClose, onSuccess }: CreateMissionR
   const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [budget, setBudget] = useState('');
+  const [budgetAmount, setBudgetAmount] = useState('');
+  const [budgetUnit, setBudgetUnit] = useState('/ prestation');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,11 +29,13 @@ export function CreateMissionRequestModal({ onClose, onSuccess }: CreateMissionR
     setLoading(true);
     setError(null);
 
+    const finalBudget = budgetAmount.trim() ? `${budgetAmount.trim()} ${budgetUnit}` : null;
+
     const { error: insertErr } = await supabase.from('mission_requests').insert({
       created_by: user.id,
       title: title.trim(),
       description: description.trim(),
-      budget: budget.trim() || null,
+      budget: finalBudget,
     });
 
     setLoading(false);
@@ -92,18 +95,30 @@ export function CreateMissionRequestModal({ onClose, onSuccess }: CreateMissionR
             </div>
             
             <div>
-              <label htmlFor="budget" className="mb-1.5 block text-sm font-medium text-neutral-700">
+              <label htmlFor="budgetAmount" className="mb-1.5 block text-sm font-medium text-neutral-700">
                 Budget proposé <span className="text-neutral-400 font-normal">(optionnel)</span>
               </label>
-              <input
-                id="budget"
-                type="text"
-                value={budget}
-                onChange={(e) => setBudget(e.target.value)}
-                placeholder="Ex: 50€, Entre 20€ et 40€, À débattre..."
-                className="input w-full"
-                maxLength={50}
-              />
+              <div className="flex gap-2">
+                <input
+                  id="budgetAmount"
+                  type="text"
+                  value={budgetAmount}
+                  onChange={(e) => setBudgetAmount(e.target.value)}
+                  placeholder="Ex: 50€, Entre 20€ et 40€..."
+                  className="input flex-1"
+                  maxLength={40}
+                />
+                <select
+                  value={budgetUnit}
+                  onChange={(e) => setBudgetUnit(e.target.value)}
+                  className="input shrink-0 bg-neutral-50"
+                >
+                  <option value="/ heure">/ heure</option>
+                  <option value="/ jour">/ jour</option>
+                  <option value="/ mois">/ mois</option>
+                  <option value="/ prestation">/ prestation</option>
+                </select>
+              </div>
             </div>
           </div>
 

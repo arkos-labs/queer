@@ -80,7 +80,7 @@ function CheckoutStep({ connectionId, onDone }: { connectionId: string; onDone: 
     <div className="mt-4">
       <p className="mb-3 flex items-start gap-2 text-xs text-neutral-500">
         <ShieldCheck size={14} className="mt-0.5 shrink-0 text-primary-600" />
-        Paiement sécurisé par Stripe. Votre carte est autorisée maintenant, débitée seulement quand vous confirmerez
+        Paiement sécurisé. Votre carte est autorisée maintenant, débitée seulement quand vous confirmerez
         que la prestation est terminée.
       </p>
       <PaymentElement />

@@ -20,6 +20,8 @@ import {
   X,
   MapPin,
   AlertTriangle,
+  Eye,
+  Ban,
 } from 'lucide-react';
 
 type Tab = 'profiles' | 'reports' | 'categories' | 'places';
@@ -159,6 +161,18 @@ function ProfilesTab() {
     if (!error) setProfiles((prev) => prev.map((x) => (x.id === p.id ? { ...x, ...patch } : x)));
   };
 
+  const rejectVerification = async (p: Profile) => {
+    const patch = { verification_status: 'rejected' as const, verified_at: null };
+    const { error } = await supabase.from('profiles').update(patch).eq('id', p.id);
+    if (!error) setProfiles((prev) => prev.map((x) => (x.id === p.id ? { ...x, ...patch } : x)));
+  };
+
+  const viewIdentityDocument = async (p: Profile) => {
+    if (!p.identity_document_path) return;
+    const { data, error } = await supabase.storage.from('identity-documents').createSignedUrl(p.identity_document_path, 120);
+    if (!error && data?.signedUrl) window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const filtered = filter === 'all' ? profiles : profiles.filter((p) => p.profile_status === filter);
 
   return (
@@ -199,6 +213,11 @@ function ProfilesTab() {
                     <ShieldCheck size={12} /> Vérifié
                   </span>
                 )}
+                {p.verification_status === 'pending' && (
+                  <span className="hidden items-center gap-1 rounded-full bg-warning-100 px-2.5 py-1 text-xs font-medium text-warning-700 sm:inline-flex">
+                    <Clock size={12} /> Pièce à vérifier
+                  </span>
+                )}
                 <span className={cn(
                   'hidden rounded-full px-2.5 py-1 text-xs font-medium sm:inline-block',
                   p.profile_status === 'active' && 'bg-success-100 text-success-700',
@@ -209,6 +228,16 @@ function ProfilesTab() {
                   {p.profile_status}
                 </span>
                 <div className="flex gap-1">
+                  {p.identity_document_path && (
+                    <button
+                      onClick={() => viewIdentityDocument(p)}
+                      className="btn-ghost btn-sm text-neutral-500 hover:bg-neutral-100"
+                      title="Voir la pièce d'identité envoyée"
+                      aria-label={`Voir la pièce d'identité de ${p.display_name}`}
+                    >
+                      <Eye size={16} />
+                    </button>
+                  )}
                   <button
                     onClick={() => toggleVerification(p)}
                     className={cn(
@@ -220,6 +249,16 @@ function ProfilesTab() {
                   >
                     <ShieldCheck size={16} />
                   </button>
+                  {p.verification_status === 'pending' && (
+                    <button
+                      onClick={() => rejectVerification(p)}
+                      className="btn-ghost btn-sm text-error-600 hover:bg-error-50"
+                      title="Refuser la pièce d'identité"
+                      aria-label={`Refuser la pièce d'identité de ${p.display_name}`}
+                    >
+                      <Ban size={16} />
+                    </button>
+                  )}
                   {p.profile_status !== 'active' && (
                     <button onClick={() => updateStatus(p.id, 'active')} className="btn-ghost btn-sm text-success-600 hover:bg-success-50" title="Activer" aria-label={`Activer le profil de ${p.display_name}`}>
                       <CheckCircle2 size={16} />

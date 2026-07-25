@@ -23,6 +23,7 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
   const [serviceDate, setServiceDate] = useState('');
   const [serviceSlot, setServiceSlot] = useState<'morning' | 'afternoon' | 'evening' | 'exact' | ''>('');
   const [serviceTime, setServiceTime] = useState('');
+  const [serviceLocation, setServiceLocation] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -165,6 +166,9 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
         amount: Math.round(priceValue * 100),
         description: description.trim(),
         scheduled_at: scheduledAtIso,
+        service_date: serviceDate || null,
+        service_time: serviceSlot === 'exact' ? serviceTime : serviceSlot || null,
+        service_location: serviceLocation.trim() || null,
       },
     });
 
@@ -310,6 +314,16 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
                         className="input mt-2"
                       />
                     )}
+                  </div>
+                  <div>
+                    <label htmlFor="pr-location" className="mb-1 block text-sm font-medium text-neutral-700">Lieu de la prestation (optionnel)</label>
+                    <input
+                      id="pr-location"
+                      value={serviceLocation}
+                      onChange={(e) => setServiceLocation(e.target.value)}
+                      className="input"
+                      placeholder="Ex: À distance, ou Paris 11e"
+                    />
                   </div>
                 </div>
 

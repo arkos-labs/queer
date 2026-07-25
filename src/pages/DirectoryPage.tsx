@@ -44,7 +44,6 @@ interface ProfileWithStats extends Profile {
 
 const typeMeta: Record<Profile['account_type'], { icon: typeof Users; label: string }> = {
   particulier: { icon: Users, label: 'Particulier·e' },
-  pro: { icon: Briefcase, label: 'Professionnel·le' },
   asso: { icon: Building2, label: 'Association' },
 };
 

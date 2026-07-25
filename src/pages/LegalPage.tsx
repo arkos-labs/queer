@@ -61,7 +61,7 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
       {
         heading: '1. Objet',
         body: [
-          `${c.siteName} est une plateforme communautaire d'entraide permettant aux membres de la communauté LGBTQI+ de proposer et de rechercher des services entre particulier·e·s, professionnel·le·s et associations.`,
+          `${c.siteName} est une plateforme communautaire d'entraide permettant aux membres de la communauté LGBTQI+ de proposer et de rechercher des services entre particulier·e·s et associations/structures.`,
         ],
       },
       {
@@ -79,10 +79,10 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
         ],
       },
       {
-        heading: '4. Comptes professionnels et associatifs',
+        heading: '4. Comptes associatifs',
         body: [
-          `Les membres s'inscrivant en tant que professionnel·le ou structure certifient l'exactitude des informations professionnelles fournies (SIRET, zone d'intervention, tarifs indicatifs). Ces informations restent sous leur seule responsabilité.`,
-          `Les avis, notes et badges affichés sont des indications communautaires et ne remplacent pas les vérifications réglementaires propres à chaque profession.`,
+          `Les membres s'inscrivant en tant que structure/association certifient l'exactitude des informations fournies (zone d'intervention, tarifs indicatifs). Ces informations restent sous leur seule responsabilité.`,
+          `Les avis, notes et badges affichés sont des indications communautaires et ne remplacent pas les vérifications réglementaires propres à chaque activité.`,
         ],
       },
       {
@@ -129,7 +129,7 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
         heading: '2. Données collectées',
         body: [
           `Données de compte : email, mot de passe (chiffré), civilité, prénom/nom affiché, pronoms.`,
-          `Données de profil : type de compte, bio, ville, compétences, besoins, photo, et pour les comptes professionnels : SIRET, zone d'intervention, tarifs indicatifs.`,
+          `Données de profil : type de compte, bio, ville, compétences, besoins, photo, budget indicatif, et pour les comptes association/structure : zone d'intervention, tarifs indicatifs.`,
           `Données d'usage : avis et notes laissés, mises en relation, signalements, badges obtenus.`,
           `⚠️ Catégorie particulière de données (art. 9 RGPD) : en vous inscrivant sur un annuaire communautaire LGBTQI+, votre seule présence sur la plateforme peut être assimilée à une donnée relative à l'orientation sexuelle et/ou à l'identité de genre. Cette donnée n'est traitée qu'avec votre consentement explicite, recueilli lors de l'inscription, et n'est jamais utilisée à d'autres fins que le fonctionnement de la plateforme.`,
         ],

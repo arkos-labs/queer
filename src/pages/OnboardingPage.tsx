@@ -24,7 +24,6 @@ const civilites: { value: Civilite; label: string }[] = [
 
 const accountTypes: { value: AccountType; label: string; desc: string; icon: string }[] = [
   { value: 'particulier', label: 'Particulier·e', desc: 'Je propose et/ou je cherche des services entre membres.', icon: '🤝' },
-  { value: 'pro', label: 'Professionnel·le', desc: 'Je suis praticien·ne ou commerçant·e et je souhaite être recommandé·e.', icon: '💼' },
   { value: 'asso', label: 'Association / structure', desc: 'Structure partenaire, association LGBTQI+ ou centre de santé.', icon: '🏳️‍🌈' },
 ];
 
@@ -57,14 +56,17 @@ export function OnboardingPage() {
   const { navigate } = useRouter();
   const [step, setStep] = useState(0);
   const [displayName, setDisplayName] = useState('');
+  const [city, setCity] = useState('');
   const [civilite, setCivilite] = useState<Civilite | null>(null);
   const [pronouns, setPronouns] = useState('');
   const [accountType, setAccountType] = useState<AccountType>('particulier');
   const [intent, setIntent] = useState<Intent | null>(null);
   const [skills, setSkills] = useState<string[]>([]);
   const [needs, setNeeds] = useState<string[]>([]);
-  const [indicativeRates, setIndicativeRates] = useState('');
-  const [budgetIndicatif, setBudgetIndicatif] = useState('');
+  const [rateAmount, setRateAmount] = useState('');
+  const [rateUnit, setRateUnit] = useState('/ heure');
+  const [budgetAmount, setBudgetAmount] = useState('');
+  const [budgetUnit, setBudgetUnit] = useState('/ prestation');
   const [skillInput, setSkillInput] = useState('');
   const [needInput, setNeedInput] = useState('');
   const [charteAccepted, setCharteAccepted] = useState(false);
@@ -94,17 +96,21 @@ export function OnboardingPage() {
   const finishOnboarding = async () => {
     setLoading(true);
     setError(null);
+    const finalRates = rateAmount.trim() ? `${rateAmount.trim()} ${rateUnit}` : null;
+    const finalBudget = budgetAmount.trim() ? `${budgetAmount.trim()} ${budgetUnit}` : null;
+
     const { error } = await supabase.from('profiles').upsert({
       id: user.id,
       display_name: displayName,
       email: user.email,
       civilite,
+      city: city.trim() || null,
       pronouns: pronouns || null,
       account_type: accountType,
       skills,
       needs,
-      indicative_rates: indicativeRates.trim() || null,
-      budget_indicatif: budgetIndicatif.trim() || null,
+      indicative_rates: finalRates,
+      budget_indicatif: finalBudget,
       charte_accepted: true,
       charte_accepted_at: new Date().toISOString(),
       profile_status: 'active',
@@ -162,6 +168,16 @@ export function OnboardingPage() {
                     className="input"
                     placeholder="Ex. Alex Martin"
                     required
+                  />
+                </div>
+
+                <div>
+                  <label className="label">Dans quelle ville ou région êtes-vous ?</label>
+                  <input
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="input"
+                    placeholder="Ex. Paris, Île-de-France, ou À distance"
                   />
                 </div>
 
@@ -301,27 +317,26 @@ export function OnboardingPage() {
                   )}
                   <div className="mt-4">
                     <label className="label">Tes tarifs (optionnel)</label>
-                    <input
-                      value={indicativeRates}
-                      onChange={(e) => setIndicativeRates(e.target.value)}
-                      className="input"
-                      placeholder="Ex. 30€/h, ou 50€ le montage d'un meuble"
-                    />
-                    <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      {RATE_UNITS.map((u) => (
-                        <button
-                          key={u}
-                          type="button"
-                          onClick={() => setIndicativeRates((v) => appendUnit(v, u))}
-                          className="rounded-full border border-neutral-200 px-2.5 py-1 text-xs text-neutral-500 hover:border-primary-300 hover:text-primary-600"
-                        >
-                          {u}
-                        </button>
-                      ))}
+                    <div className="flex gap-2 mt-1.5">
+                      <input
+                        value={rateAmount}
+                        onChange={(e) => setRateAmount(e.target.value)}
+                        className="input flex-1"
+                        placeholder="Ex. 30€, ou Entre 20€ et 40€"
+                      />
+                      <select
+                        value={rateUnit}
+                        onChange={(e) => setRateUnit(e.target.value)}
+                        className="input shrink-0 bg-neutral-50"
+                      >
+                        <option value="/ heure">/ heure</option>
+                        <option value="/ jour">/ jour</option>
+                        <option value="/ mois">/ mois</option>
+                        <option value="/ prestation">/ prestation</option>
+                      </select>
                     </div>
                     <p className="mt-1.5 text-xs text-neutral-400">
-                      Ça donne aux client·es une idée du prix avant qu'iels ne demandent un devis — le prix exact se
-                      négocie ensuite pour chaque demande, selon la durée réelle du travail.
+                      Ça donne aux client·es une idée du prix avant qu'iels ne demandent un devis.
                     </p>
                   </div>
                 </div>
@@ -356,27 +371,27 @@ export function OnboardingPage() {
                   )}
                   <div className="mt-4">
                     <label className="label">Budget indicatif (optionnel)</label>
-                    <input
-                      value={budgetIndicatif}
-                      onChange={(e) => setBudgetIndicatif(e.target.value)}
-                      className="input"
-                      placeholder="Ex. jusqu'à 40€, ou 20€/h"
-                    />
-                    <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      {RATE_UNITS.map((u) => (
-                        <button
-                          key={u}
-                          type="button"
-                          onClick={() => setBudgetIndicatif((v) => appendUnit(v, u))}
-                          className="rounded-full border border-neutral-200 px-2.5 py-1 text-xs text-neutral-500 hover:border-secondary-300 hover:text-secondary-600"
-                        >
-                          {u}
-                        </button>
-                      ))}
+                    <div className="flex gap-2 mt-1.5">
+                      <input
+                        value={budgetAmount}
+                        onChange={(e) => setBudgetAmount(e.target.value)}
+                        className="input flex-1"
+                        placeholder="Ex. 40€"
+                      />
+                      <select
+                        value={budgetUnit}
+                        onChange={(e) => setBudgetUnit(e.target.value)}
+                        className="input shrink-0 bg-neutral-50"
+                      >
+                        <option value="/ heure">/ heure</option>
+                        <option value="/ jour">/ jour</option>
+                        <option value="/ mois">/ mois</option>
+                        <option value="/ prestation">/ prestation</option>
+                      </select>
                     </div>
                     <p className="mt-1.5 text-xs text-neutral-400">
                       Indique à quel prix tu recherches ce service — ça aide les prestataires à savoir si leur tarif
-                      correspond avant de te contacter.
+                      correspond.
                     </p>
                   </div>
                 </div>

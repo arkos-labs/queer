@@ -11,7 +11,6 @@ import { PaymentRequestModal } from '@/components/PaymentRequestModal';
 import { avg, formatDate, timeAgo } from '@/lib/utils';
 import {
   MapPin,
-  Briefcase,
   Building2,
   Users,
   Mail,
@@ -184,7 +183,6 @@ export function ProfileDetailPage({ id }: { id: string }) {
 
   const typeMeta = {
     particulier: { icon: Users, label: 'Particulier·e' },
-    pro: { icon: Briefcase, label: 'Professionnel·le' },
     asso: { icon: Building2, label: 'Association / structure' },
   }[target.account_type];
 
@@ -342,23 +340,15 @@ export function ProfileDetailPage({ id }: { id: string }) {
 
 
 
-          {/* Pro fields if applicable */}
-          {target.account_type !== 'particulier' && (
+          {/* Structure fields if applicable */}
+          {target.intervention_zone && (
             <div className="card p-6">
-              <h2 className="font-display text-lg font-semibold text-neutral-900 mb-4">Informations Pro</h2>
+              <h2 className="font-display text-lg font-semibold text-neutral-900 mb-4">Informations complémentaires</h2>
               <div className="flex flex-col gap-4 text-sm text-neutral-600">
-                {target.siret && (
-                  <div>
-                    <span className="block text-xs text-neutral-400 mb-1">SIRET</span>
-                    <span className="font-medium text-neutral-900">{target.siret}</span>
-                  </div>
-                )}
-                {target.intervention_zone && (
-                  <div>
-                    <span className="block text-xs text-neutral-400 mb-1">Zone d'intervention</span>
-                    <span className="font-medium text-neutral-900">{target.intervention_zone}</span>
-                  </div>
-                )}
+                <div>
+                  <span className="block text-xs text-neutral-400 mb-1">Zone d'intervention</span>
+                  <span className="font-medium text-neutral-900">{target.intervention_zone}</span>
+                </div>
               </div>
             </div>
           )}

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase, edgeFunctionErrorMessage } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import { Download, Trash2, AlertTriangle, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight, LifeBuoy, CreditCard, CheckCircle2, Clock, LogOut } from 'lucide-react';
+import { Download, Trash2, AlertTriangle, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight, LifeBuoy, CreditCard, CheckCircle2, Clock, LogOut, UserCheck, Upload, XCircle } from 'lucide-react';
 
 export function SettingsPage() {
   const { user, profile, signOut, refreshProfile } = useAuth();
@@ -16,6 +16,8 @@ export function SettingsPage() {
   const [stripeError, setStripeError] = useState<string | null>(null);
   const [syncingStripe, setSyncingStripe] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [uploadingId, setUploadingId] = useState(false);
+  const [idError, setIdError] = useState<string | null>(null);
 
   useEffect(() => {
     // Coming back from the Stripe onboarding flow — pull the account's
@@ -59,6 +61,39 @@ export function SettingsPage() {
     await supabase.functions.invoke('stripe-sync-account');
     await refreshProfile();
     setSyncingStripe(false);
+  };
+
+  const uploadIdentityDocument = async (file: File) => {
+    if (!user) return;
+    const okType = file.type.startsWith('image/') || file.type === 'application/pdf';
+    if (!okType) {
+      setIdError('Le fichier doit être une image (JPG, PNG, WebP) ou un PDF.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setIdError('Fichier trop lourd (10 Mo maximum).');
+      return;
+    }
+    setUploadingId(true);
+    setIdError(null);
+    const ext = file.name.split('.').pop() || 'jpg';
+    const path = `${user.id}/${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from('identity-documents').upload(path, file, { upsert: true });
+    if (upErr) {
+      setUploadingId(false);
+      setIdError(upErr.message);
+      return;
+    }
+    const { error: patchErr } = await supabase
+      .from('profiles')
+      .update({ identity_document_path: path, verification_status: 'pending' })
+      .eq('id', user.id);
+    setUploadingId(false);
+    if (patchErr) {
+      setIdError(patchErr.message);
+      return;
+    }
+    await refreshProfile();
   };
 
   const exportMyData = async () => {
@@ -159,6 +194,60 @@ export function SettingsPage() {
           </div>
         </div>
 
+        {/* Identity verification */}
+        <div className="card p-6 md:p-8">
+          <div className="flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
+              <UserCheck size={20} />
+            </div>
+            <div className="flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="font-display text-lg font-semibold text-neutral-900">Vérification d'identité</h2>
+                {profile?.verification_status === 'verified' && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-success-100 px-2.5 py-1 text-xs font-medium text-success-700">
+                    <CheckCircle2 size={12} /> Vérifié·e
+                  </span>
+                )}
+                {profile?.verification_status === 'pending' && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-warning-100 px-2.5 py-1 text-xs font-medium text-warning-700">
+                    <Clock size={12} /> En cours de vérification
+                  </span>
+                )}
+                {profile?.verification_status === 'rejected' && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-error-100 px-2.5 py-1 text-xs font-medium text-error-700">
+                    <XCircle size={12} /> Document refusé
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-sm text-neutral-600">
+                Envoyez une photo de votre pièce d'identité (carte d'identité, passeport ou titre de séjour) pour
+                obtenir le badge « vérifié·e ». Un membre de l'équipe la vérifie manuellement ; elle n'est jamais
+                rendue publique et reste accessible uniquement à vous et à l'équipe de modération.
+              </p>
+              {profile?.verification_status !== 'verified' && (
+                <div className="mt-4">
+                  <label className="btn-outline cursor-pointer">
+                    <Upload size={16} />
+                    {uploadingId ? 'Envoi…' : profile?.identity_document_path ? 'Envoyer un nouveau document' : 'Envoyer ma pièce d\'identité'}
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      className="hidden"
+                      disabled={uploadingId}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) uploadIdentityDocument(file);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                </div>
+              )}
+              {idError && <p className="mt-3 text-sm text-error-600">{idError}</p>}
+            </div>
+          </div>
+        </div>
+
         {/* Payments */}
         <div className="card p-6 md:p-8">
           <div className="flex items-start gap-4">
@@ -180,8 +269,8 @@ export function SettingsPage() {
               </div>
               <p className="mt-1 text-sm text-neutral-600">
                 Activez les paiements pour pouvoir être payé·e directement dans l'app quand un membre vous demande un
-                service payant (ex. montage de meuble). Géré par Stripe : vos coordonnées bancaires et votre pièce
-                d'identité ne transitent jamais par Queer Service.
+                service payant (ex. montage de meuble). Vos coordonnées bancaires et votre pièce d'identité sont
+                gérées par notre prestataire de paiement sécurisé et ne transitent jamais par Queer Service.
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <button onClick={startStripeOnboarding} disabled={stripeLoading} className="btn-outline">
