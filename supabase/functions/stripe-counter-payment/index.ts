@@ -84,16 +84,10 @@ Deno.serve(async (req) => {
       .single();
     if (updErr) throw updErr;
 
-    // Send a system message to trigger notifications for the recipient
-    await admin.from("messages").insert({
-      connection_id,
-      sender_id: user.id,
-      body: `J'ai fait une contre-offre à ${(amountCents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}.`,
-    });
-
     return json({ payment: updated });
   } catch (err) {
     console.error(err);
-    return json({ error: err instanceof Error ? err.message : "Erreur inconnue." }, 500);
+    const message = err instanceof Error ? err.message : (err as { message?: string })?.message ?? "Erreur inconnue.";
+    return json({ error: message }, 500);
   }
 });

@@ -93,6 +93,8 @@ export function ProfileDetailPage({ id }: { id: string }) {
       .from('connections')
       .select('*')
       .or(`and(user_a.eq.${user.id},user_b.eq.${target.id}),and(user_a.eq.${target.id},user_b.eq.${user.id})`)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (findErr) {

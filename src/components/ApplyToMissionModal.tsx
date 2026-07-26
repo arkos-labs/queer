@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, edgeFunctionErrorMessage } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
+import { PriceInput } from '@/components/PriceInput';
 import { X, Send, AlertTriangle, Sparkles } from 'lucide-react';
+
+const PAYMENTS_ENABLED = !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
 interface MissionForModal {
   id: string;
@@ -16,6 +19,13 @@ interface MissionForModal {
 // applicant's pitch as the first message. This is where the applicant
 // gets to stand out — a blank "Postuler" click wouldn't tell the poster
 // anything about them.
+//
+// A proposed rate goes through the exact same payment-request system as
+// the "Demander un devis" flow on a profile page (same payments table,
+// same PaymentOfferCard in the thread with accept/counter/pay) — just
+// with payer and payee reversed, since here it's the applicant (payee)
+// proposing a price for the mission poster (payer) to accept. See the
+// `role: 'payee'` handling in stripe-request-payment.
 export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForModal; onClose: () => void }) {
   const { user, profile } = useAuth();
   const { navigate } = useRouter();
@@ -42,6 +52,8 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
       .from('connections')
       .select('*')
       .or(`and(user_a.eq.${user.id},user_b.eq.${mission.created_by}),and(user_a.eq.${mission.created_by},user_b.eq.${user.id})`)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (findErr) {
@@ -75,17 +87,34 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
       await supabase.from('connections').update({ mission_request_id: mission.id }).eq('id', connId);
     }
 
-    const finalRate = rateAmount.trim() ? `\n\nTarif proposé : ${rateAmount.trim()} ${rateUnit}` : '';
-    
     const { error: msgErr } = await supabase.from('messages').insert({
       connection_id: connId,
       sender_id: user.id,
-      body: `Candidature pour « ${mission.title} » : \n${pitch.trim()}${finalRate}`,
+      body: `Candidature pour « ${mission.title} » : \n${pitch.trim()}`,
     });
-    setLoading(false);
     if (msgErr) {
+      setLoading(false);
       setError('Erreur : ' + msgErr.message);
       return;
+    }
+
+    const rateValue = Number(rateAmount.trim().replace(',', '.'));
+    if (PAYMENTS_ENABLED && rateAmount.trim() && Number.isFinite(rateValue) && rateValue >= 1) {
+      const { error: fnErr } = await supabase.functions.invoke('stripe-request-payment', {
+        body: {
+          connection_id: connId,
+          amount: Math.round(rateValue * 100),
+          description: `Tarif proposé pour « ${mission.title} » : ${rateAmount.trim()}€ ${rateUnit}`,
+          role: 'payee',
+        },
+      });
+      setLoading(false);
+      if (fnErr) {
+        setError(await edgeFunctionErrorMessage(fnErr, "Votre candidature a été envoyée, mais le tarif n'a pas pu être proposé."));
+        return;
+      }
+    } else {
+      setLoading(false);
     }
 
     onClose();
@@ -120,28 +149,28 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
               autoFocus
             />
           </div>
-          <div>
-            <label className="label">Proposer un tarif (optionnel)</label>
-            <div className="grid grid-cols-2 gap-2 mt-1">
-              <input
-                value={rateAmount}
-                onChange={(e) => setRateAmount(e.target.value)}
-                className="input"
-                placeholder="Ex. 50€"
-              />
-              <select
-                value={rateUnit}
-                onChange={(e) => setRateUnit(e.target.value)}
-                className="input bg-neutral-50"
-              >
-                <option value="/ heure">/ heure</option>
-                <option value="/ jour">/ jour</option>
-                <option value="/ mois">/ mois</option>
-                <option value="/ prestation">/ prestation</option>
-              </select>
+          {PAYMENTS_ENABLED && (
+            <div>
+              <label className="label">Proposer un tarif (optionnel)</label>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                <PriceInput value={rateAmount} onChange={setRateAmount} placeholder="50" />
+                <select
+                  value={rateUnit}
+                  onChange={(e) => setRateUnit(e.target.value)}
+                  className="input bg-neutral-50"
+                >
+                  <option value="/ heure">/ heure</option>
+                  <option value="/ jour">/ jour</option>
+                  <option value="/ mois">/ mois</option>
+                  <option value="/ prestation">/ prestation</option>
+                </select>
+              </div>
+              <p className="mt-1.5 text-xs text-neutral-400">
+                Comme sur une demande de devis : l'auteur·e de la mission pourra accepter ce prix, vous faire une
+                contre-offre, ou refuser — directement depuis la conversation.
+              </p>
             </div>
-            <p className="mt-1.5 text-xs text-neutral-400">Ce tarif sera inclus dans votre message à l'auteur·e.</p>
-          </div>
+          )}
         </div>
         {error && (
           <div className="mt-4 flex items-start gap-2 rounded-xl bg-warning-50 p-3 text-sm text-warning-800">

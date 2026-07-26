@@ -44,26 +44,26 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
     let cancelled = false;
     const check = async () => {
       if (!user) return;
-      const { data: conn } = await supabase
+      const { data: conns } = await supabase
         .from('connections')
         .select('id')
-        .or(`and(user_a.eq.${user.id},user_b.eq.${target.id}),and(user_a.eq.${target.id},user_b.eq.${user.id})`)
-        .maybeSingle();
+        .or(`and(user_a.eq.${user.id},user_b.eq.${target.id}),and(user_a.eq.${target.id},user_b.eq.${user.id})`);
       if (cancelled) return;
-      if (!conn) {
+      const connIds = (conns ?? []).map((c) => c.id);
+      if (!connIds.length) {
         setChecking(false);
         return;
       }
       const { data: pendingPayment } = await supabase
         .from('payments')
-        .select('id, status')
-        .eq('connection_id', conn.id)
+        .select('id, status, connection_id')
+        .in('connection_id', connIds)
         .in('status', ['pending', 'authorized'])
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
       if (cancelled) return;
-      if (pendingPayment) setExistingConnectionId(conn.id);
+      if (pendingPayment) setExistingConnectionId(pendingPayment.connection_id);
       setChecking(false);
     };
     check().catch(() => setChecking(false));
@@ -123,6 +123,8 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
         .from('connections')
         .select('*')
         .or(`and(user_a.eq.${user.id},user_b.eq.${target.id}),and(user_a.eq.${target.id},user_b.eq.${user.id})`)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (findErr) {

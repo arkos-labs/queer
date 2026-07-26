@@ -33,10 +33,16 @@ Deno.serve(async (req) => {
     const { data: { user }, error: userErr } = await userClient.auth.getUser();
     if (userErr || !user) return json({ error: "Non authentifié." }, 401);
 
-    const { connection_id, amount, description, scheduled_at, service_date, service_time, service_location } = await req.json().catch(() => ({}));
+    const { connection_id, amount, description, scheduled_at, service_date, service_time, service_location, role } = await req.json().catch(() => ({}));
     if (!connection_id || typeof amount !== "number" || !Number.isFinite(amount) || amount < 100) {
       return json({ error: "Paramètres invalides (montant minimum 1€)." }, 400);
     }
+    // Who's proposing the price isn't always who's paying: on a profile
+    // "quote request" the caller is the client requesting to pay someone
+    // (role: 'payer', the default). On a mission application, the caller
+    // is the provider proposing their own rate for the mission poster to
+    // pay (role: 'payee') — same negotiation flow, opposite direction.
+    const callerIsPayee = role === "payee";
     let scheduledAtIso: string | null = null;
     if (scheduled_at) {
       const d = new Date(scheduled_at);
@@ -56,17 +62,22 @@ Deno.serve(async (req) => {
       return json({ error: "Accès refusé." }, 403);
     }
 
-    const payeeId = connection.user_a === user.id ? connection.user_b : connection.user_a;
+    const otherPartyId = connection.user_a === user.id ? connection.user_b : connection.user_a;
+    const payerId = callerIsPayee ? otherPartyId : user.id;
+    const payeeId = callerIsPayee ? user.id : otherPartyId;
 
-    const { data: payerProfile } = await admin
+    const { data: callerProfile } = await admin
       .from("profiles")
       .select("charte_accepted, profile_status")
       .eq("id", user.id)
       .single();
-    if (!payerProfile?.charte_accepted || payerProfile.profile_status !== "active") {
+    if (!callerProfile?.charte_accepted || callerProfile.profile_status !== "active") {
       return json({ error: "Acceptez la charte de respect depuis votre profil avant de demander un service payant." }, 403);
     }
 
+    // Whoever will receive the money (the payee) needs Stripe payouts
+    // enabled, regardless of which side of the conversation proposed the
+    // price.
     const { data: payeeProfile, error: payeeErr } = await admin
       .from("profiles")
       .select("id, display_name, stripe_account_id, stripe_charges_enabled")
@@ -74,7 +85,14 @@ Deno.serve(async (req) => {
       .single();
     if (payeeErr || !payeeProfile) return json({ error: "Prestataire introuvable." }, 404);
     if (!payeeProfile.stripe_account_id || !payeeProfile.stripe_charges_enabled) {
-      return json({ error: `${payeeProfile.display_name} n'a pas encore activé les paiements.` }, 400);
+      return json(
+        {
+          error: callerIsPayee
+            ? "Activez les paiements en ligne depuis vos réglages pour pouvoir proposer un tarif payant."
+            : `${payeeProfile.display_name} n'a pas encore activé les paiements.`,
+        },
+        400,
+      );
     }
 
     // Don't stack a second pending request on top of one that's already
@@ -99,7 +117,7 @@ Deno.serve(async (req) => {
       .from("payments")
       .insert({
         connection_id,
-        payer_id: user.id,
+        payer_id: payerId,
         payee_id: payeeId,
         description: safeDescription,
         amount: amountCents,
@@ -116,16 +134,10 @@ Deno.serve(async (req) => {
       .single();
     if (payErr) throw payErr;
 
-    // Send a system message to trigger notifications for the recipient
-    await admin.from("messages").insert({
-      connection_id,
-      sender_id: user.id,
-      body: `J'ai envoyé une proposition de prix de ${(amountCents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}.`,
-    });
-
     return json({ payment_id: payment.id });
   } catch (err) {
     console.error(err);
-    return json({ error: err instanceof Error ? err.message : "Erreur inconnue." }, 500);
+    const message = err instanceof Error ? err.message : (err as { message?: string })?.message ?? "Erreur inconnue.";
+    return json({ error: message }, 500);
   }
 });

@@ -45,6 +45,8 @@ export function SettingsPage() {
         .from('connections')
         .select('id')
         .or(`and(user_a.eq.${user.id},user_b.eq.${adminId}),and(user_a.eq.${adminId},user_b.eq.${user.id})`)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (findErr) throw findErr;
