@@ -428,7 +428,7 @@ export function MessageThreadPage({ id }: { id: string }) {
                               : 'rounded-bl-sm bg-neutral-100 text-neutral-900'
                           }`}
                         >
-                          <p className="whitespace-pre-line break-words overflow-hidden">{m.body}</p>
+                          <p className="whitespace-pre-wrap break-words">{m.body}</p>
                           <p className={`mt-1 text-[10px] ${mine ? 'text-primary-100' : 'text-neutral-400'}`}>{timeAgo(m.created_at)}</p>
                         </div>
                       </div>
