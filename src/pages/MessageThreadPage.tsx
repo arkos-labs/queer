@@ -285,7 +285,7 @@ export function MessageThreadPage({ id }: { id: string }) {
         />
       )}
       {/* Thread header */}
-      <div className="sticky top-[96px] z-40 border-b border-neutral-100 bg-white/95 backdrop-blur-lg">
+      <div className="fixed top-[96px] w-full max-w-[440px] z-40 border-b border-neutral-100 bg-white/95 backdrop-blur-lg">
         <div className="flex items-center gap-3 px-4 py-3">
           <button onClick={() => navigate('/messages')} aria-label="Retour aux messages" className="rounded-full p-1.5 text-neutral-500 hover:bg-neutral-100">
             <ArrowLeft size={18} />
@@ -384,7 +384,7 @@ export function MessageThreadPage({ id }: { id: string }) {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 space-y-3 px-4 pt-4">
+      <div className="flex-1 space-y-3 px-4 pt-[90px] pb-[100px]">
         {timeline.length === 0 ? (
           <p className="py-10 text-center text-sm text-neutral-400">
             Aucun message pour l'instant. Dites bonjour à {other?.display_name?.split(' ')[0] ?? 'ce membre'} !
@@ -451,11 +451,11 @@ export function MessageThreadPage({ id }: { id: string }) {
 
       {/* Composer */}
       {!profile?.charte_accepted ? (
-        <div className="sticky bottom-[calc(61px+env(safe-area-inset-bottom))] z-30 flex items-center gap-2 border-t border-neutral-200 bg-warning-50 px-4 py-3 text-xs text-warning-800">
+        <div className="fixed bottom-[calc(61px+env(safe-area-inset-bottom))] w-full max-w-[440px] z-30 flex items-center gap-2 border-t border-neutral-200 bg-warning-50 px-4 py-3 text-xs text-warning-800">
           <Flag size={14} /> Acceptez la charte de respect depuis votre profil pour pouvoir écrire.
         </div>
       ) : (
-        <form onSubmit={sendMessage} className="sticky bottom-[calc(61px+env(safe-area-inset-bottom))] z-30 flex items-end gap-2 border-t border-neutral-200 bg-white px-4 py-3">
+        <form onSubmit={sendMessage} className="fixed bottom-[calc(61px+env(safe-area-inset-bottom))] w-full max-w-[440px] z-30 flex items-end gap-2 border-t border-neutral-200 bg-white px-4 py-3">
           <label htmlFor="thread-composer" className="sr-only">Votre message</label>
           <textarea
             id="thread-composer"
@@ -470,6 +470,10 @@ export function MessageThreadPage({ id }: { id: string }) {
             rows={1}
             placeholder="Écrire un message…"
             className="input max-h-28 flex-1 resize-none"
+            onInput={(e) => {
+              e.currentTarget.style.height = 'auto';
+              e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
+            }}
           />
           <button type="submit" disabled={sending || !body.trim()} className="btn-primary shrink-0 !px-4" aria-label="Envoyer">
             <Send size={16} />
