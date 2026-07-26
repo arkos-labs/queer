@@ -70,12 +70,14 @@ export function Layout({ children }: { children: ReactNode }) {
   ].filter((t) => t.show);
 
   const isLanding = path === '/' || path === '/connexion' || path === '/inscription';
+  const isMessageThread = path.startsWith('/messages/') && path.length > '/messages/'.length;
 
   return (
     <div className="mobile-shell">
       <div className="mobile-frame">
         {/* Status-bar style top accent */}
-        <div className="sticky top-0 z-50 flex flex-col bg-[#1c1e2b] text-white pt-4 px-4 shadow-md w-full">
+        {!isMessageThread && (
+          <div className="sticky top-0 z-50 flex flex-col bg-[#1c1e2b] text-white pt-4 px-4 shadow-md w-full">
           <div className="flex items-center justify-between pb-4">
             <button
               onClick={() => go('/ressources')}
@@ -154,12 +156,13 @@ export function Layout({ children }: { children: ReactNode }) {
             </div>
           )}
         </div>
+        )}
 
         {/* Scrollable app content */}
-        <main className="mobile-content">{children}</main>
+        <main className={cn("mobile-content", isMessageThread && "pb-0")}>{children}</main>
 
         {/* Bottom tab bar */}
-        {user && tabs.length > 0 && (
+        {user && tabs.length > 0 && !isMessageThread && (
           <nav className="mobile-tabbar">
             {tabs.map((t) => {
               const Icon = t.icon;

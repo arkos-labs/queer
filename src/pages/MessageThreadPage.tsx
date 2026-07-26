@@ -285,7 +285,7 @@ export function MessageThreadPage({ id }: { id: string }) {
         />
       )}
       {/* Thread header */}
-      <div className="sticky top-20 z-40 border-b border-neutral-100 bg-white/95 backdrop-blur-lg">
+      <div className="sticky top-0 z-40 border-b border-neutral-100 bg-white/95 backdrop-blur-lg pt-[env(safe-area-inset-top)]">
         <div className="flex items-center gap-3 px-4 py-3">
           <button onClick={() => navigate('/messages')} aria-label="Retour aux messages" className="rounded-full p-1.5 text-neutral-500 hover:bg-neutral-100">
             <ArrowLeft size={18} />
@@ -451,11 +451,11 @@ export function MessageThreadPage({ id }: { id: string }) {
 
       {/* Composer */}
       {!profile?.charte_accepted ? (
-        <div className="sticky bottom-20 z-30 flex items-center gap-2 border-t border-neutral-200 bg-warning-50 px-4 py-3 text-xs text-warning-800">
+        <div className="sticky bottom-0 z-30 flex items-center gap-2 border-t border-neutral-200 bg-warning-50 px-4 py-3 text-xs text-warning-800 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <Flag size={14} /> Acceptez la charte de respect depuis votre profil pour pouvoir écrire.
         </div>
       ) : (
-        <form onSubmit={sendMessage} className="sticky bottom-20 z-30 flex items-end gap-2 border-t border-neutral-200 bg-white px-4 py-3">
+        <form onSubmit={sendMessage} className="sticky bottom-0 z-30 flex items-end gap-2 border-t border-neutral-200 bg-white px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
           <label htmlFor="thread-composer" className="sr-only">Votre message</label>
           <textarea
             id="thread-composer"
