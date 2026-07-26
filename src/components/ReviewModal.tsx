@@ -11,6 +11,7 @@ export function ReviewModal({
   targetName,
   connectionId,
   authorId,
+  authorName,
   onClose,
   onDone,
 }: {
@@ -18,6 +19,7 @@ export function ReviewModal({
   targetName: string;
   connectionId: string;
   authorId: string;
+  authorName: string;
   onClose: () => void;
   onDone: () => void;
 }) {
@@ -45,6 +47,15 @@ export function ReviewModal({
       setError(insErr.message);
       return;
     }
+    // Same idea as the payment-confirmation message: without this the
+    // reviewed person only finds out by reopening the thread. Posting it
+    // as a real message bumps the conversation to the top of their
+    // Messages list and shows up as a notification to follow up on.
+    await supabase.from('messages').insert({
+      connection_id: connectionId,
+      sender_id: authorId,
+      body: `${authorName} vous a laissé un avis (${rating} étoile${rating > 1 ? 's' : ''})${comment.trim() ? ` : « ${comment.trim()} »` : '.'}`,
+    });
     onDone();
   };
 

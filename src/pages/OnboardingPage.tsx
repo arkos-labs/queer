@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
 import { supabase } from '@/lib/supabase';
-import type { AccountType, Civilite } from '@/lib/types';
+import type { AccountType, Civilite, Profile } from '@/lib/types';
 import { Heart, ShieldCheck, ArrowRight, ArrowLeft, CheckCircle2, Sparkles, Search, HandHeart, Plus, X, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PriceInput } from '@/components/PriceInput';
@@ -53,7 +53,7 @@ const chartePoints = [
 ];
 
 export function OnboardingPage() {
-  const { user, refreshProfile, signOut } = useAuth();
+  const { user, setProfile: setAuthProfile, signOut } = useAuth();
   const { navigate } = useRouter();
   const [step, setStep] = useState(0);
   const [displayName, setDisplayName] = useState('');
@@ -100,29 +100,41 @@ export function OnboardingPage() {
     const finalRates = rateAmount.trim() ? `${rateAmount.trim()}€ ${rateUnit}` : null;
     const finalBudget = budgetAmount.trim() ? `${budgetAmount.trim()}€ ${budgetUnit}` : null;
 
-    const { error } = await supabase.from('profiles').upsert({
-      id: user.id,
-      display_name: displayName,
-      email: user.email,
-      civilite,
-      city: city.trim() || null,
-      pronouns: pronouns || null,
-      account_type: accountType,
-      skills,
-      needs,
-      indicative_rates: finalRates,
-      budget_indicatif: finalBudget,
-      charte_accepted: true,
-      charte_accepted_at: new Date().toISOString(),
-      profile_status: 'active',
-    });
+    // Use the row the upsert itself returns (same request, so guaranteed
+    // fresh and correct) and push it straight into the auth context. Doing
+    // a separate refetch-then-navigate here left a real window where
+    // navigate() could land on a route before the context's `profile` had
+    // actually updated, and every protected route bounces back to
+    // /onboarding as long as `profile` reads as null — which looked like
+    // "the signup didn't happen" (back to the display-name step) even
+    // though the account was created fine.
+    const { data, error } = await supabase
+      .from('profiles')
+      .upsert({
+        id: user.id,
+        display_name: displayName,
+        email: user.email,
+        civilite,
+        city: city.trim() || null,
+        pronouns: pronouns || null,
+        account_type: accountType,
+        skills,
+        needs,
+        indicative_rates: finalRates,
+        budget_indicatif: finalBudget,
+        charte_accepted: true,
+        charte_accepted_at: new Date().toISOString(),
+        profile_status: 'active',
+      })
+      .select()
+      .single();
     setLoading(false);
     if (error) {
       setError(error.message);
       return;
     }
-    await refreshProfile();
-    navigate('/profil?bienvenue=1');
+    setAuthProfile(data as Profile);
+    navigate('/annuaire');
   };
 
   const next = () => setStep((s) => s + 1);

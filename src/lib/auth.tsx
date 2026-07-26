@@ -12,6 +12,14 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  /** Set the in-memory profile directly from a row you already have (e.g.
+   *  the row returned by an upsert's own `.select()`), instead of doing a
+   *  second round-trip fetch via refreshProfile. Used right after
+   *  onboarding finishes, so the context's `profile` is guaranteed
+   *  up to date in the very same tick as the navigate() call that follows
+   *  — no window where a route guard could see a stale `profile === null`
+   *  and bounce back to /onboarding. */
+  setProfile: (profile: Profile) => void;
   /** Dev-only helper to bypass real auth while Supabase isn't wired up yet.
    *  Only ever defined in local dev builds (import.meta.env.DEV) — stripped
    *  out of production builds, never shown to real users. */
@@ -135,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ session, user, profile, loading, signUp, signIn, signOut, refreshProfile, devLogin }}
+      value={{ session, user, profile, loading, signUp, signIn, signOut, refreshProfile, setProfile, devLogin }}
     >
       {children}
     </AuthContext.Provider>

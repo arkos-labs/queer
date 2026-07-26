@@ -99,8 +99,18 @@ Deno.serve(async (req) => {
     if (pendingErr) throw pendingErr;
     if (!pendingPayment) return json({ error: "Aucune demande de paiement en attente pour cette conversation." }, 404);
 
+    // The negotiated price (pendingPayment.amount) is what the provider
+    // agreed to be paid — the platform's cut must not come out of that.
+    // So the client is charged the negotiated price PLUS the platform
+    // fee on top; application_fee_amount (= the fee) is what Stripe Connect
+    // keeps for the platform, and a destination charge automatically
+    // transfers `amount - application_fee_amount` to the connected
+    // account, which works out to exactly the negotiated price, in full,
+    // for the provider.
+    const totalChargeAmount = pendingPayment.amount + pendingPayment.platform_fee_amount;
+
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: pendingPayment.amount,
+      amount: totalChargeAmount,
       currency: "eur",
       capture_method: "manual",
       application_fee_amount: pendingPayment.platform_fee_amount,

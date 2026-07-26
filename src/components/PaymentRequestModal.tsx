@@ -84,6 +84,31 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
     return Number.isNaN(d.getTime()) ? null : d.toISOString();
   })();
 
+  // The PaymentOfferCard shows the price/date separately below the
+  // message, but the first message itself was only ever the raw
+  // description — all the detail typed into the form (price, date,
+  // time slot, location) never made it into the actual chat text. Fold
+  // it all into the message body so the conversation is self-contained
+  // even before scrolling down to the offer card.
+  const buildMessageBody = () => {
+    const details: string[] = [];
+    if (Number.isFinite(priceValue) && priceValue >= 1) {
+      details.push(`Tarif proposé : ${priceValue.toLocaleString('fr-FR')}€`);
+    }
+    if (serviceDate) {
+      const dateLabel = new Date(`${serviceDate}T00:00:00`).toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      });
+      const slotLabel =
+        serviceSlot === 'exact' ? serviceTime : SLOTS.find((s) => s.value === serviceSlot)?.label;
+      details.push(`Date souhaitée : ${dateLabel}${slotLabel ? ` — ${slotLabel}` : ''}`);
+    }
+    if (serviceLocation.trim()) details.push(`Lieu : ${serviceLocation.trim()}`);
+    return details.length ? `${description.trim()}\n\n${details.join('\n')}` : description.trim();
+  };
+
   const sendRequest = async () => {
     if (!user || !canSubmit) return;
     if (!profile?.charte_accepted) {
@@ -156,7 +181,7 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
 
     const { error: msgErr } = await supabase
       .from('messages')
-      .insert({ connection_id: connId, sender_id: user.id, body: description.trim() });
+      .insert({ connection_id: connId, sender_id: user.id, body: buildMessageBody() });
     if (msgErr) {
       setLoading(false);
       setError('Erreur : ' + msgErr.message);

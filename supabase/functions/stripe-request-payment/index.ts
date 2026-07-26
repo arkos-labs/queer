@@ -134,6 +134,25 @@ Deno.serve(async (req) => {
       .single();
     if (payErr) throw payErr;
 
+    // A fresh proposal always starts a new negotiation round. If the
+    // connection was left 'cancelled' (previous offer refused/canceled) or
+    // 'completed' (a prior, separate deal on the same thread), it needs to
+    // go back to 'pending' — otherwise the client only shows accept/
+    // refuse/counter actions when connectionStatus === 'pending', and this
+    // brand new payment would render with no actions at all because the
+    // connection's status was still stuck on the previous round's outcome.
+    const { data: connRow } = await admin
+      .from("connections")
+      .select("status")
+      .eq("id", connection_id)
+      .single();
+    if (connRow && (connRow.status === "cancelled" || connRow.status === "completed")) {
+      await admin
+        .from("connections")
+        .update({ status: "pending", updated_at: new Date().toISOString() })
+        .eq("id", connection_id);
+    }
+
     return json({ payment_id: payment.id });
   } catch (err) {
     console.error(err);

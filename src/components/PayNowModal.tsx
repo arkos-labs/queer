@@ -13,15 +13,20 @@ export function PayNowModal({
   clientSecret,
   connectionId,
   amount,
+  feeAmount,
   onClose,
   onDone,
 }: {
   clientSecret: string;
   connectionId: string;
+  /** The negotiated service price (what the provider will receive in full). */
   amount?: number;
+  /** The platform's cut, charged on top of `amount` — never deducted from it. */
+  feeAmount?: number;
   onClose: () => void;
   onDone: () => void;
 }) {
+  const total = typeof amount === 'number' && typeof feeAmount === 'number' ? amount + feeAmount : undefined;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="pay-now-title">
       <div className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm animate-fade-in" onClick={onClose} />
@@ -34,15 +39,25 @@ export function PayNowModal({
             <X size={18} />
           </button>
         </div>
-        {typeof amount === 'number' && (
-          <div className="mt-3 flex shrink-0 items-baseline justify-between rounded-xl bg-primary-50 px-4 py-3">
-            <span className="text-sm font-medium text-primary-700">Montant autorisé</span>
-            <span className="text-2xl font-bold text-primary-900">{formatEuros(amount)}</span>
+        {typeof total === 'number' && (
+          <div className="mt-3 shrink-0 rounded-xl bg-primary-50 px-4 py-3">
+            <div className="flex items-center justify-between text-sm text-primary-700">
+              <span>Prix de la prestation</span>
+              <span className="font-medium">{formatEuros(amount!)}</span>
+            </div>
+            <div className="mt-1 flex items-center justify-between text-sm text-primary-700">
+              <span>Frais de service</span>
+              <span className="font-medium">{formatEuros(feeAmount!)}</span>
+            </div>
+            <div className="mt-2 flex items-baseline justify-between border-t border-primary-200 pt-2">
+              <span className="text-sm font-medium text-primary-700">Total à payer</span>
+              <span className="text-2xl font-bold text-primary-900">{formatEuros(total)}</span>
+            </div>
           </div>
         )}
         <div className="min-h-0 flex-1 overflow-y-auto">
           <Elements stripe={getStripe()} options={{ clientSecret }}>
-            <CheckoutStep connectionId={connectionId} amount={amount} onDone={onDone} />
+            <CheckoutStep connectionId={connectionId} amount={total} onDone={onDone} />
           </Elements>
         </div>
       </div>

@@ -107,7 +107,7 @@ export function RainbowExplorer({ navigateOnSelect = true, compact = false }: Ra
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && onSearch()}
-          className="w-full rounded-2xl border border-neutral-200 bg-white py-3.5 pl-12 pr-12 text-sm text-neutral-900 shadow-soft placeholder-neutral-400 transition focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
+          className="w-full rounded-2xl border border-neutral-200 bg-white py-3.5 pl-12 pr-12 text-base md:text-sm text-neutral-900 shadow-soft placeholder-neutral-400 transition focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
           placeholder="Rechercher un service, un talent…"
         />
         {search ? (

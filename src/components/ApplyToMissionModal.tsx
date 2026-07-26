@@ -98,10 +98,15 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
       connId = created.id as string;
     }
 
+    // Same idea as PaymentRequestModal: the tarif proposé used to live
+    // only in the payment row/PaymentOfferCard, never in the actual
+    // message text — fold it into the first message so it's readable
+    // without needing the offer card below to know what was proposed.
+    const rateLine = rateAmount.trim() ? `\n\nTarif proposé : ${rateAmount.trim()}€ ${rateUnit}` : '';
     const { error: msgErr } = await supabase.from('messages').insert({
       connection_id: connId,
       sender_id: user.id,
-      body: `Candidature pour « ${mission.title} » : \n${pitch.trim()}`,
+      body: `Candidature pour « ${mission.title} » :\n${pitch.trim()}${rateLine}`,
     });
     if (msgErr) {
       setLoading(false);

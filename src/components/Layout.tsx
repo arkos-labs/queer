@@ -149,7 +149,7 @@ export function Layout({ children }: { children: ReactNode }) {
                 type="search"
                 onChange={(e) => window.dispatchEvent(new CustomEvent('directory-search', { detail: e.target.value }))}
                 placeholder="Montage cuisine, ménage, pet-sitting..."
-                className="block w-full pl-12 pr-4 py-3 bg-white text-slate-900 rounded-2xl border-none focus:ring-2 focus:ring-blue-500 shadow-lg text-sm outline-none"
+                className="block w-full pl-12 pr-4 py-3 bg-white text-slate-900 rounded-2xl border-none focus:ring-2 focus:ring-blue-500 shadow-lg text-base md:text-sm outline-none"
               />
             </div>
           )}

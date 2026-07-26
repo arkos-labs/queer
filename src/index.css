@@ -80,7 +80,12 @@
     @apply rounded-3xl bg-white shadow-soft ring-1 ring-neutral-200/60;
   }
   .input {
-    @apply w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-900 placeholder-neutral-400 transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200;
+    /* text-base (16px) below md, text-sm (14px) from md up: iOS Safari
+       auto-zooms into any focused field smaller than 16px, and the
+       zoomed-in view then leaves the whole page zoomed until the person
+       manually pinches back out — this is what "il faut dézoomer" was.
+       Keeping 16px on mobile stops that auto-zoom from ever triggering. */
+    @apply w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-base md:text-sm text-neutral-900 placeholder-neutral-400 transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200;
   }
   .label {
     @apply mb-1.5 block text-sm font-medium text-neutral-700;

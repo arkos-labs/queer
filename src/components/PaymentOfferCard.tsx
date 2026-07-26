@@ -83,7 +83,13 @@ export function PaymentOfferCard({
         </div>
 
         <p className="mt-2 text-2xl font-bold text-neutral-900">{formatEuros(payment.amount)}</p>
-        {payment.description && <p className="mt-0.5 text-sm text-neutral-600">{payment.description}</p>}
+        <p className="mt-0.5 text-xs text-neutral-500">
+          + {formatEuros(payment.platform_fee_amount)} de frais de service à la charge du client, soit{' '}
+          <span className="font-medium text-neutral-700">
+            {formatEuros(payment.amount + payment.platform_fee_amount)} au total
+          </span>
+        </p>
+        {payment.description && <p className="mt-1.5 text-sm text-neutral-600">{payment.description}</p>}
         {payment.scheduled_at && (
           <p className="mt-1 flex items-center gap-1.5 text-xs text-neutral-500">
             <Calendar size={13} /> {formatScheduled(payment.scheduled_at)}
@@ -129,15 +135,20 @@ export function PaymentOfferCard({
 
         {/* Mission accepted, price agreed, not yet paid */}
         {connectionStatus === 'accepted' && payment.status === 'pending' && noPI && (
-          isPayer ? (
-            <button onClick={onPayNow} disabled={payNowLoading} className="mt-3 btn-primary btn-sm">
-              <CreditCard size={14} /> {payNowLoading ? 'Préparation…' : 'Payer maintenant'}
-            </button>
-          ) : (
-            <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-neutral-500">
-              <Clock size={13} /> En attente que le client règle le paiement
+          <div className="mt-3">
+            <p className="flex items-center gap-1.5 text-xs font-semibold text-success-700">
+              <CheckCircle2 size={13} /> Proposition de prix acceptée — en attente de paiement
             </p>
-          )
+            {isPayer ? (
+              <button onClick={onPayNow} disabled={payNowLoading} className="mt-2 btn-primary btn-sm">
+                <CreditCard size={14} /> {payNowLoading ? 'Préparation…' : 'Payer maintenant'}
+              </button>
+            ) : (
+              <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-neutral-500">
+                <Clock size={13} /> En attente que le client règle le paiement
+              </p>
+            )}
+          </div>
         )}
 
         {payment.status === 'pending' && !noPI && (

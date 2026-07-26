@@ -249,6 +249,16 @@ export function MessageThreadPage({ id }: { id: string }) {
         return;
       }
       setPayment({ ...payment, status: 'captured' });
+      // The provider never sees the payer confirm+pay happen on their own
+      // screen in real time — post it as an actual message so it shows up
+      // as a follow-up notification in their Messages list (bumps
+      // connection.updated_at and counts as unread), not just a silent
+      // status change only visible if they happen to reopen the thread.
+      await supabase.from('messages').insert({
+        connection_id: connection.id,
+        sender_id: user.id,
+        body: `J'ai confirmé que la prestation a bien été réalisée et le paiement de ${formatEuros(payment.amount)} a été effectué. Merci !`,
+      });
     }
 
     if (status === 'cancelled' && payment && (payment.status === 'pending' || payment.status === 'authorized')) {
@@ -307,6 +317,7 @@ export function MessageThreadPage({ id }: { id: string }) {
           clientSecret={payNowSecret}
           connectionId={connection.id}
           amount={payment?.amount}
+          feeAmount={payment?.platform_fee_amount}
           onClose={() => setPayNowSecret(null)}
           onDone={() => {
             setPayNowSecret(null);
@@ -322,6 +333,7 @@ export function MessageThreadPage({ id }: { id: string }) {
           targetName={other.display_name}
           connectionId={connection.id}
           authorId={user.id}
+          authorName={profile?.display_name ?? 'Un membre'}
           onClose={() => setReviewOpen(false)}
           onDone={() => {
             setReviewOpen(false);
@@ -488,7 +500,10 @@ export function MessageThreadPage({ id }: { id: string }) {
       {paymentJustAuthorized && payment && (
         <div className="mx-4 mb-2 flex items-start gap-2 rounded-xl bg-success-50 p-3 text-sm text-success-700">
           <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
-          <span>Carte autorisée pour {formatEuros(payment.amount)}. Le débit aura lieu une fois la prestation confirmée terminée.</span>
+          <span>
+            Carte autorisée pour {formatEuros(payment.amount + payment.platform_fee_amount)} (dont {formatEuros(payment.platform_fee_amount)} de
+            frais de service). Le débit aura lieu une fois la prestation confirmée terminée.
+          </span>
         </div>
       )}
 
