@@ -3,7 +3,7 @@ import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
 import { supabase } from '@/lib/supabase';
 import type { AccountType, Civilite } from '@/lib/types';
-import { Heart, ShieldCheck, ArrowRight, ArrowLeft, CheckCircle2, Sparkles, Search, HandHeart, Plus, X } from 'lucide-react';
+import { Heart, ShieldCheck, ArrowRight, ArrowLeft, CheckCircle2, Sparkles, Search, HandHeart, Plus, X, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PriceInput } from '@/components/PriceInput';
 
@@ -53,7 +53,7 @@ const chartePoints = [
 ];
 
 export function OnboardingPage() {
-  const { user, refreshProfile } = useAuth();
+  const { user, refreshProfile, signOut } = useAuth();
   const { navigate } = useRouter();
   const [step, setStep] = useState(0);
   const [displayName, setDisplayName] = useState('');
@@ -132,12 +132,21 @@ export function OnboardingPage() {
 
   return (
     <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-neutral-50 px-4 py-12">
+      <div className="absolute top-4 right-4 z-10">
+        <button 
+          onClick={async () => { await signOut(); navigate('/'); }}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-neutral-200 text-sm font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors shadow-sm"
+        >
+          <LogOut size={16} /> Se déconnecter
+        </button>
+      </div>
+
       <div className="absolute -right-20 top-0 -z-10 h-72 w-72 rounded-full bg-primary-200/40 blur-3xl" />
       <div className="absolute -left-20 bottom-0 -z-10 h-72 w-72 rounded-full bg-secondary-200/30 blur-3xl" />
 
       <div className="mx-auto max-w-xl">
         {/* Progress */}
-        <div className="mb-8 flex items-center justify-center gap-2">
+        <div className="mb-8 flex items-center justify-center gap-2 mt-4">
           {[0, 1, 2, 3].map((i) => (
             <div
               key={i}

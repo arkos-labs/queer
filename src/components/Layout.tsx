@@ -159,7 +159,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <main className="mobile-content">{children}</main>
 
         {/* Bottom tab bar */}
-        {user && tabs.length > 0 && (
+        {user && profile && tabs.length > 0 && (
           <nav className="mobile-tabbar">
             {tabs.map((t) => {
               const Icon = t.icon;

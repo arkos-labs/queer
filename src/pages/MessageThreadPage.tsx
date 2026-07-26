@@ -6,9 +6,10 @@ import type { Connection, Message, Profile, Payment } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
 import { PayNowModal } from '@/components/PayNowModal';
 import { PaymentOfferCard } from '@/components/PaymentOfferCard';
+import { ReviewOfferCard } from '@/components/ReviewOfferCard';
 import { ReviewModal } from '@/components/ReviewModal';
 import { formatDate, timeAgo } from '@/lib/utils';
-import { ArrowLeft, Send, CheckCircle2, XCircle, Clock, Flag, CreditCard, AlertTriangle, Star } from 'lucide-react';
+import { ArrowLeft, Send, CheckCircle2, XCircle, Clock, Flag, CreditCard, AlertTriangle } from 'lucide-react';
 
 const STATUS_META: Record<Connection['status'], { label: string; cls: string; icon: typeof Clock }> = {
   pending: { label: 'En attente', cls: 'bg-warning-100 text-warning-700', icon: Clock },
@@ -412,19 +413,6 @@ export function MessageThreadPage({ id }: { id: string }) {
           </div>
         )}
 
-        {connection.status === 'completed' && (
-          <div className="flex flex-wrap items-center gap-2 border-t border-neutral-100 px-4 py-2">
-            {alreadyReviewed ? (
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-500">
-                <Star size={13} className="fill-accent-400 text-accent-400" /> Avis envoyé
-              </span>
-            ) : (
-              <button onClick={() => setReviewOpen(true)} className="btn-outline btn-sm">
-                <Star size={14} /> Laisser un avis
-              </button>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Messages */}
@@ -485,6 +473,13 @@ export function MessageThreadPage({ id }: { id: string }) {
               </div>
             );
           })
+        )}
+        {connection.status === 'completed' && (
+          <ReviewOfferCard
+            otherName={other?.display_name?.split(' ')[0] ?? 'l\'autre membre'}
+            alreadyReviewed={alreadyReviewed}
+            onReview={() => setReviewOpen(true)}
+          />
         )}
         <div className="h-40" />
         <div ref={bottomRef} />
