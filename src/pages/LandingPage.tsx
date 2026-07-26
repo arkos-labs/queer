@@ -62,19 +62,7 @@ export function LandingPage() {
         <div className="absolute -right-24 -top-16 -z-10 h-64 w-64 rounded-full bg-primary-200/40 blur-3xl" />
         <div className="absolute -left-24 bottom-0 -z-10 h-64 w-64 rounded-full bg-secondary-200/30 blur-3xl" />
 
-        {import.meta.env.DEV && devLogin && (
-          <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-dashed border-warning-300 bg-warning-50 px-4 py-2.5">
-            <span className="text-[11px] font-medium text-warning-700">
-              Mode développement — Supabase non connecté
-            </span>
-            <button
-              onClick={handleDevLogin}
-              className="shrink-0 rounded-full bg-warning-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-warning-700 transition-colors"
-            >
-              Connexion dev
-            </button>
-          </div>
-        )}
+
 
         <img src="/logo.png" alt="Queer Service" className="mx-auto h-14 w-14 object-contain" />
 
