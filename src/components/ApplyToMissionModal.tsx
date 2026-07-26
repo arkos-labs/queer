@@ -122,17 +122,17 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
           </div>
           <div>
             <label className="label">Proposer un tarif (optionnel)</label>
-            <div className="flex gap-2 mt-1">
+            <div className="grid grid-cols-2 gap-2 mt-1">
               <input
                 value={rateAmount}
                 onChange={(e) => setRateAmount(e.target.value)}
-                className="input flex-1"
+                className="input"
                 placeholder="Ex. 50€"
               />
               <select
                 value={rateUnit}
                 onChange={(e) => setRateUnit(e.target.value)}
-                className="input shrink-0 bg-neutral-50"
+                className="input bg-neutral-50"
               >
                 <option value="/ heure">/ heure</option>
                 <option value="/ jour">/ jour</option>
