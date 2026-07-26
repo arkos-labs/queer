@@ -451,11 +451,11 @@ export function MessageThreadPage({ id }: { id: string }) {
 
       {/* Composer */}
       {!profile?.charte_accepted ? (
-        <div className="sticky bottom-[72px] z-30 flex items-center gap-2 border-t border-neutral-200 bg-warning-50 px-4 py-3 text-xs text-warning-800">
+        <div className="sticky bottom-[calc(61px+env(safe-area-inset-bottom))] z-30 flex items-center gap-2 border-t border-neutral-200 bg-warning-50 px-4 py-3 text-xs text-warning-800">
           <Flag size={14} /> Acceptez la charte de respect depuis votre profil pour pouvoir écrire.
         </div>
       ) : (
-        <form onSubmit={sendMessage} className="sticky bottom-[72px] z-30 flex items-end gap-2 border-t border-neutral-200 bg-white px-4 py-3">
+        <form onSubmit={sendMessage} className="sticky bottom-[calc(61px+env(safe-area-inset-bottom))] z-30 flex items-end gap-2 border-t border-neutral-200 bg-white px-4 py-3">
           <label htmlFor="thread-composer" className="sr-only">Votre message</label>
           <textarea
             id="thread-composer"
