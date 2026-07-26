@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase, edgeFunctionErrorMessage } from '@/lib/supabase';
+import { supabase, edgeFunctionErrorMessage, invokeEdgeFunction } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
 import { PriceInput } from '@/components/PriceInput';
@@ -14,11 +14,21 @@ interface MissionForModal {
 }
 
 // Applying to a mission always goes through messaging: we open (or reuse)
-// a connection with the poster, tag it with mission_request_id so a DB
-// trigger can auto-close the mission once it's accepted, and send the
-// applicant's pitch as the first message. This is where the applicant
-// gets to stand out — a blank "Postuler" click wouldn't tell the poster
-// anything about them.
+// a connection with the poster dedicated to THIS mission, tag it with
+// mission_request_id so a DB trigger can auto-close the mission once it's
+// accepted, and send the applicant's pitch as the first message. This is
+// where the applicant gets to stand out — a blank "Postuler" click
+// wouldn't tell the poster anything about them.
+//
+// Deliberately scoped per mission rather than reusing whatever connection
+// already exists between the two people: the same client and provider
+// can have several independent missions on the go (or one finished and a
+// new one starting), each with its own price negotiation. The "one
+// active payment per connection" guard in stripe-request-payment is
+// scoped to a connection, so folding every mission into a single shared
+// thread would make finishing mission #1 block proposing a rate on
+// mission #2 — reusing another mission's connection, or a generic
+// contact thread, isn't safe here.
 //
 // A proposed rate goes through the exact same payment-request system as
 // the "Demander un devis" flow on a profile page (same payments table,
@@ -48,9 +58,14 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
     setLoading(true);
     setError(null);
 
+    // Only reuse a connection that's already dedicated to THIS mission
+    // (e.g. re-opening the modal on a mission already applied to) — never
+    // one left over from a different mission or a generic contact thread,
+    // so each application's payment negotiation stays independent.
     const { data: existing, error: findErr } = await supabase
       .from('connections')
       .select('*')
+      .eq('mission_request_id', mission.id)
       .or(`and(user_a.eq.${user.id},user_b.eq.${mission.created_by}),and(user_a.eq.${mission.created_by},user_b.eq.${user.id})`)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -81,10 +96,6 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
         return;
       }
       connId = created.id as string;
-    } else if (!existing.mission_request_id) {
-      // Tag the existing conversation with this mission so accepting it
-      // later closes the mission automatically.
-      await supabase.from('connections').update({ mission_request_id: mission.id }).eq('id', connId);
     }
 
     const { error: msgErr } = await supabase.from('messages').insert({
@@ -100,13 +111,11 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
 
     const rateValue = Number(rateAmount.trim().replace(',', '.'));
     if (PAYMENTS_ENABLED && rateAmount.trim() && Number.isFinite(rateValue) && rateValue >= 1) {
-      const { error: fnErr } = await supabase.functions.invoke('stripe-request-payment', {
-        body: {
-          connection_id: connId,
-          amount: Math.round(rateValue * 100),
-          description: `Tarif proposé pour « ${mission.title} » : ${rateAmount.trim()}€ ${rateUnit}`,
-          role: 'payee',
-        },
+      const { error: fnErr } = await invokeEdgeFunction('stripe-request-payment', {
+        connection_id: connId,
+        amount: Math.round(rateValue * 100),
+        description: `Tarif proposé pour « ${mission.title} » : ${rateAmount.trim()}€ ${rateUnit}`,
+        role: 'payee',
       });
       setLoading(false);
       if (fnErr) {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase, edgeFunctionErrorMessage } from '@/lib/supabase';
+import { supabase, edgeFunctionErrorMessage, invokeEdgeFunction } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
 import type { Profile } from '@/lib/types';
@@ -163,16 +163,14 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
       return;
     }
 
-    const { data, error: fnErr } = await supabase.functions.invoke('stripe-request-payment', {
-      body: {
-        connection_id: connId,
-        amount: Math.round(priceValue * 100),
-        description: description.trim(),
-        scheduled_at: scheduledAtIso,
-        service_date: serviceDate || null,
-        service_time: serviceSlot === 'exact' ? serviceTime : serviceSlot || null,
-        service_location: serviceLocation.trim() || null,
-      },
+    const { data, error: fnErr } = await invokeEdgeFunction<{ payment_id?: string }>('stripe-request-payment', {
+      connection_id: connId,
+      amount: Math.round(priceValue * 100),
+      description: description.trim(),
+      scheduled_at: scheduledAtIso,
+      service_date: serviceDate || null,
+      service_time: serviceSlot === 'exact' ? serviceTime : serviceSlot || null,
+      service_location: serviceLocation.trim() || null,
     });
 
     setLoading(false);

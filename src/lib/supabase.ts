@@ -43,3 +43,34 @@ export async function edgeFunctionErrorMessage(error: unknown, fallback: string)
   }
   return error instanceof Error ? error.message : fallback;
 }
+
+// IMPORTANT: a Response body can only be read once (`.json()`/`.text()`
+// consumes the stream). This only ever checks the HTTP status code, never
+// the body — a second read (e.g. by edgeFunctionErrorMessage afterwards)
+// would otherwise throw and mask the real error behind the SDK's generic
+// "Edge Function returned a non-2xx status code" fallback.
+function isAuthErrorResponse(error: unknown): boolean {
+  return error instanceof FunctionsHttpError && error.context?.status === 401;
+}
+
+// Edge Functions that require a user session (payment requests, counter-
+// offers, etc.) occasionally get an access token that's mid-refresh —
+// autoRefreshToken swaps it out in the background and functions.invoke()
+// can pick up a token that the gateway rejects with 401 "Non authentifié.",
+// even though the user is genuinely signed in (their regular table
+// queries succeed fine in the same breath). Rather than surface a
+// confusing auth error, force a session refresh and retry once before
+// giving up — this is the single call site every edge-function invoke
+// that needs auth should go through.
+export async function invokeEdgeFunction<T = unknown>(
+  name: string,
+  body: Record<string, unknown>,
+): Promise<{ data: T | null; error: unknown }> {
+  const first = await supabase.functions.invoke<T>(name, { body });
+  if (!first.error || !isAuthErrorResponse(first.error)) return first;
+
+  const { error: refreshErr } = await supabase.auth.refreshSession();
+  if (refreshErr) return first;
+
+  return supabase.functions.invoke<T>(name, { body });
+}

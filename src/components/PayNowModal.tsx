@@ -3,6 +3,8 @@ import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-
 import { getStripe } from '@/lib/stripe';
 import { X, AlertTriangle, ShieldCheck, CreditCard } from 'lucide-react';
 
+const formatEuros = (cents: number) => (cents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+
 // Card-entry modal shown from a conversation once the provider has
 // accepted the mission — this is deliberately the only place a client
 // can be asked for card details. See stripe-create-payment: it refuses
@@ -10,19 +12,21 @@ import { X, AlertTriangle, ShieldCheck, CreditCard } from 'lucide-react';
 export function PayNowModal({
   clientSecret,
   connectionId,
+  amount,
   onClose,
   onDone,
 }: {
   clientSecret: string;
   connectionId: string;
+  amount?: number;
   onClose: () => void;
   onDone: () => void;
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="pay-now-title">
       <div className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm animate-fade-in" onClick={onClose} />
-      <div className="card relative z-10 w-full max-w-md animate-scale-in p-6">
-        <div className="flex items-center justify-between">
+      <div className="card relative z-10 flex w-full max-w-md animate-scale-in flex-col p-6 max-h-[90vh]">
+        <div className="flex shrink-0 items-center justify-between">
           <h3 id="pay-now-title" className="font-display text-lg font-semibold text-neutral-900 flex items-center gap-2">
             <CreditCard size={18} className="text-primary-600" /> Payer la mission
           </h3>
@@ -30,15 +34,23 @@ export function PayNowModal({
             <X size={18} />
           </button>
         </div>
-        <Elements stripe={getStripe()} options={{ clientSecret }}>
-          <CheckoutStep connectionId={connectionId} onDone={onDone} />
-        </Elements>
+        {typeof amount === 'number' && (
+          <div className="mt-3 flex shrink-0 items-baseline justify-between rounded-xl bg-primary-50 px-4 py-3">
+            <span className="text-sm font-medium text-primary-700">Montant autorisé</span>
+            <span className="text-2xl font-bold text-primary-900">{formatEuros(amount)}</span>
+          </div>
+        )}
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <Elements stripe={getStripe()} options={{ clientSecret }}>
+            <CheckoutStep connectionId={connectionId} amount={amount} onDone={onDone} />
+          </Elements>
+        </div>
       </div>
     </div>
   );
 }
 
-function CheckoutStep({ connectionId, onDone }: { connectionId: string; onDone: () => void }) {
+function CheckoutStep({ connectionId, amount, onDone }: { connectionId: string; amount?: number; onDone: () => void }) {
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
@@ -91,7 +103,11 @@ function CheckoutStep({ connectionId, onDone }: { connectionId: string; onDone: 
       )}
       <div className="mt-5 flex justify-end">
         <button onClick={confirm} disabled={!stripe || submitting} className="btn-primary">
-          {submitting ? 'Autorisation…' : 'Autoriser le paiement'}
+          {submitting
+            ? 'Autorisation…'
+            : typeof amount === 'number'
+              ? `Autoriser le paiement de ${formatEuros(amount)}`
+              : 'Autoriser le paiement'}
         </button>
       </div>
     </div>

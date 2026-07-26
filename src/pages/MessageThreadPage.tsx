@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
-import { supabase, edgeFunctionErrorMessage, PUBLIC_PROFILE_COLUMNS } from '@/lib/supabase';
+import { supabase, edgeFunctionErrorMessage, invokeEdgeFunction, PUBLIC_PROFILE_COLUMNS } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import type { Connection, Message, Profile, Payment } from '@/lib/types';
@@ -46,6 +46,7 @@ export function MessageThreadPage({ id }: { id: string }) {
   const [cancelPaymentLoading, setCancelPaymentLoading] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+  const [paymentJustAuthorized, setPaymentJustAuthorized] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const footerRef = useRef<HTMLDivElement>(null);
@@ -119,6 +120,17 @@ export function MessageThreadPage({ id }: { id: string }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length, payment?.status]);
 
+  // The card form closes as soon as Stripe confirms the authorization, but
+  // nothing else on screen changed yet at that exact instant (the sticky
+  // banner update and this effect fire in the same tick) — without an
+  // explicit acknowledgement it looked like the payment vanished. Show it
+  // briefly, then let the permanent "Carte autorisée" banner speak for itself.
+  useEffect(() => {
+    if (!paymentJustAuthorized) return;
+    const t = setTimeout(() => setPaymentJustAuthorized(false), 5000);
+    return () => clearTimeout(t);
+  }, [paymentJustAuthorized]);
+
   // The header (name row + optional payment banner + optional action row)
   // and footer (composer) are fixed-position, so the scrollable message list
   // needs matching padding — but their heights change depending on
@@ -168,8 +180,8 @@ export function MessageThreadPage({ id }: { id: string }) {
     if (!connection || !user) return;
     setError(null);
     setPayNowLoading(true);
-    const { data, error: fnErr } = await supabase.functions.invoke('stripe-create-payment', {
-      body: { connection_id: connection.id },
+    const { data, error: fnErr } = await invokeEdgeFunction<{ client_secret?: string }>('stripe-create-payment', {
+      connection_id: connection.id,
     });
     setPayNowLoading(false);
     if (fnErr) {
@@ -185,8 +197,9 @@ export function MessageThreadPage({ id }: { id: string }) {
 
   const counterPayment = async (amountCents: number): Promise<string | null> => {
     if (!connection || !user) return 'Erreur.';
-    const { data, error: fnErr } = await supabase.functions.invoke('stripe-counter-payment', {
-      body: { connection_id: connection.id, amount: amountCents },
+    const { data, error: fnErr } = await invokeEdgeFunction<{ payment?: Payment }>('stripe-counter-payment', {
+      connection_id: connection.id,
+      amount: amountCents,
     });
     if (fnErr) return await edgeFunctionErrorMessage(fnErr, "Impossible d'envoyer la contre-offre.");
     if (data?.payment) setPayment(data.payment as Payment);
@@ -197,8 +210,9 @@ export function MessageThreadPage({ id }: { id: string }) {
     if (!connection || !user || !payment) return;
     setError(null);
     setCancelPaymentLoading(true);
-    const { error: fnErr } = await supabase.functions.invoke('stripe-manage-payment', {
-      body: { connection_id: connection.id, action: 'cancel' },
+    const { error: fnErr } = await invokeEdgeFunction('stripe-manage-payment', {
+      connection_id: connection.id,
+      action: 'cancel',
     });
     setCancelPaymentLoading(false);
     if (fnErr) {
@@ -224,8 +238,9 @@ export function MessageThreadPage({ id }: { id: string }) {
         return;
       }
       setStatusLoading(true);
-      const { error: fnErr } = await supabase.functions.invoke('stripe-manage-payment', {
-        body: { connection_id: connection.id, action: 'capture' },
+      const { error: fnErr } = await invokeEdgeFunction('stripe-manage-payment', {
+        connection_id: connection.id,
+        action: 'capture',
       });
       setStatusLoading(false);
       if (fnErr) {
@@ -237,8 +252,9 @@ export function MessageThreadPage({ id }: { id: string }) {
 
     if (status === 'cancelled' && payment && (payment.status === 'pending' || payment.status === 'authorized')) {
       setStatusLoading(true);
-      const { error: fnErr } = await supabase.functions.invoke('stripe-manage-payment', {
-        body: { connection_id: connection.id, action: 'cancel' },
+      const { error: fnErr } = await invokeEdgeFunction('stripe-manage-payment', {
+        connection_id: connection.id,
+        action: 'cancel',
       });
       setStatusLoading(false);
       if (fnErr) {
@@ -289,10 +305,13 @@ export function MessageThreadPage({ id }: { id: string }) {
         <PayNowModal
           clientSecret={payNowSecret}
           connectionId={connection.id}
+          amount={payment?.amount}
           onClose={() => setPayNowSecret(null)}
           onDone={() => {
             setPayNowSecret(null);
             if (payment) setPayment({ ...payment, status: 'authorized' });
+            setError(null);
+            setPaymentJustAuthorized(true);
           }}
         />
       )}
@@ -470,6 +489,13 @@ export function MessageThreadPage({ id }: { id: string }) {
         <div className="h-40" />
         <div ref={bottomRef} />
       </div>
+
+      {paymentJustAuthorized && payment && (
+        <div className="mx-4 mb-2 flex items-start gap-2 rounded-xl bg-success-50 p-3 text-sm text-success-700">
+          <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+          <span>Carte autorisée pour {formatEuros(payment.amount)}. Le débit aura lieu une fois la prestation confirmée terminée.</span>
+        </div>
+      )}
 
       {error && (
         <div className="mx-4 mb-2 flex items-start gap-2 rounded-xl bg-error-50 p-3 text-sm text-error-700">
