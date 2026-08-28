@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -11,125 +11,130 @@
     scroll-behavior: smooth;
   }
   body {
-    @apply bg-neutral-200 text-neutral-800 font-sans antialiased;
+    @apply bg-neutral-50 text-neutral-900 font-sans antialiased;
+    line-height: 1.6;
   }
   h1, h2, h3 {
-    @apply font-display;
-    line-height: 1.2;
-  }
-  body {
-    line-height: 1.6;
+    @apply font-display font-semibold text-neutral-900 tracking-tight;
+    line-height: 1.1;
   }
 }
 
-/* Mobile app shell — phone frame centered on desktop, full-bleed on mobile */
+/* ── App shell ── */
 .mobile-shell {
-  @apply mx-auto flex min-h-screen w-full max-w-[440px] flex-col bg-neutral-50 shadow-2xl sm:my-0 sm:min-h-screen;
-  position: relative;
+  @apply mx-auto flex min-h-screen w-full flex-col;
 }
 .mobile-frame {
   @apply flex w-full flex-1 flex-col;
   min-height: 100vh;
   min-height: 100dvh;
 }
-.mobile-status-bar {
-  @apply sticky top-0 z-50 flex h-20 items-center justify-between border-b border-white/10 bg-neutral-950/90 px-4 backdrop-blur-lg;
-}
 .mobile-content {
-  @apply flex-1 overflow-x-hidden pb-20;
-}
-.mobile-tabbar {
-  @apply fixed bottom-0 left-1/2 z-50 flex w-full max-w-[440px] -translate-x-1/2 items-stretch justify-around border-t border-neutral-200 bg-white/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg;
-}
-.mobile-tab {
-  @apply flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition;
-}
-.mobile-tab-active {
-  @apply text-primary-600;
-}
-.mobile-tab-inactive {
-  @apply text-neutral-400;
-}
-.mobile-tab-inactive:active {
-  @apply scale-95;
+  @apply flex-1 overflow-x-hidden pb-28 sm:pb-16;
 }
 
+/* ── Bottom tab bar ── */
+.mobile-tabbar {
+  @apply fixed bottom-4 left-4 right-4 z-50 flex items-stretch justify-around
+         rounded-2xl bg-white border border-neutral-200 px-2 py-1 shadow-lift
+         sm:bottom-6 sm:left-1/2 sm:w-auto sm:max-w-md sm:-translate-x-1/2 sm:px-4;
+  padding-bottom: max(env(safe-area-inset-bottom), 4px);
+}
+.mobile-tab {
+  @apply flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors;
+}
+.mobile-tab-active   { @apply text-primary-600; }
+.mobile-tab-inactive { @apply text-neutral-400 hover:text-neutral-600; }
+
+/* ── Components ── */
 @layer components {
+
+  /* Buttons */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5
+           text-sm font-semibold transition-all duration-150
+           disabled:opacity-40 disabled:cursor-not-allowed;
   }
   .btn-primary {
-    @apply btn bg-primary-600 text-white hover:bg-primary-700 active:scale-[0.98] shadow-soft;
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 shadow-primary-glow
+           active:scale-[0.98];
   }
   .btn-secondary {
-    @apply btn bg-secondary-500 text-white hover:bg-secondary-600 active:scale-[0.98];
+    @apply btn bg-neutral-900 text-white hover:bg-neutral-800 active:scale-[0.98];
   }
   .btn-outline {
-    @apply btn border border-neutral-300 bg-white text-neutral-800 hover:border-primary-400 hover:text-primary-700;
+    @apply btn border border-neutral-200 bg-white text-neutral-700
+           hover:bg-neutral-50 hover:border-neutral-300 active:scale-[0.98];
   }
   .btn-ghost {
     @apply btn text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900;
   }
-  .btn-sm {
-    @apply px-4 py-2 text-xs;
-  }
-  .btn-lg {
-    @apply px-8 py-4 text-base;
-  }
+  .btn-sm  { @apply px-3 py-1.5 text-xs rounded-lg; }
+  .btn-lg  { @apply px-6 py-3 text-base rounded-xl; }
+
+  /* Cards */
   .card {
-    @apply rounded-3xl bg-white shadow-soft ring-1 ring-neutral-200/60;
+    @apply rounded-2xl bg-white border border-neutral-200 p-5 shadow-card;
   }
+  .card-hover {
+    @apply card transition-all hover:shadow-lift hover:-translate-y-0.5
+           hover:border-primary-200 cursor-pointer;
+  }
+
+  /* Inputs */
   .input {
-    /* text-base (16px) below md, text-sm (14px) from md up: iOS Safari
-       auto-zooms into any focused field smaller than 16px, and the
-       zoomed-in view then leaves the whole page zoomed until the person
-       manually pinches back out — this is what "il faut dézoomer" was.
-       Keeping 16px on mobile stops that auto-zoom from ever triggering. */
-    @apply w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-base md:text-sm text-neutral-900 placeholder-neutral-400 transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200;
+    @apply w-full rounded-xl border border-neutral-200 bg-white px-4 py-3
+           text-sm text-neutral-900 placeholder-neutral-400 transition
+           focus:border-primary-500 focus:outline-none focus:ring-2
+           focus:ring-primary-500/20;
   }
   .label {
     @apply mb-1.5 block text-sm font-medium text-neutral-700;
   }
+
+  /* Badges */
   .badge-chip {
-    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium;
+    @apply inline-flex items-center gap-1.5 rounded-full border border-neutral-200
+           bg-neutral-50 text-neutral-700 px-2.5 py-1 text-[11px] font-medium;
   }
+
+  /* Misc */
   .container-app {
-    @apply mx-auto w-full max-w-[440px] px-4;
+    @apply mx-auto w-full max-w-2xl px-4 sm:px-6;
   }
   .section-title {
-    @apply font-display text-3xl font-semibold text-neutral-900 sm:text-4xl;
+    @apply font-display text-3xl font-bold text-neutral-900 sm:text-4xl;
+  }
+  .divider {
+    @apply border-t border-neutral-100 my-4;
   }
 }
 
-/* Visible keyboard focus ring (WCAG 2.4.7) — only shown for keyboard navigation */
+/* ── Focus ring ── */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid theme('colors.primary.600');
+  outline: 2px solid #7c3aed;
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 8px;
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
-}
+/* ── Scrollbar hidden ── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+::-webkit-scrollbar { width: 0; height: 0; }
+body { overscroll-behavior-y: none; }
 
-/* Hide scrollbar for mobile app feel */
-::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+/* ── Rainbow gradient (landing) ── */
+.bg-rainbow {
+  background: linear-gradient(90deg, #f43f5e, #f59e0b, #22c55e, #3b82f6, #8b5cf6);
+  background-size: 300% 100%;
 }
-body {
-  overscroll-behavior-y: none;
+.bg-hero-radial {
+  background: radial-gradient(ellipse at 60% 0%, rgba(139,92,246,0.06) 0%, transparent 70%),
+              radial-gradient(ellipse at 20% 80%, rgba(244,63,94,0.05) 0%, transparent 70%),
+              #fafafa;
 }

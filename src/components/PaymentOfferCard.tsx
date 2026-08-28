@@ -77,7 +77,7 @@ export function PaymentOfferCard({
   return (
     <div className="flex justify-center py-1">
       <div className="w-full max-w-sm rounded-2xl border border-primary-100 bg-primary-50/60 p-4 shadow-sm">
-        <div className="flex items-center gap-2 text-primary-700">
+        <div className="flex items-center gap-2 text-primary-600">
           <Handshake size={16} />
           <span className="text-xs font-semibold uppercase tracking-wide">Proposition de prix</span>
         </div>
@@ -85,11 +85,11 @@ export function PaymentOfferCard({
         <p className="mt-2 text-2xl font-bold text-neutral-900">{formatEuros(payment.amount)}</p>
         <p className="mt-0.5 text-xs text-neutral-500">
           + {formatEuros(payment.platform_fee_amount)} de frais de service à la charge du client, soit{' '}
-          <span className="font-medium text-neutral-700">
+          <span className="font-medium text-neutral-900">
             {formatEuros(payment.amount + payment.platform_fee_amount)} au total
           </span>
         </p>
-        {payment.description && <p className="mt-1.5 text-sm text-neutral-600">{payment.description}</p>}
+        {payment.description && <p className="mt-1.5 text-sm text-neutral-500">{payment.description}</p>}
         {payment.scheduled_at && (
           <p className="mt-1 flex items-center gap-1.5 text-xs text-neutral-500">
             <Calendar size={13} /> {formatScheduled(payment.scheduled_at)}
@@ -126,7 +126,7 @@ export function PaymentOfferCard({
               <button onClick={() => setCountering(true)} className="btn-outline btn-sm">
                 Proposer un autre prix
               </button>
-              <button onClick={onRefuse} disabled={cancelLoading} className="btn-ghost btn-sm text-neutral-600 hover:text-error-700 hover:bg-error-50">
+              <button onClick={onRefuse} disabled={cancelLoading} className="btn-ghost btn-sm text-neutral-500 hover:text-error-700 hover:bg-error-50">
                 <XCircle size={14} /> {cancelLoading ? 'Traitement…' : 'Refuser'}
               </button>
             </div>
@@ -157,7 +157,7 @@ export function PaymentOfferCard({
               <Clock size={13} /> Paiement en cours de confirmation…
             </p>
             {isPayer && (
-              <button onClick={onCancelPayment} disabled={cancelLoading} className="mt-2 text-xs font-medium text-neutral-400 underline hover:text-neutral-600">
+              <button onClick={onCancelPayment} disabled={cancelLoading} className="mt-2 text-xs font-medium text-neutral-400 underline hover:text-neutral-500">
                 {cancelLoading ? 'Annulation…' : "La saisie de carte a échoué ou a été abandonnée ? Annuler cette demande"}
               </button>
             )}

@@ -37,7 +37,7 @@ export function AnnouncementsBanner() {
 
   if (loading) {
     return (
-      <div className="mx-4 mb-6 rounded-2xl bg-neutral-50 p-4 animate-pulse">
+      <div className="mx-4 mb-6 rounded-2xl bg-neutral-100 p-4 animate-pulse">
         <div className="h-6 w-1/3 bg-neutral-200 rounded"></div>
       </div>
     );

@@ -274,7 +274,7 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
 
                 <div className="mt-4 space-y-4">
                   <div>
-                    <label htmlFor="pr-description" className="mb-1 block text-sm font-medium text-neutral-700">Description du service</label>
+                    <label htmlFor="pr-description" className="mb-1 block text-sm font-medium text-neutral-900">Description du service</label>
                     <textarea
                       id="pr-description"
                       value={description}
@@ -285,7 +285,7 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
                     />
                   </div>
                   <div>
-                    <label htmlFor="pr-price" className="mb-1 block text-sm font-medium text-neutral-700">Prix proposé</label>
+                    <label htmlFor="pr-price" className="mb-1 block text-sm font-medium text-neutral-900">Prix proposé</label>
                     <PriceInput id="pr-price" value={priceEuros} onChange={setPriceEuros} placeholder="30" />
                     {target.indicative_rates && (
                       <p className="mt-1.5 text-xs text-neutral-400">
@@ -296,7 +296,7 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
                     )}
                   </div>
                   <div>
-                    <label htmlFor="pr-date" className="mb-1 flex items-center gap-1.5 text-sm font-medium text-neutral-700">
+                    <label htmlFor="pr-date" className="mb-1 flex items-center gap-1.5 text-sm font-medium text-neutral-900">
                       <Calendar size={14} /> Date de la prestation (optionnel)
                     </label>
                     <input
@@ -316,8 +316,8 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
                             onClick={() => setServiceSlot(s.value)}
                             className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
                               serviceSlot === s.value
-                                ? 'border-primary-500 bg-primary-50 text-primary-700'
-                                : 'border-neutral-200 text-neutral-600 hover:border-neutral-300'
+                                ? 'border-primary-500 bg-primary-50 text-primary-600'
+                                : 'border-neutral-200 text-neutral-500 hover:border-neutral-200'
                             }`}
                           >
                             {s.label}
@@ -335,7 +335,7 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
                     )}
                   </div>
                   <div>
-                    <label htmlFor="pr-location" className="mb-1 block text-sm font-medium text-neutral-700">Lieu de la prestation (optionnel)</label>
+                    <label htmlFor="pr-location" className="mb-1 block text-sm font-medium text-neutral-900">Lieu de la prestation (optionnel)</label>
                     <input
                       id="pr-location"
                       value={serviceLocation}

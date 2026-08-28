@@ -171,7 +171,7 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
                 <select
                   value={rateUnit}
                   onChange={(e) => setRateUnit(e.target.value)}
-                  className="input bg-neutral-50"
+                  className="input bg-neutral-100"
                 >
                   <option value="/ heure">/ heure</option>
                   <option value="/ jour">/ jour</option>

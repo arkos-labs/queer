@@ -57,7 +57,7 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
           <div className="card p-8 text-center md:p-10">
             <MailCheck size={40} className="mx-auto mb-4 text-primary-600" />
             <h1 className="font-display text-xl font-semibold text-neutral-900">Vérifiez votre boîte mail</h1>
-            <p className="mt-3 text-sm text-neutral-600">
+            <p className="mt-3 text-sm text-neutral-500">
               Nous avons envoyé un lien de confirmation à <strong>{email}</strong>. Cliquez dessus pour activer votre
               compte, vous pourrez ensuite compléter votre profil.
             </p>
@@ -81,7 +81,9 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
       <div className="absolute -left-20 bottom-0 -z-10 h-72 w-72 rounded-full bg-secondary-200/30 blur-3xl" />
 
       <div className="w-full max-w-md animate-scale-in">
-        <div className="card p-8 md:p-10">
+        <div className="overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-neutral-200">
+          <div aria-hidden className="h-1.5 w-full bg-amber-400 animate-gradient-x bg-[length:200%_100%]" />
+          <div className="p-8 md:p-10">
           <div className="mb-8 text-center">
             <img src="/logo.png" alt="Queer Service" className="mx-auto mb-4 h-16 w-16 object-contain" />
             <h1 className="font-display text-2xl font-semibold text-neutral-900">
@@ -124,16 +126,16 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
             </div>
 
             {isSignup && (
-              <div className="space-y-2.5 rounded-xl bg-neutral-50 p-4">
+              <div className="space-y-2.5 rounded-xl bg-neutral-100 p-4">
                 <label className="flex cursor-pointer items-start gap-2.5">
                   <input
                     type="checkbox"
                     checked={acceptTerms}
                     onChange={(e) => setAcceptTerms(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+                    className="mt-0.5 h-4 w-4 rounded border-neutral-200 text-primary-600 focus:ring-primary-500"
                     required
                   />
-                  <span className="text-xs text-neutral-600">
+                  <span className="text-xs text-neutral-500">
                     J'ai lu et j'accepte les{' '}
                     <a href="#/cgu" target="_blank" rel="noopener noreferrer" className="font-medium text-primary-600 hover:underline">
                       CGU
@@ -150,10 +152,10 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
                     type="checkbox"
                     checked={acceptSensitiveData}
                     onChange={(e) => setAcceptSensitiveData(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+                    className="mt-0.5 h-4 w-4 rounded border-neutral-200 text-primary-600 focus:ring-primary-500"
                     required
                   />
-                  <span className="text-xs text-neutral-600">
+                  <span className="text-xs text-neutral-500">
                     Je comprends que mon inscription à cet annuaire communautaire implique le traitement de données
                     relatives à l'orientation sexuelle et/ou à l'identité de genre (catégorie particulière de
                     données), et j'y consens explicitement (art. 9 du RGPD).
@@ -192,11 +194,12 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
               </>
             )}
           </p>
+          </div>
         </div>
         <p className="mt-6 text-center text-xs text-neutral-400">
           En vous inscrivant, vous acceptez de respecter la charte communautaire de Queer Service.
           {' '}
-          <a href="#/mentions-legales" target="_blank" rel="noopener noreferrer" className="underline hover:text-neutral-600">
+          <a href="#/mentions-legales" target="_blank" rel="noopener noreferrer" className="underline hover:text-neutral-500">
             Mentions légales
           </a>
         </p>

@@ -41,16 +41,16 @@ export function PayNowModal({
         </div>
         {typeof total === 'number' && (
           <div className="mt-3 shrink-0 rounded-xl bg-primary-50 px-4 py-3">
-            <div className="flex items-center justify-between text-sm text-primary-700">
+            <div className="flex items-center justify-between text-sm text-primary-600">
               <span>Prix de la prestation</span>
               <span className="font-medium">{formatEuros(amount!)}</span>
             </div>
-            <div className="mt-1 flex items-center justify-between text-sm text-primary-700">
+            <div className="mt-1 flex items-center justify-between text-sm text-primary-600">
               <span>Frais de service</span>
               <span className="font-medium">{formatEuros(feeAmount!)}</span>
             </div>
             <div className="mt-2 flex items-baseline justify-between border-t border-primary-200 pt-2">
-              <span className="text-sm font-medium text-primary-700">Total à payer</span>
+              <span className="text-sm font-medium text-primary-600">Total à payer</span>
               <span className="text-2xl font-bold text-primary-900">{formatEuros(total)}</span>
             </div>
           </div>

@@ -52,11 +52,11 @@ export function CreateMissionRequestModal({ onClose, onSuccess }: CreateMissionR
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
       <div className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl animate-in fade-in zoom-in-95">
-        <div className="flex items-center justify-between border-b border-neutral-100 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
           <h2 className="text-lg font-semibold text-neutral-900">Publier une annonce</h2>
           <button
             onClick={onClose}
-            className="rounded-full p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 transition-colors"
+            className="rounded-full p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-500 transition-colors"
           >
             <X size={20} />
           </button>
@@ -65,7 +65,7 @@ export function CreateMissionRequestModal({ onClose, onSuccess }: CreateMissionR
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-4">
             <div>
-              <label htmlFor="title" className="mb-1.5 block text-sm font-medium text-neutral-700">
+              <label htmlFor="title" className="mb-1.5 block text-sm font-medium text-neutral-900">
                 Titre de la mission
               </label>
               <input
@@ -81,7 +81,7 @@ export function CreateMissionRequestModal({ onClose, onSuccess }: CreateMissionR
             </div>
             
             <div>
-              <label htmlFor="description" className="mb-1.5 block text-sm font-medium text-neutral-700">
+              <label htmlFor="description" className="mb-1.5 block text-sm font-medium text-neutral-900">
                 Description et détails
               </label>
               <textarea
@@ -96,7 +96,7 @@ export function CreateMissionRequestModal({ onClose, onSuccess }: CreateMissionR
             </div>
             
             <div>
-              <label htmlFor="budgetAmount" className="mb-1.5 block text-sm font-medium text-neutral-700">
+              <label htmlFor="budgetAmount" className="mb-1.5 block text-sm font-medium text-neutral-900">
                 Budget proposé <span className="text-neutral-400 font-normal">(optionnel)</span>
               </label>
               <div className="flex gap-2">
@@ -110,7 +110,7 @@ export function CreateMissionRequestModal({ onClose, onSuccess }: CreateMissionR
                 <select
                   value={budgetUnit}
                   onChange={(e) => setBudgetUnit(e.target.value)}
-                  className="input w-auto shrink-0 bg-neutral-50"
+                  className="input w-auto shrink-0 bg-neutral-100"
                 >
                   <option value="/ heure">/ heure</option>
                   <option value="/ jour">/ jour</option>

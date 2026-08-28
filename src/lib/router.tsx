@@ -61,6 +61,8 @@ export function parseRoute(path: string): { name: string; params: Record<string,
   if (first === 'parametres') return { name: 'settings', params: {} };
   if (first === 'admin') return { name: 'admin', params: {} };
   if (first === 'ressources') return { name: 'resources', params: {} };
+  if (first === 'installer') return { name: 'install-guide', params: {} };
+  if (first === 'evenements') return { name: 'events', params: {} };
   if (first === 'mentions-legales') return { name: 'legal', params: { slug: 'mentions-legales' } };
   if (first === 'cgu') return { name: 'legal', params: { slug: 'cgu' } };
   if (first === 'confidentialite') return { name: 'legal', params: { slug: 'confidentialite' } };

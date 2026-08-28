@@ -75,6 +75,7 @@ export interface Review {
   connection_id: string | null;
   rating: number;
   comment: string | null;
+  images?: string[] | null;
   created_at: string;
   author?: Pick<Profile, 'id' | 'display_name' | 'photo_url'>;
 }
@@ -182,4 +183,18 @@ export interface Report {
   created_at: string;
   handled_by: string | null;
   resolution_note: string | null;
+}
+
+export type NotificationType = 'message' | 'review' | 'system';
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  action_url: string | null;
+  reference_id: string | null;
+  read_at: string | null;
+  created_at: string;
 }

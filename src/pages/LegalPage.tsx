@@ -246,7 +246,7 @@ export function LegalPage({ slug }: { slug: LegalSlug }) {
 
       <div className="container-app max-w-3xl py-8">
         <div className="card p-6 md:p-8">
-          <p className="text-sm text-neutral-600">{page.intro}</p>
+          <p className="text-sm text-neutral-500">{page.intro}</p>
 
           <div className="mt-6 space-y-6">
             {page.sections.map((s) => (
@@ -254,7 +254,7 @@ export function LegalPage({ slug }: { slug: LegalSlug }) {
                 <h2 className="font-display text-base font-semibold text-neutral-900">{s.heading}</h2>
                 <div className="mt-2 space-y-2">
                   {s.body.map((p, i) => (
-                    <p key={i} className="text-sm leading-relaxed text-neutral-600">
+                    <p key={i} className="text-sm leading-relaxed text-neutral-500">
                       {p}
                     </p>
                   ))}

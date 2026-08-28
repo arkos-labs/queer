@@ -15,7 +15,9 @@ import { MessagesPage } from '@/pages/MessagesPage';
 import { MessageThreadPage } from '@/pages/MessageThreadPage';
 import { ResourcesPage } from '@/pages/ResourcesPage';
 import { PlaceDetailPage } from '@/pages/PlaceDetailPage';
+import { EventsPage } from '@/pages/EventsPage';
 import { LegalPage, type LegalSlug } from '@/pages/LegalPage';
+import { InstallGuidePage } from '@/pages/InstallGuidePage';
 import { CookieBanner } from '@/components/CookieBanner';
 import { InstallPWABanner } from '@/components/InstallPWABanner';
 
@@ -26,17 +28,18 @@ function Routes() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600" />
-          <p className="text-sm text-neutral-400">Chargement…</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-hero-radial">
+        <img src="/logo.png" alt="Queer Service" className="h-16 w-16 animate-float object-contain" />
+        <div className="h-1.5 w-40 overflow-hidden rounded-full bg-gold-hairline">
+          <div className="h-full w-1/3 animate-gradient-x rounded-full bg-kinpaku-gold" />
         </div>
+        <p className="text-sm font-medium text-text-light-faint">Chargement…</p>
       </div>
     );
   }
 
   // Protect authenticated routes
-  const protectedRoutes = ['directory', 'missions', 'profile', 'my-profile', 'profile-edit', 'settings', 'admin', 'messages', 'message-thread', 'place-detail'];
+  const protectedRoutes = ['events', 'directory', 'missions', 'profile', 'my-profile', 'profile-edit', 'settings', 'admin', 'messages', 'message-thread', 'place-detail'];
   if (protectedRoutes.includes(name) && !user) {
     navigate('/connexion');
     return null;
@@ -75,10 +78,14 @@ function Routes() {
       return <MessagesPage />;
     case 'message-thread':
       return <MessageThreadPage id={params.id} />;
+    case 'events':
+      return <EventsPage />;
     case 'resources':
       return <ResourcesPage />;
     case 'place-detail':
       return <PlaceDetailPage id={params.id} />;
+    case 'install-guide':
+      return <InstallGuidePage />;
     case 'legal':
       return <LegalPage slug={params.slug as LegalSlug} />;
     default:

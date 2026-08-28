@@ -26,7 +26,7 @@ export function StarRating({
           <Star
             size={size}
             className={cn(
-              n <= Math.round(value) ? 'fill-accent-400 text-accent-400' : 'fill-neutral-200 text-neutral-300',
+              n <= Math.round(value) ? 'fill-accent-400 text-accent-400' : 'fill-neutral-200 text-neutral-400',
             )}
           />
         </button>
@@ -39,7 +39,7 @@ export function AverageStars({ value, count, size = 16 }: { value: number; count
   return (
     <div className="inline-flex items-center gap-2">
       <StarRating value={value} size={size} />
-      <span className="text-sm font-medium text-neutral-600">
+      <span className="text-sm font-medium text-neutral-500">
         {value > 0 ? value.toFixed(1) : '—'}
         {count > 0 && <span className="text-neutral-400"> ({count})</span>}
       </span>

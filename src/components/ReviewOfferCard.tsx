@@ -31,7 +31,7 @@ export function ReviewOfferCard({
         ) : (
           <>
             <p className="mt-2 text-lg font-bold text-neutral-900">Comment s'est passée la prestation ?</p>
-            <p className="mt-0.5 text-sm text-neutral-600">Donnez votre avis sur {otherName}, ça aide toute la communauté.</p>
+            <p className="mt-0.5 text-sm text-neutral-500">Donnez votre avis sur {otherName}, ça aide toute la communauté.</p>
             <button onClick={onReview} className="mt-3 btn-primary btn-sm">
               <Star size={14} /> Laisser un avis
             </button>

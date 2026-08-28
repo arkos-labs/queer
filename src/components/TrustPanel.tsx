@@ -13,13 +13,11 @@ interface TrustPanelProps {
 function Row({
   icon,
   label,
-  ok,
   detail,
-  color = 'bg-neutral-100 text-neutral-600',
+  color = 'bg-neutral-100 text-neutral-500',
 }: {
   icon: ReactNode;
   label: string;
-  ok: boolean | null;
   detail: string;
   color?: string;
 }) {
@@ -45,7 +43,7 @@ export function TrustPanel({ profile, badges, reviewCount, avgRating }: TrustPan
   return (
     <div className="card p-6">
       <div className="flex items-center gap-2 mb-4">
-        <ShieldCheck size={20} className="text-primary-700" />
+        <ShieldCheck size={20} className="text-primary-600" />
         <h3 className="font-display text-lg font-bold text-neutral-900">Confiance & sécurité</h3>
       </div>
 
@@ -54,7 +52,6 @@ export function TrustPanel({ profile, badges, reviewCount, avgRating }: TrustPan
           icon={<CheckCircle2 size={18} />}
           color="bg-success-50 text-success-600"
           label="Identité vérifiée"
-          ok={isVerified ? true : profile.verification_status === 'rejected' ? false : null}
           detail={
             isVerified
               ? 'Identité vérifiée par notre équipe'
@@ -70,7 +67,6 @@ export function TrustPanel({ profile, badges, reviewCount, avgRating }: TrustPan
           icon={<Handshake size={18} />}
           color="bg-yellow-50 text-yellow-600"
           label="Charte d'inclusion"
-          ok={profile.charte_accepted}
           detail={
             profile.charte_accepted
               ? `Acceptée${profile.charte_accepted_at ? ' le ' + formatDate(profile.charte_accepted_at) : ''}`
@@ -82,7 +78,6 @@ export function TrustPanel({ profile, badges, reviewCount, avgRating }: TrustPan
           icon={<Star size={18} />}
           color="bg-success-50 text-success-600"
           label="Notes de la communauté"
-          ok={reviewCount > 0 ? true : null}
           detail={
             reviewCount > 0
               ? `${avgRating.toFixed(1)} / 5 sur ${reviewCount} avis`
@@ -94,7 +89,6 @@ export function TrustPanel({ profile, badges, reviewCount, avgRating }: TrustPan
           icon={<Clock size={18} />}
           color="bg-blue-50 text-blue-600"
           label="Dernière vérification"
-          ok={!!profile.verified_at}
           detail={profile.verified_at ? formatDate(profile.verified_at) : 'Jamais vérifiée'}
         />
 
@@ -103,7 +97,6 @@ export function TrustPanel({ profile, badges, reviewCount, avgRating }: TrustPan
             icon={<Heart size={18} />}
             color="bg-rose-50 text-rose-600"
             label='Badge "Safe" communautaire'
-            ok={true}
             detail="Attribué après plusieurs retours positifs"
           />
         )}

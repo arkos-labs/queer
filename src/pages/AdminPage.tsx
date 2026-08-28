@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth';
 import type { Profile, Report, Category, Place, PlaceReview, Badge } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
 import { StarRating } from '@/components/StarRating';
-import { cn, formatDate, timeAgo } from '@/lib/utils';
+import { cn, timeAgo } from '@/lib/utils';
 import {
   Shield,
   ShieldCheck,
@@ -17,7 +17,6 @@ import {
   Clock,
   Trash2,
   Plus,
-  X,
   MapPin,
   AlertTriangle,
   Eye,
@@ -53,7 +52,7 @@ export function AdminPage() {
       <div className="border-b border-neutral-200 bg-white">
         <div className="container-app py-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 text-white shadow-soft">
               <Shield size={20} />
             </div>
             <div>
@@ -62,7 +61,7 @@ export function AdminPage() {
             </div>
           </div>
 
-          <div className="mt-5 flex gap-1 overflow-x-auto">
+          <div className="mt-5 flex w-fit max-w-full gap-1 overflow-x-auto rounded-full bg-neutral-100 p-1 ring-1 ring-neutral-200">
             {([
               { id: 'profiles' as Tab, label: 'Profils', icon: Users },
               { id: 'places' as Tab, label: 'Lieux', icon: MapPin },
@@ -73,8 +72,10 @@ export function AdminPage() {
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 className={cn(
-                  'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition',
-                  tab === t.id ? 'bg-primary-600 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200',
+                  'inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200',
+                  tab === t.id
+                    ? 'bg-white text-primary-600 shadow-soft ring-1 ring-neutral-200'
+                    : 'text-neutral-500 hover:text-neutral-900',
                 )}
               >
                 <t.icon size={16} /> {t.label}
@@ -184,7 +185,7 @@ function ProfilesTab() {
             onClick={() => setFilter(f)}
             className={cn(
               'rounded-full px-4 py-1.5 text-sm font-medium transition',
-              filter === f ? 'bg-primary-600 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200',
+              filter === f ? 'bg-primary-600 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200',
             )}
           >
             {f === 'all' ? 'Tous' : f === 'pending' ? 'En attente' : f === 'suspended' ? 'Suspendus' : 'Bannis'}
@@ -201,7 +202,7 @@ function ProfilesTab() {
       ) : (
         <div className="space-y-3">
           {filtered.map((p) => (
-            <div key={p.id} className="card p-4">
+            <div key={p.id} className="card p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
               <div className="flex items-center gap-4">
                 <Avatar name={p.display_name} src={p.photo_url} size={44} />
                 <div className="min-w-0 flex-1">
@@ -209,7 +210,7 @@ function ProfilesTab() {
                   <p className="truncate text-xs text-neutral-500">{p.email} · {p.account_type} · {p.city ?? '—'}</p>
                 </div>
                 {p.verification_status === 'verified' && (
-                  <span className="hidden items-center gap-1 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 ring-1 ring-primary-200 sm:inline-flex">
+                  <span className="hidden items-center gap-1 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-600 ring-1 ring-primary-200 sm:inline-flex">
                     <ShieldCheck size={12} /> Vérifié
                   </span>
                 )}
@@ -222,7 +223,7 @@ function ProfilesTab() {
                   'hidden rounded-full px-2.5 py-1 text-xs font-medium sm:inline-block',
                   p.profile_status === 'active' && 'bg-success-100 text-success-700',
                   p.profile_status === 'pending' && 'bg-warning-100 text-warning-700',
-                  p.profile_status === 'suspended' && 'bg-neutral-200 text-neutral-700',
+                  p.profile_status === 'suspended' && 'bg-neutral-200 text-neutral-900',
                   p.profile_status === 'banned' && 'bg-error-100 text-error-700',
                 )}>
                   {p.profile_status}
@@ -277,7 +278,7 @@ function ProfilesTab() {
                 </div>
               </div>
               {badges.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1.5 border-t border-neutral-100 pt-3">
+                <div className="mt-3 flex flex-wrap gap-1.5 border-t border-neutral-200 pt-3">
                   {badges.map((b) => {
                     const active = profileBadges[p.id]?.has(b.id);
                     return (
@@ -288,8 +289,8 @@ function ProfilesTab() {
                         className={cn(
                           'rounded-full border px-2.5 py-1 text-xs font-medium transition',
                           active
-                            ? 'border-primary-300 bg-primary-50 text-primary-700'
-                            : 'border-neutral-200 text-neutral-500 hover:border-neutral-300',
+                            ? 'border-primary-300 bg-primary-50 text-primary-600'
+                            : 'border-neutral-200 text-neutral-500 hover:border-neutral-200',
                         )}
                       >
                         {b.label}
@@ -393,7 +394,7 @@ function PlacesTab() {
               onClick={() => setSubTab(t)}
               className={cn(
                 'rounded-full px-4 py-1.5 text-sm font-medium transition',
-                subTab === t ? 'bg-primary-600 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200',
+                subTab === t ? 'bg-primary-600 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200',
               )}
             >
               {t === 'places' ? `Lieux (${places.length})` : `Avis sur les lieux (${placeReviews.length})`}
@@ -407,7 +408,7 @@ function PlacesTab() {
               onClick={() => setFilter(f)}
               className={cn(
                 'rounded-full px-3.5 py-1.5 text-xs font-medium transition',
-                filter === f ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200',
+                filter === f ? 'bg-primary-600 text-white shadow-soft' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200',
               )}
             >
               {f === 'all' ? 'Tous' : f === 'pending' ? 'En attente' : f === 'approved' ? 'Approuvés' : 'Rejetés'}
@@ -426,12 +427,12 @@ function PlacesTab() {
         ) : (
           <div className="space-y-3">
             {filteredPlaces.map((p) => (
-              <div key={p.id} className="card flex items-start gap-4 p-4">
+              <div key={p.id} className="card flex items-start gap-4 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
                 <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-neutral-100">
                   {p.photo_url ? (
                     <img src={p.photo_url} alt={p.name} className="h-full w-full object-cover" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-neutral-300"><MapPin size={20} /></div>
+                    <div className="flex h-full w-full items-center justify-center text-neutral-400"><MapPin size={20} /></div>
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -470,7 +471,7 @@ function PlacesTab() {
       ) : (
         <div className="space-y-3">
           {filteredReviews.map((r) => (
-            <div key={r.id} className="card flex items-start gap-4 p-4">
+            <div key={r.id} className="card flex items-start gap-4 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <p className="truncate font-medium text-neutral-900">{r.place?.name ?? '—'}</p>
@@ -482,7 +483,7 @@ function PlacesTab() {
                   )}
                 </div>
                 <p className="truncate text-xs text-neutral-500">par {r.author?.display_name ?? '—'} · {timeAgo(r.created_at)}</p>
-                {r.comment && <p className="mt-1 text-sm text-neutral-600">{r.comment}</p>}
+                {r.comment && <p className="mt-1 text-sm text-neutral-500">{r.comment}</p>}
                 {r.rejection_reason && <p className="mt-1 text-xs text-neutral-400 italic">Motif : {r.rejection_reason}</p>}
               </div>
               {statusPill(r.status)}
@@ -539,7 +540,7 @@ function ReportsTab() {
   return (
     <div className="space-y-3">
       {reports.map((r) => (
-        <div key={r.id} className="card p-5">
+        <div key={r.id} className="card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
@@ -548,17 +549,17 @@ function ReportsTab() {
                   r.status === 'open' && 'bg-error-100 text-error-700',
                   r.status === 'reviewing' && 'bg-warning-100 text-warning-700',
                   r.status === 'resolved' && 'bg-success-100 text-success-700',
-                  r.status === 'dismissed' && 'bg-neutral-100 text-neutral-600',
+                  r.status === 'dismissed' && 'bg-neutral-100 text-neutral-500',
                 )}>
                   {r.status === 'open' ? 'Ouvert' : r.status === 'reviewing' ? 'En cours' : r.status === 'resolved' ? 'Résolu' : 'Écarté'}
                 </span>
                 <span className="text-xs text-neutral-400">par {r.reporter?.display_name ?? 'Inconnu'} · {timeAgo(r.created_at)}</span>
               </div>
-              <p className="mt-2 text-sm text-neutral-700">
+              <p className="mt-2 text-sm text-neutral-900">
                 <span className="font-medium">{r.target_type === 'profile' ? 'Profil' : r.target_type === 'review' ? 'Avis' : 'Message'} :</span>{' '}
                 <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs">{r.target_id.slice(0, 8)}</code>
               </p>
-              <p className="mt-2 text-sm text-neutral-600">{r.reason}</p>
+              <p className="mt-2 text-sm text-neutral-500">{r.reason}</p>
             </div>
             <div className="flex shrink-0 gap-1">
               {r.status !== 'resolved' && (
@@ -638,7 +639,7 @@ function CategoriesTab() {
 
       <div className="space-y-2">
         {categories.map((c) => (
-          <div key={c.id} className="card flex items-center gap-4 p-4">
+          <div key={c.id} className="card flex items-center gap-4 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
               <LayoutGrid size={16} />
             </div>

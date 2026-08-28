@@ -68,8 +68,8 @@ export function SettingsPage() {
       }
       
       navigate(`/messages/${connId}`);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Impossible de contacter le support.');
     } finally {
       setContactingSupport(false);
     }
@@ -210,8 +210,8 @@ export function SettingsPage() {
     <div className="animate-fade-in">
       <div className="border-b border-neutral-200 bg-white">
         <div className="container-app py-6">
-          <h1 className="font-display text-3xl font-semibold text-neutral-900">Paramètres & confidentialité</h1>
-          <p className="mt-2 text-neutral-600">Gérez vos données et votre compte, conformément au RGPD.</p>
+          <h1 className="font-display text-3xl font-semibold text-neutral-900">Paramètres & <span className="gradient-text">confidentialité</span></h1>
+          <p className="mt-2 text-neutral-500">Gérez vos données et votre compte, conformément au RGPD.</p>
         </div>
       </div>
 
@@ -219,34 +219,34 @@ export function SettingsPage() {
         {/* Help */}
         <button
           onClick={() => navigate('/ressources')}
-          className="card flex w-full items-center gap-4 p-6 text-left hover:shadow-md transition-shadow md:p-8"
+          className="card flex w-full items-center gap-4 p-6 text-left transition-all hover:-translate-y-0.5 hover:shadow-lift md:p-8"
         >
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-secondary-50 text-secondary-600">
             <LifeBuoy size={20} />
           </div>
           <div className="flex-1">
             <h2 className="font-display text-lg font-semibold text-neutral-900">Besoin d'aide ?</h2>
-            <p className="mt-1 text-sm text-neutral-600">Numéros d'écoute et guides pratiques, gratuits et confidentiels.</p>
+            <p className="mt-1 text-sm text-neutral-500">Numéros d'écoute et guides pratiques, gratuits et confidentiels.</p>
           </div>
-          <ChevronRight size={18} className="shrink-0 text-neutral-300" />
+          <ChevronRight size={18} className="shrink-0 text-neutral-400" />
         </button>
 
         {/* Contact Support */}
         <button
           onClick={contactSupport}
           disabled={contactingSupport}
-          className="card flex w-full items-center gap-4 p-6 text-left hover:shadow-md transition-shadow md:p-8"
+          className="card flex w-full items-center gap-4 p-6 text-left transition-all hover:-translate-y-0.5 hover:shadow-lift md:p-8"
         >
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
             <MessageCircle size={20} />
           </div>
           <div className="flex-1">
             <h2 className="font-display text-lg font-semibold text-neutral-900">Contacter l'équipe</h2>
-            <p className="mt-1 text-sm text-neutral-600">
+            <p className="mt-1 text-sm text-neutral-500">
               {contactingSupport ? 'Ouverture de la messagerie...' : 'Un problème, une question ? Écrivez-nous directement dans l\'application.'}
             </p>
           </div>
-          <ChevronRight size={18} className="shrink-0 text-neutral-300" />
+          <ChevronRight size={18} className="shrink-0 text-neutral-400" />
         </button>
 
         {/* Privacy */}
@@ -257,11 +257,11 @@ export function SettingsPage() {
             </div>
             <div>
               <h2 className="font-display text-lg font-semibold text-neutral-900">Confidentialité</h2>
-              <p className="mt-1 text-sm text-neutral-600">
+              <p className="mt-1 text-sm text-neutral-500">
                 Votre profil est visible par les autres membres de la communauté. Votre email et téléphone ne sont
                 affichés que sur la fiche détaillée, aux membres connectés.
               </p>
-              <p className="mt-2 text-sm text-neutral-600">
+              <p className="mt-2 text-sm text-neutral-500">
                 Vos données sont hébergées en Union Européenne, chiffrées au repos et en transit.
               </p>
             </div>
@@ -278,22 +278,22 @@ export function SettingsPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="font-display text-lg font-semibold text-neutral-900">Vérification d'identité</h2>
                 {profile?.verification_status === 'verified' && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-success-100 px-2.5 py-1 text-xs font-medium text-success-700">
+                  <span className="badge-chip bg-success-100 text-success-700">
                     <CheckCircle2 size={12} /> Vérifié·e
                   </span>
                 )}
                 {profile?.verification_status === 'pending' && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-warning-100 px-2.5 py-1 text-xs font-medium text-warning-700">
+                  <span className="badge-chip bg-warning-100 text-warning-700">
                     <Clock size={12} /> En cours de vérification
                   </span>
                 )}
                 {profile?.verification_status === 'rejected' && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-error-100 px-2.5 py-1 text-xs font-medium text-error-700">
+                  <span className="badge-chip bg-error-100 text-error-700">
                     <XCircle size={12} /> Document refusé
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-sm text-neutral-600">
+              <p className="mt-1 text-sm text-neutral-500">
                 Envoyez une photo de votre pièce d'identité (carte d'identité, passeport ou titre de séjour) pour
                 obtenir le badge « vérifié·e ». Un membre de l'équipe la vérifie manuellement ; elle n'est jamais
                 rendue publique et reste accessible uniquement à vous et à l'équipe de modération.
@@ -332,16 +332,16 @@ export function SettingsPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="font-display text-lg font-semibold text-neutral-900">Recevoir des paiements</h2>
                 {profile?.stripe_charges_enabled ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-success-100 px-2.5 py-1 text-xs font-medium text-success-700">
+                  <span className="badge-chip bg-success-100 text-success-700">
                     <CheckCircle2 size={12} /> Activé
                   </span>
                 ) : profile?.stripe_account_id ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-warning-100 px-2.5 py-1 text-xs font-medium text-warning-700">
+                  <span className="badge-chip bg-warning-100 text-warning-700">
                     <Clock size={12} /> Configuration en cours
                   </span>
                 ) : null}
               </div>
-              <p className="mt-1 text-sm text-neutral-600">
+              <p className="mt-1 text-sm text-neutral-500">
                 Activez les paiements pour pouvoir être payé·e directement dans l'app quand un membre vous demande un
                 service payant (ex. montage de meuble). Vos coordonnées bancaires et votre pièce d'identité sont
                 gérées par notre prestataire de paiement sécurisé et ne transitent jamais par Queer Service.
@@ -376,7 +376,7 @@ export function SettingsPage() {
             </div>
             <div className="flex-1">
               <h2 className="font-display text-lg font-semibold text-neutral-900">Droit à la portabilité</h2>
-              <p className="mt-1 text-sm text-neutral-600">
+              <p className="mt-1 text-sm text-neutral-500">
                 Téléchargez toutes les données associées à votre compte (profil, badges, avis, mises en relation) au
                 format JSON.
               </p>
@@ -393,12 +393,12 @@ export function SettingsPage() {
         {/* Sign out */}
         <div className="card p-6 md:p-8">
           <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-600">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500">
               <LogOut size={20} />
             </div>
             <div className="flex-1">
               <h2 className="font-display text-lg font-semibold text-neutral-900">Se déconnecter</h2>
-              <p className="mt-1 text-sm text-neutral-600">Terminez votre session sur cet appareil.</p>
+              <p className="mt-1 text-sm text-neutral-500">Terminez votre session sur cet appareil.</p>
               <button onClick={handleSignOut} disabled={signingOut} className="btn-outline mt-4">
                 <LogOut size={16} /> {signingOut ? 'Déconnexion…' : 'Se déconnecter'}
               </button>
@@ -414,7 +414,7 @@ export function SettingsPage() {
             </div>
             <div className="flex-1">
               <h2 className="font-display text-lg font-semibold text-neutral-900">Droit à l'effacement</h2>
-              <p className="mt-1 text-sm text-neutral-600">
+              <p className="mt-1 text-sm text-neutral-500">
                 La suppression de votre compte est définitive. Toutes vos données (profil, avis, mises en relation,
                 badges) seront effacées. Cette action est irréversible.
               </p>
@@ -428,15 +428,15 @@ export function SettingsPage() {
         {/* Legal */}
         <div className="card overflow-hidden p-0">
           <div className="flex items-start gap-4 p-6 md:p-8 md:pb-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-600">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500">
               <Scale size={20} />
             </div>
             <div>
               <h2 className="font-display text-lg font-semibold text-neutral-900">Informations légales</h2>
-              <p className="mt-1 text-sm text-neutral-600">Mentions légales, conditions d'utilisation et politiques de la plateforme.</p>
+              <p className="mt-1 text-sm text-neutral-500">Mentions légales, conditions d'utilisation et politiques de la plateforme.</p>
             </div>
           </div>
-          <nav className="border-t border-neutral-100">
+          <nav className="border-t border-neutral-200">
             {([
               { to: '/mentions-legales', label: 'Mentions légales', icon: FileText },
               { to: '/cgu', label: "Conditions Générales d'Utilisation", icon: Scale },
@@ -446,11 +446,11 @@ export function SettingsPage() {
               <button
                 key={l.to}
                 onClick={() => navigate(l.to)}
-                className="flex w-full items-center gap-3 border-b border-neutral-100 px-6 py-3.5 text-left text-sm text-neutral-700 last:border-0 hover:bg-neutral-50 md:px-8"
+                className="flex w-full items-center gap-3 border-b border-neutral-200 px-6 py-3.5 text-left text-sm text-neutral-900 last:border-0 hover:bg-neutral-100 md:px-8"
               >
                 <l.icon size={16} className="shrink-0 text-neutral-400" />
                 <span className="flex-1">{l.label}</span>
-                <ChevronRight size={16} className="shrink-0 text-neutral-300" />
+                <ChevronRight size={16} className="shrink-0 text-neutral-400" />
               </button>
             ))}
           </nav>
@@ -470,11 +470,11 @@ export function SettingsPage() {
                 <X size={18} />
               </button>
             </div>
-            <p className="mt-4 text-sm text-neutral-600">
+            <p className="mt-4 text-sm text-neutral-500">
               Cette action supprimera définitivement votre compte et toutes les données associées. Vous ne pourrez pas
               annuler cette opération.
             </p>
-            <p className="mt-3 text-sm font-medium text-neutral-800">Tapez « supprimer » pour confirmer.</p>
+            <p className="mt-3 text-sm font-medium text-neutral-900">Tapez « supprimer » pour confirmer.</p>
             <ConfirmInput onConfirm={deleteAccount} loading={deleteLoading} />
             {error && <p className="mt-3 text-sm text-error-600">{error}</p>}
           </div>

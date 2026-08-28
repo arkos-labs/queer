@@ -93,12 +93,12 @@ export function AddPlaceModal({
 
         <div className="mt-5 space-y-4">
           <div>
-            <label htmlFor="place-name" className="mb-1 block text-sm font-medium text-neutral-700">Nom du lieu *</label>
+            <label htmlFor="place-name" className="mb-1 block text-sm font-medium text-neutral-900">Nom du lieu *</label>
             <input id="place-name" value={name} onChange={(e) => setName(e.target.value)} className="input" placeholder="Ex. Le Comptoir Arc-en-Ciel" />
           </div>
 
           <div>
-            <label htmlFor="place-subcategory" className="mb-1 block text-sm font-medium text-neutral-700">Type de lieu</label>
+            <label htmlFor="place-subcategory" className="mb-1 block text-sm font-medium text-neutral-900">Type de lieu</label>
             <select id="place-subcategory" value={subcategoryId} onChange={(e) => setSubcategoryId(e.target.value)} className="input">
               <option value="">Choisir…</option>
               {subcategories.map((s) => (
@@ -108,23 +108,23 @@ export function AddPlaceModal({
           </div>
 
           <div>
-            <label htmlFor="place-description" className="mb-1 block text-sm font-medium text-neutral-700">Description</label>
+            <label htmlFor="place-description" className="mb-1 block text-sm font-medium text-neutral-900">Description</label>
             <textarea id="place-description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="input" placeholder="Pourquoi le recommander ?" />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="place-address" className="mb-1 block text-sm font-medium text-neutral-700">Adresse</label>
+              <label htmlFor="place-address" className="mb-1 block text-sm font-medium text-neutral-900">Adresse</label>
               <input id="place-address" value={address} onChange={(e) => setAddress(e.target.value)} className="input" placeholder="12 rue de la Paix" />
             </div>
             <div>
-              <label htmlFor="place-city" className="mb-1 block text-sm font-medium text-neutral-700">Ville</label>
+              <label htmlFor="place-city" className="mb-1 block text-sm font-medium text-neutral-900">Ville</label>
               <input id="place-city" value={city} onChange={(e) => setCity(e.target.value)} className="input" placeholder="Paris" />
             </div>
           </div>
 
           <div>
-            <label htmlFor="place-photo" className="mb-1 block text-sm font-medium text-neutral-700">Photo (URL, optionnel)</label>
+            <label htmlFor="place-photo" className="mb-1 block text-sm font-medium text-neutral-900">Photo (URL, optionnel)</label>
             <input id="place-photo" value={photoUrl} onChange={(e) => setPhotoUrl(e.target.value)} className="input" placeholder="https://…" />
           </div>
         </div>

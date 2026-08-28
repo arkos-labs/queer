@@ -6,19 +6,14 @@ import type { Profile, Badge, Review, Connection } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
 import { BadgeList } from '@/components/BadgeChip';
 import { TrustPanel } from '@/components/TrustPanel';
-import { AverageStars, StarRating } from '@/components/StarRating';
-import { avg, formatDate, timeAgo } from '@/lib/utils';
+import { StarRating } from '@/components/StarRating';
+import { avg, timeAgo } from '@/lib/utils';
 import {
-  Pencil,
   MapPin,
   Users,
   Building2,
   MessageCircle,
-  Mail,
-  Phone,
-  Star,
   Clock,
-  Calendar,
   CheckCircle2,
   XCircle,
   ArrowRight,
@@ -38,7 +33,7 @@ interface ReviewWithAuthor extends Review {
 }
 
 export function MyProfilePage() {
-  const { user, profile, refreshProfile, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const { path, navigate } = useRouter();
   const [badges, setBadges] = useState<Badge[]>([]);
   const [reviews, setReviews] = useState<ReviewWithAuthor[]>([]);
@@ -73,7 +68,7 @@ export function MyProfilePage() {
       setReviews((revRes.data ?? []) as ReviewWithAuthor[]);
       const conns = (connRes.data ?? []) as Connection[];
       const otherIds = Array.from(new Set(conns.map((c) => (c.user_a === user.id ? c.user_b : c.user_a))));
-      let otherMap = new Map<string, Profile>();
+      const otherMap = new Map<string, Profile>();
       if (otherIds.length > 0) {
         const { data: others } = await supabase.from('profiles').select(PUBLIC_PROFILE_COLUMNS).in('id', otherIds);
         for (const o of (others ?? []) as Profile[]) otherMap.set(o.id, o);
@@ -104,7 +99,7 @@ export function MyProfilePage() {
           <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-primary-600" />
           <div className="flex-1">
             <p className="text-sm font-medium text-primary-900">Bienvenue, votre inscription est terminée !</p>
-            <p className="mt-0.5 text-xs text-primary-700">Votre profil est prêt, vous pouvez le compléter à tout moment.</p>
+            <p className="mt-0.5 text-xs text-primary-600">Votre profil est prêt, vous pouvez le compléter à tout moment.</p>
           </div>
           <button
             onClick={() => {
@@ -118,29 +113,23 @@ export function MyProfilePage() {
           </button>
         </div>
       )}
-      <div className="mb-6 flex items-center justify-between">
+
+      <div className="mb-6">
         <button
-          onClick={() => navigate('/annuaire')}
-          aria-label="Retour à l'annuaire"
-          className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100"
+          onClick={() => window.history.back()}
+          aria-label="Retour"
+          title="Retour"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-paper-raised border border-gold-hairline text-ink-base shadow-card transition-all hover:scale-105 hover:border-patina-deep hover:text-patina-deep"
         >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="font-display text-lg font-semibold text-neutral-900">Profil</h1>
-        <button
-          onClick={() => navigate('/parametres')}
-          aria-label="Réglages"
-          title="Réglages"
-          className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100"
-        >
-          <Settings size={20} />
+          <ArrowLeft size={18} strokeWidth={1.5} />
         </button>
       </div>
-
       <div className="flex flex-col gap-6">
           {/* Main Card */}
-          <div className="card overflow-hidden pb-8 pt-8">
-            <div className="flex justify-center relative">
+          <div className="card overflow-hidden pb-8">
+            {/* Rainbow banner */}
+            <div aria-hidden="true" className="h-28 bg-amber-400 bg-[length:200%_100%] animate-gradient-x sm:h-32" />
+            <div className="relative -mt-14 flex justify-center sm:-mt-16">
               <Avatar name={profile.display_name} src={profile.photo_url} size={112} className="bg-primary-600 text-white" />
               {profile.verification_status === 'verified' && (
                 <div className="absolute bottom-0 right-1/2 translate-x-12 translate-y-1 rounded-full bg-white p-0.5 shadow-sm">
@@ -152,7 +141,7 @@ export function MyProfilePage() {
             <div className="px-6 mt-6 text-center">
               <h1 className="font-display text-3xl font-bold text-neutral-900">{profile.display_name}</h1>
                 {typeMeta && (
-                  <span className="mt-2 inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">
+                  <span className="mt-2 inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-600">
                     {typeMeta.label}
                   </span>
                 )}
@@ -164,7 +153,7 @@ export function MyProfilePage() {
               </div>
 
               {profile.bio && (
-                <p className="mt-6 text-[15px] italic text-neutral-600 leading-relaxed whitespace-pre-line px-2">
+                <p className="mt-6 text-[15px] italic text-neutral-500 leading-relaxed whitespace-pre-line px-2">
                   "{profile.bio}"
                 </p>
               )}
@@ -190,7 +179,7 @@ export function MyProfilePage() {
                   <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-400 mb-3">Compétences proposées</h3>
                   <div className="flex flex-wrap justify-center gap-2">
                     {profile.skills.map((s) => (
-                      <span key={s} className="rounded-md bg-neutral-50 px-3 py-1.5 text-xs font-medium text-neutral-700 border border-neutral-200">
+                      <span key={s} className="badge-chip bg-primary-50 text-primary-600 ring-1 ring-primary-100">
                         {s}
                       </span>
                     ))}
@@ -203,7 +192,7 @@ export function MyProfilePage() {
                   <h3 className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 mb-3">Recherche</h3>
                   <div className="flex flex-wrap justify-center gap-2">
                     {profile.needs.map((s) => (
-                      <span key={s} className="rounded-md bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 border border-secondary-100">
+                      <span key={s} className="badge-chip bg-primary-50 text-neutral-900 ring-1 ring-neutral-200">
                         {s}
                       </span>
                     ))}
@@ -219,7 +208,7 @@ export function MyProfilePage() {
           {(profile.intervention_zone || profile.indicative_rates) && (
             <div className="card p-6">
               <h2 className="font-display text-lg font-semibold text-neutral-900 mb-4">Informations complémentaires</h2>
-              <div className="flex flex-col gap-4 text-sm text-neutral-600">
+              <div className="flex flex-col gap-4 text-sm text-neutral-500">
                 {profile.intervention_zone && (
                   <div>
                     <span className="block text-xs text-neutral-400 mb-1">Zone d'intervention</span>
@@ -242,8 +231,8 @@ export function MyProfilePage() {
           <div className="card p-6">
             <h2 className="mb-4 font-display text-lg font-bold text-neutral-900">Mises en relation</h2>
             {connections.length === 0 ? (
-              <div className="rounded-2xl bg-neutral-50 p-8 text-center">
-                <MessageCircle size={28} className="mx-auto text-neutral-300" />
+              <div className="rounded-2xl bg-neutral-100 p-8 text-center">
+                <MessageCircle size={28} className="mx-auto text-neutral-400" />
                 <p className="mt-3 text-sm text-neutral-500">Aucune mise en relation pour l'instant.</p>
                 <button onClick={() => navigate('/annuaire')} className="btn-outline btn-sm mt-4">
                   Explorer l'annuaire <ArrowRight size={14} />
@@ -255,7 +244,7 @@ export function MyProfilePage() {
                   <button
                     key={c.id}
                     onClick={() => navigate(`/messages/${c.id}`)}
-                    className="flex w-full items-center gap-4 rounded-xl border border-neutral-100 p-4 text-left hover:border-primary-300 hover:bg-primary-50/30 transition-colors"
+                    className="flex w-full items-center gap-4 rounded-xl border border-neutral-200 p-4 text-left hover:border-primary-300 hover:bg-primary-50/30 transition-colors"
                   >
                     <Avatar name={c.other?.display_name ?? 'Inconnu'} src={c.other?.photo_url} size={44} />
                     <div className="min-w-0 flex-1">
@@ -280,7 +269,7 @@ export function MyProfilePage() {
             ) : (
               <div className="space-y-6">
                 {reviews.map((r) => (
-                  <div key={r.id} className="border-b border-neutral-100 pb-6 last:border-0 last:pb-0">
+                  <div key={r.id} className="border-b border-neutral-200 pb-6 last:border-0 last:pb-0">
                     <div className="flex gap-4">
                       <Avatar name={r.author?.display_name ?? 'Anonyme'} src={r.author?.photo_url} size={44} />
                       <div className="flex-1 min-w-0">
@@ -291,7 +280,7 @@ export function MyProfilePage() {
                         <div className="mt-0.5">
                           <StarRating value={r.rating} size={13} />
                         </div>
-                        {r.comment && <p className="mt-2.5 text-[15px] text-neutral-700 leading-relaxed">{r.comment}</p>}
+                        {r.comment && <p className="mt-2.5 text-[15px] text-neutral-900 leading-relaxed">{r.comment}</p>}
                       </div>
                     </div>
                   </div>
@@ -317,9 +306,9 @@ export function MyProfilePage() {
 function StatusBadge({ status }: { status: Connection['status'] }) {
   const map = {
     pending: { icon: Clock, label: 'En attente', cls: 'bg-warning-100 text-warning-700' },
-    accepted: { icon: CheckCircle2, label: 'Acceptée', cls: 'bg-primary-100 text-primary-700' },
+    accepted: { icon: CheckCircle2, label: 'Acceptée', cls: 'bg-primary-100 text-primary-600' },
     completed: { icon: CheckCircle2, label: 'Terminée', cls: 'bg-success-100 text-success-700' },
-    cancelled: { icon: XCircle, label: 'Annulée', cls: 'bg-neutral-100 text-neutral-600' },
+    cancelled: { icon: XCircle, label: 'Annulée', cls: 'bg-neutral-100 text-neutral-500' },
   }[status];
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${map.cls}`}>

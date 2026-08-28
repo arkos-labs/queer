@@ -87,8 +87,28 @@ export function MessagesPage() {
       }
     };
     load();
+
+    const channel = supabase
+      .channel('user-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          // A bit heavy to reload entirely, but ensures we always get the new
+          // connections/profiles that we might not have yet in state if someone
+          // we never talked to messages us.
+          load();
+        }
+      )
+      .subscribe();
+
     return () => {
       cancelled = true;
+      supabase.removeChannel(channel);
     };
   }, [user, navigate]);
 
@@ -99,7 +119,8 @@ export function MessagesPage() {
       <div className="border-b border-neutral-200 bg-white">
         <div className="container-app py-6">
           <h1 className="font-display text-3xl font-semibold text-neutral-900">Messages</h1>
-          <p className="mt-2 text-neutral-600">Vos conversations avec la communauté.</p>
+          <p className="mt-2 text-neutral-500">Vos conversations avec la communauté.</p>
+          <div aria-hidden className="mt-3 h-1 w-16 rounded-full bg-amber-400" />
         </div>
       </div>
 
@@ -114,7 +135,7 @@ export function MessagesPage() {
           </div>
         ) : rows.length === 0 ? (
           <div className="card p-10 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-400">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
               <MessageCircle size={26} />
             </div>
             <h3 className="text-lg font-semibold text-neutral-900">Aucune conversation</h3>
@@ -131,7 +152,7 @@ export function MessagesPage() {
               <button
                 key={r.connection.id}
                 onClick={() => navigate(`/messages/${r.connection.id}`)}
-                className="card flex w-full items-center gap-3 p-4 text-left hover:shadow-md transition-shadow"
+                className="card flex w-full items-center gap-3 p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-lift"
               >
                 <Avatar name={r.other?.display_name ?? 'Membre'} src={r.other?.photo_url} size={48} />
                 <div className="min-w-0 flex-1">

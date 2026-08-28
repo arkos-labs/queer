@@ -6,23 +6,19 @@ import type { Profile, Badge, Review } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
 import { BadgeList } from '@/components/BadgeChip';
 import { TrustPanel } from '@/components/TrustPanel';
-import { StarRating, AverageStars } from '@/components/StarRating';
+import { StarRating } from '@/components/StarRating';
 import { PaymentRequestModal } from '@/components/PaymentRequestModal';
-import { avg, formatDate, timeAgo } from '@/lib/utils';
+import { avg, timeAgo } from '@/lib/utils';
 import {
   MapPin,
   Building2,
   Users,
-  Mail,
   Phone,
-  Clock,
-  Calendar,
   ArrowLeft,
   Flag,
   Send,
   X,
   ShieldCheck,
-  MessageCircle,
   MessageSquare,
   Settings,
   CreditCard,
@@ -194,7 +190,7 @@ export function ProfileDetailPage({ id }: { id: string }) {
         <button
           onClick={() => navigate('/annuaire')}
           aria-label="Retour à l'annuaire"
-          className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
         >
           <ArrowLeft size={20} />
         </button>
@@ -204,7 +200,7 @@ export function ProfileDetailPage({ id }: { id: string }) {
             onClick={() => navigate('/parametres')}
             aria-label="Réglages"
             title="Réglages"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
           >
             <Settings size={20} />
           </button>
@@ -222,8 +218,10 @@ export function ProfileDetailPage({ id }: { id: string }) {
 
       <div className="flex flex-col gap-6">
           {/* Main Card */}
-          <div className="card overflow-hidden pb-8 pt-8">
-            <div className="flex justify-center relative">
+          <div className="card overflow-hidden pb-8">
+            {/* Rainbow banner */}
+            <div aria-hidden="true" className="h-28 bg-amber-400 bg-[length:200%_100%] animate-gradient-x sm:h-32" />
+            <div className="relative -mt-14 flex justify-center sm:-mt-16">
               <Avatar name={target.display_name} src={target.photo_url} size={112} className="bg-primary-600 text-white" />
               {target.verification_status === 'verified' && (
                 <div className="absolute bottom-0 right-1/2 translate-x-12 translate-y-1 rounded-full bg-white p-0.5 shadow-sm">
@@ -235,7 +233,7 @@ export function ProfileDetailPage({ id }: { id: string }) {
             <div className="px-6 mt-6 text-center">
               <h1 className="font-display text-3xl font-bold text-neutral-900">{target.display_name}</h1>
               {typeMeta && (
-                <span className="mt-2 inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">
+                <span className="mt-2 inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-600">
                   {typeMeta.label}
                 </span>
               )}
@@ -247,7 +245,7 @@ export function ProfileDetailPage({ id }: { id: string }) {
               </div>
 
               {target.bio && (
-                <p className="mt-6 text-[15px] italic text-neutral-600 leading-relaxed whitespace-pre-line px-2">
+                <p className="mt-6 text-[15px] italic text-neutral-500 leading-relaxed whitespace-pre-line px-2">
                   "{target.bio}"
                 </p>
               )}
@@ -259,27 +257,9 @@ export function ProfileDetailPage({ id }: { id: string }) {
                    </button>
                 ) : (
                   <>
-                    <button onClick={() => setContactOpen(true)} className="btn-primary flex-1 font-semibold text-[15px]">
+                    <button onClick={() => setContactOpen(true)} className="btn-primary w-full font-semibold text-[15px]">
                        <MessageSquare size={18} className="mr-1.5" /> Message
                     </button>
-                    {target.phone ? (
-                      <a
-                        href={`tel:${target.phone}`}
-                        aria-label={`Appeler ${target.display_name}`}
-                        title="Appeler"
-                        className="inline-flex h-[44px] w-[56px] shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-700 transition-colors hover:bg-neutral-200"
-                      >
-                        <Phone size={18} />
-                      </a>
-                    ) : (
-                      <span
-                        aria-hidden
-                        title="Téléphone non renseigné"
-                        className="inline-flex h-[44px] w-[56px] shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-300"
-                      >
-                        <Phone size={18} />
-                      </span>
-                    )}
                   </>
                 )}
               </div>
@@ -289,7 +269,7 @@ export function ProfileDetailPage({ id }: { id: string }) {
                   <div className="mt-4">
                     {target.indicative_rates && (
                       <p className="mb-2 text-center text-xs text-neutral-500">
-                        Tarifs indicatifs de {target.display_name} : <span className="font-medium text-neutral-700">{target.indicative_rates}</span>
+                        Tarifs indicatifs de {target.display_name} : <span className="font-medium text-neutral-900">{target.indicative_rates}</span>
                       </p>
                     )}
                     <button
@@ -300,7 +280,7 @@ export function ProfileDetailPage({ id }: { id: string }) {
                     </button>
                   </div>
                 ) : (
-                  <div className="mt-4 flex items-center gap-2 rounded-xl bg-neutral-50 px-4 py-3 text-left text-xs text-neutral-500">
+                  <div className="mt-4 flex items-center gap-2 rounded-xl bg-neutral-100 px-4 py-3 text-left text-xs text-neutral-500">
                     <CreditCard size={16} className="shrink-0 text-neutral-400" />
                     <span>{target.display_name} n'a pas encore activé les paiements en ligne. Contactez-le·la par message pour convenir d'un prix.</span>
                   </div>
@@ -312,7 +292,7 @@ export function ProfileDetailPage({ id }: { id: string }) {
                   <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-400 mb-3">Compétences proposées</h3>
                   <div className="flex flex-wrap justify-center gap-2">
                     {target.skills.map((s) => (
-                      <span key={s} className="rounded-md bg-neutral-50 px-3 py-1.5 text-xs font-medium text-neutral-700 border border-neutral-200">
+                      <span key={s} className="badge-chip bg-primary-50 text-primary-600 ring-1 ring-primary-100">
                         {s}
                       </span>
                     ))}
@@ -325,14 +305,14 @@ export function ProfileDetailPage({ id }: { id: string }) {
                   <h3 className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 mb-3">Recherche</h3>
                   <div className="flex flex-wrap justify-center gap-2">
                     {target.needs.map((s) => (
-                      <span key={s} className="rounded-md bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 border border-secondary-100">
+                      <span key={s} className="badge-chip bg-primary-50 text-neutral-900 ring-1 ring-neutral-200">
                         {s}
                       </span>
                     ))}
                   </div>
                   {target.budget_indicatif && (
                     <p className="mt-3 text-center text-xs text-neutral-500">
-                      Budget indicatif : <span className="font-medium text-neutral-700">{target.budget_indicatif}</span>
+                      Budget indicatif : <span className="font-medium text-neutral-900">{target.budget_indicatif}</span>
                     </p>
                   )}
                 </div>
@@ -346,7 +326,7 @@ export function ProfileDetailPage({ id }: { id: string }) {
           {target.intervention_zone && (
             <div className="card p-6">
               <h2 className="font-display text-lg font-semibold text-neutral-900 mb-4">Informations complémentaires</h2>
-              <div className="flex flex-col gap-4 text-sm text-neutral-600">
+              <div className="flex flex-col gap-4 text-sm text-neutral-500">
                 <div>
                   <span className="block text-xs text-neutral-400 mb-1">Zone d'intervention</span>
                   <span className="font-medium text-neutral-900">{target.intervention_zone}</span>
@@ -367,7 +347,7 @@ export function ProfileDetailPage({ id }: { id: string }) {
             ) : (
               <div className="space-y-6">
                 {reviews.map((r) => (
-                  <div key={r.id} className="border-b border-neutral-100 pb-6 last:border-0 last:pb-0">
+                  <div key={r.id} className="border-b border-neutral-200 pb-6 last:border-0 last:pb-0">
                     <div className="flex gap-4">
                       <Avatar name={r.author?.display_name ?? 'Anonyme'} src={r.author?.photo_url} size={44} />
                       <div className="flex-1 min-w-0">
@@ -378,7 +358,16 @@ export function ProfileDetailPage({ id }: { id: string }) {
                         <div className="mt-0.5">
                           <StarRating value={r.rating} size={13} />
                         </div>
-                        {r.comment && <p className="mt-2.5 text-[15px] text-neutral-700 leading-relaxed">{r.comment}</p>}
+                        {r.comment && <p className="mt-2.5 text-[15px] text-neutral-900 leading-relaxed">{r.comment}</p>}
+                        {r.images && r.images.length > 0 && (
+                          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                            {r.images.map((imgUrl, idx) => (
+                              <a href={imgUrl} target="_blank" rel="noopener noreferrer" key={idx} className="shrink-0">
+                                <img src={imgUrl} alt="Photo de l'avis" className="h-20 w-20 rounded-lg object-cover border border-neutral-200 shadow-sm" loading="lazy" />
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

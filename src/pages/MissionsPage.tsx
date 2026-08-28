@@ -55,7 +55,6 @@ export function MissionsPage() {
 
   useEffect(() => {
     fetchRequests();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSuccess = () => {
@@ -76,9 +75,9 @@ export function MissionsPage() {
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h1 className="flex items-center gap-2 font-display text-3xl font-semibold text-neutral-900">
-                <Megaphone size={26} className="text-primary-600" /> Missions recherchées
+                <Megaphone size={26} className="text-primary-600" /> Missions <span className="gradient-text">recherchées</span>
               </h1>
-              <p className="mt-2 text-neutral-600">
+              <p className="mt-2 text-neutral-500">
                 Toutes les demandes ouvertes par des membres de la communauté, du plus récent au plus ancien.
               </p>
             </div>
@@ -102,7 +101,7 @@ export function MissionsPage() {
           <div className="card p-8 text-center text-sm text-error-600">{error}</div>
         ) : requests.length === 0 ? (
           <div className="card p-10 text-center">
-            <Megaphone size={28} className="mx-auto text-neutral-300" />
+            <Megaphone size={28} className="mx-auto text-neutral-400" />
             <p className="mt-3 text-sm text-neutral-500">Aucune mission recherchée pour le moment.</p>
             {user && (
               <button onClick={() => setShowModal(true)} className="btn-outline btn-sm mt-4">
@@ -116,7 +115,7 @@ export function MissionsPage() {
               <div 
                 key={req.id} 
                 onClick={() => setDetailTarget(req)}
-                className="card p-4 cursor-pointer hover:border-primary-300 hover:shadow-md transition-all group"
+                className="card group cursor-pointer p-4 transition-all hover:-translate-y-0.5 hover:shadow-lift"
               >
                 <div className="flex items-start justify-between gap-2">
                   <button
@@ -125,20 +124,20 @@ export function MissionsPage() {
                   >
                     <Avatar name={req.profiles?.display_name ?? '?'} src={req.profiles?.photo_url} size={28} />
                     <span className="truncate text-sm text-neutral-500">
-                      <span className="font-medium text-neutral-700">{req.profiles?.display_name ?? 'Membre'}</span>
+                      <span className="font-medium text-neutral-900">{req.profiles?.display_name ?? 'Membre'}</span>
                       {' · '}
                       <span className="inline-flex items-center gap-1"><Clock size={11} className="inline" /> {timeAgo(req.created_at)}</span>
                     </span>
                   </button>
                   {req.budget && (
-                    <span className="shrink-0 rounded-full border border-primary-100 bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700">
+                    <span className="badge-chip shrink-0 border border-primary-100 bg-primary-50 text-primary-600">
                       {req.budget}
                     </span>
                   )}
                 </div>
 
                 <h2 className="mt-3 font-display text-lg font-semibold text-neutral-900">{req.title}</h2>
-                <p className="mt-1 text-sm text-neutral-600 whitespace-pre-line">{req.description}</p>
+                <p className="mt-1 text-sm text-neutral-500 whitespace-pre-line">{req.description}</p>
 
                 {user && user.id !== req.created_by ? (
                   <button onClick={(e) => { e.stopPropagation(); setApplyTarget(req); }} className="btn-primary mt-4 w-full group-hover:scale-[1.01] transition-transform">

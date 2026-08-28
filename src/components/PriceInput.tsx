@@ -20,7 +20,7 @@ export function PriceInput({
   autoFocus?: boolean;
 }) {
   return (
-    <div className={cn('flex min-w-0 items-center gap-1.5 rounded-xl border border-neutral-300 bg-white px-4 py-2.5 transition focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-200', className)}>
+    <div className={cn('flex min-w-0 items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 transition focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-200', className)}>
       <span className="shrink-0 text-base md:text-sm font-semibold text-neutral-400 select-none" aria-hidden="true">€</span>
       <input
         id={id}

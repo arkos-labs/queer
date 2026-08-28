@@ -28,17 +28,6 @@ const accountTypes: { value: AccountType; label: string; desc: string; icon: str
   { value: 'asso', label: 'Association / structure', desc: 'Structure partenaire, association LGBTQI+ ou centre de santé.', icon: '🏳️‍🌈' },
 ];
 
-const RATE_UNITS = ['/ heure', '/ jour', '/ prestation', '/ mois'];
-
-const appendUnit = (current: string, unit: string) => {
-  const withoutUnit = RATE_UNITS.reduce(
-    (acc, u) => (acc.endsWith(u) ? acc.slice(0, acc.length - u.length).trimEnd() : acc),
-    current.trim(),
-  );
-  if (!withoutUnit) return withoutUnit;
-  return `${withoutUnit} ${unit}`;
-};
-
 const chartePoints = [
   'Je m\'engage à respecter chaque membre, quelle que soit son orientation sexuelle, son identité ou son expression de genre.',
   'Je n\'utilise pas de langage discriminant, haineux, stigmatisant ou de propos transphobes, homophobes, biphobes ou racistes.',
@@ -143,11 +132,11 @@ export function OnboardingPage() {
   const canProceed = step === 0 ? displayName.trim().length > 0 : step === 2 ? !!intent : step === 3 ? charteAccepted : true;
 
   return (
-    <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-neutral-50 px-4 py-12">
+    <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-neutral-100 px-4 py-12">
       <div className="absolute top-4 right-4 z-10">
         <button 
           onClick={async () => { await signOut(); navigate('/'); }}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-neutral-200 text-sm font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors shadow-sm"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-neutral-200 text-sm font-medium text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 transition-colors shadow-sm"
         >
           <LogOut size={16} /> Se déconnecter
         </button>
@@ -164,13 +153,16 @@ export function OnboardingPage() {
               key={i}
               className={cn(
                 'h-2 rounded-full transition-all duration-300',
-                i === step ? 'w-10 bg-primary-600' : i < step ? 'w-8 bg-primary-400' : 'w-8 bg-neutral-200',
+                i === step ? 'w-10 bg-amber-400' : i < step ? 'w-8 bg-primary-400' : 'w-8 bg-neutral-200',
               )}
             />
           ))}
         </div>
 
-        <div className="card animate-scale-in p-8 md:p-10">
+        <div className="card animate-scale-in overflow-hidden">
+          {/* Rainbow brand strip */}
+          <div aria-hidden="true" className="h-1.5 bg-amber-400 bg-[length:200%_100%] animate-gradient-x" />
+          <div className="p-8 md:p-10">
           {step === 0 && (
             <div>
               <div className="mb-6 text-center">
@@ -214,8 +206,8 @@ export function OnboardingPage() {
                         className={cn(
                           'rounded-xl border px-3 py-3 text-sm font-medium transition',
                           civilite === c.value
-                            ? 'border-primary-500 bg-primary-50 text-primary-700'
-                            : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300',
+                            ? 'border-primary-500 bg-primary-50 text-primary-600 ring-2 ring-primary-200'
+                            : 'border-neutral-200 bg-white text-neutral-500 hover:border-neutral-200 hover:bg-neutral-100',
                         )}
                       >
                         {c.label}
@@ -258,7 +250,7 @@ export function OnboardingPage() {
                       'flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition',
                       accountType === t.value
                         ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-200'
-                        : 'border-neutral-200 bg-white hover:border-neutral-300',
+                        : 'border-neutral-200 bg-white hover:border-neutral-200',
                     )}
                   >
                     <span className="text-2xl">{t.icon}</span>
@@ -295,7 +287,7 @@ export function OnboardingPage() {
                       'flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition',
                       intent === t.value
                         ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-200'
-                        : 'border-neutral-200 bg-white hover:border-neutral-300',
+                        : 'border-neutral-200 bg-white hover:border-neutral-200',
                     )}
                   >
                     <t.icon size={20} className="mt-0.5 shrink-0 text-primary-600" />
@@ -328,9 +320,9 @@ export function OnboardingPage() {
                   {skills.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {skills.map((s) => (
-                        <span key={s} className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1.5 text-sm text-primary-700">
+                        <span key={s} className="badge-chip bg-primary-50 text-primary-600 ring-1 ring-primary-100">
                           {s}
-                          <button type="button" onClick={() => setSkills((arr) => arr.filter((x) => x !== s))} className="text-primary-400 hover:text-primary-700">
+                          <button type="button" onClick={() => setSkills((arr) => arr.filter((x) => x !== s))} className="text-primary-400 hover:text-primary-600">
                             <X size={14} />
                           </button>
                         </span>
@@ -349,7 +341,7 @@ export function OnboardingPage() {
                       <select
                         value={rateUnit}
                         onChange={(e) => setRateUnit(e.target.value)}
-                        className="input w-auto shrink-0 bg-neutral-50"
+                        className="input w-auto shrink-0 bg-neutral-100"
                       >
                         <option value="/ heure">/ heure</option>
                         <option value="/ jour">/ jour</option>
@@ -382,7 +374,7 @@ export function OnboardingPage() {
                   {needs.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {needs.map((s) => (
-                        <span key={s} className="inline-flex items-center gap-1.5 rounded-full bg-secondary-50 px-3 py-1.5 text-sm text-secondary-700">
+                        <span key={s} className="badge-chip bg-primary-50 text-neutral-900 ring-1 ring-neutral-200">
                           {s}
                           <button type="button" onClick={() => setNeeds((arr) => arr.filter((x) => x !== s))} className="text-secondary-400 hover:text-secondary-700">
                             <X size={14} />
@@ -403,7 +395,7 @@ export function OnboardingPage() {
                       <select
                         value={budgetUnit}
                         onChange={(e) => setBudgetUnit(e.target.value)}
-                        className="input w-auto shrink-0 bg-neutral-50"
+                        className="input w-auto shrink-0 bg-neutral-100"
                       >
                         <option value="/ heure">/ heure</option>
                         <option value="/ jour">/ jour</option>
@@ -433,23 +425,30 @@ export function OnboardingPage() {
                 </p>
               </div>
 
-              <div className="space-y-3 rounded-2xl bg-neutral-50 p-5">
+              <div className="space-y-3 rounded-2xl bg-neutral-100 p-5">
                 {chartePoints.map((p, i) => (
                   <div key={i} className="flex items-start gap-3">
                     <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-primary-500" />
-                    <span className="text-sm text-neutral-700">{p}</span>
+                    <span className="text-sm text-neutral-900">{p}</span>
                   </div>
                 ))}
               </div>
 
-              <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-2xl border border-neutral-200 p-4 transition hover:bg-neutral-50">
+              <label
+                className={cn(
+                  'mt-5 flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition',
+                  charteAccepted
+                    ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-200'
+                    : 'border-neutral-200 hover:bg-neutral-100',
+                )}
+              >
                 <input
                   type="checkbox"
                   checked={charteAccepted}
                   onChange={(e) => setCharteAccepted(e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+                  className="mt-1 h-4 w-4 rounded border-neutral-200 text-primary-600 focus:ring-primary-500"
                 />
-                <span className="text-sm font-medium text-neutral-800">
+                <span className="text-sm font-medium text-neutral-900">
                   J'ai lu et j'accepte la charte de respect de Queer Service.
                 </span>
               </label>
@@ -477,6 +476,7 @@ export function OnboardingPage() {
                 {!loading && <ArrowRight size={16} />}
               </button>
             )}
+          </div>
           </div>
         </div>
       </div>

@@ -3,14 +3,12 @@ import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import { supabase, PUBLIC_PROFILE_COLUMNS } from '@/lib/supabase';
 import type { Category, Subcategory, Profile, Place } from '@/lib/types';
-import { Avatar } from '@/components/Avatar';
 import { avg } from '@/lib/utils';
 import { FALLBACK_CATEGORIES, FALLBACK_SUBCATEGORIES } from '@/lib/taxonomy';
 import { AddPlaceModal } from '@/components/AddPlaceModal';
 import { AnnouncementsBanner } from '@/components/AnnouncementsBanner';
 import {
   Search,
-  X,
   Star,
   MapPin,
   Home,
@@ -22,9 +20,10 @@ import {
   LayoutGrid,
   ShieldCheck,
   Briefcase,
-  Building2,
   LifeBuoy,
   Plus,
+  HelpCircle,
+  Megaphone,
 } from 'lucide-react';
 
 const CATEGORY_ICONS: Record<string, typeof Home> = {
@@ -42,18 +41,12 @@ interface ProfileWithStats extends Profile {
   reviewCount: number;
 }
 
-const typeMeta: Record<Profile['account_type'], { icon: typeof Users; label: string }> = {
-  particulier: { icon: Users, label: 'Particulier·e' },
-  asso: { icon: Building2, label: 'Association' },
-};
-
 export function DirectoryPage() {
   const { navigate } = useRouter();
   const { user, profile: myProfile } = useAuth();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeSub, setActiveSub] = useState<string | null>(null);
-  const [showSubBar, setShowSubBar] = useState(false);
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
@@ -87,14 +80,17 @@ export function DirectoryPage() {
         if (catRes.error || subRes.error || !catRes.data?.length) {
           setCategories(FALLBACK_CATEGORIES);
           setSubcategories(FALLBACK_SUBCATEGORIES);
+          if (!activeCategory) setActiveCategory(FALLBACK_CATEGORIES[0].id);
         } else {
           setCategories(catRes.data as Category[]);
           setSubcategories((subRes.data ?? []) as Subcategory[]);
+          if (!activeCategory && catRes.data?.length) setActiveCategory(catRes.data[0].id);
         }
       } catch {
         if (cancelled) return;
         setCategories(FALLBACK_CATEGORIES);
         setSubcategories(FALLBACK_SUBCATEGORIES);
+        if (!activeCategory) setActiveCategory(FALLBACK_CATEGORIES[0].id);
       }
 
       // Real member data can't be faked — surface a real error if this fails.
@@ -167,8 +163,6 @@ export function DirectoryPage() {
   const subsForActiveCat = subcategories.filter((s) => s.category_id === activeCategory);
   const subcategoryById = useMemo(() => new Map(subcategories.map((s) => [s.id, s])), [subcategories]);
 
-  const isShoppingTheme = activeCatDef?.slug === 'shopping-bonnes-adresses';
-
   const loadPlaces = async () => {
     setPlacesLoading(true);
     const { data } = await supabase
@@ -181,13 +175,17 @@ export function DirectoryPage() {
   };
 
   useEffect(() => {
-    if (isShoppingTheme) loadPlaces();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isShoppingTheme]);
+    loadPlaces();
+  }, []);
 
   const filteredPlaces = useMemo(() => {
-    if (!isShoppingTheme) return [];
     let list = places;
+    
+    if (activeCategory) {
+      const subIdsInCat = new Set(subcategories.filter((s) => s.category_id === activeCategory).map((s) => s.id));
+      list = list.filter((p) => (p.subcategory_id ? subIdsInCat.has(p.subcategory_id) : false));
+    }
+    
     if (activeSub) list = list.filter((p) => p.subcategory_id === activeSub);
     if (search.trim()) {
       const q = search.toLowerCase().trim();
@@ -199,7 +197,7 @@ export function DirectoryPage() {
       );
     }
     return list;
-  }, [places, isShoppingTheme, activeSub, search]);
+  }, [places, activeCategory, subcategories, activeSub, search]);
 
   const filtered = useMemo(() => {
     let list = profiles.filter((p) => p.id !== myProfile?.id);
@@ -245,21 +243,23 @@ export function DirectoryPage() {
         <AnnouncementsBanner />
       </div>
 
-      <section className="bg-white border-b border-slate-100 py-4 shadow-sm overflow-x-auto no-scrollbar flex items-center px-4 space-x-6">
+      {/* Categories (Main) */}
+      <section className="no-scrollbar flex items-center gap-6 overflow-x-auto px-6 pb-2 mt-4">
         <button
           onClick={() => {
             setActiveCategory(null);
             setActiveSub(null);
-            setShowSubBar(false);
           }}
-          className={`flex flex-col items-center space-y-2 min-w-fit cursor-pointer ${
-            !activeCategory ? 'border-b-2 border-slate-900 pb-1' : 'opacity-60 hover:opacity-100 transition-opacity'
-          }`}
+          className="flex min-w-fit cursor-pointer flex-col items-center gap-2"
         >
-          <div className={`p-2 rounded-xl ${!activeCategory ? 'bg-slate-100' : ''}`}>
-            <Sparkles size={24} className={!activeCategory ? 'text-slate-900' : ''} />
+          <div className={`flex h-[60px] w-[60px] items-center justify-center rounded-full transition-all ${
+            !activeCategory ? 'bg-primary-50' : 'bg-neutral-100 border border-neutral-200 hover:bg-neutral-100'
+          }`}>
+            <Users size={22} className={!activeCategory ? 'text-primary-700' : 'text-neutral-400'} />
           </div>
-          <span className={`text-xs whitespace-nowrap ${!activeCategory ? 'font-semibold' : 'font-medium'}`}>Tout</span>
+          <span className={`text-[11px] ${!activeCategory ? 'font-bold text-neutral-900 border-b-2 border-primary-500 pb-1' : 'font-semibold text-neutral-400 pb-1'}`}>
+            Tous les membres
+          </span>
         </button>
 
         {categories.map((c) => {
@@ -272,121 +272,71 @@ export function DirectoryPage() {
                 if (isActive) {
                   setActiveCategory(null);
                   setActiveSub(null);
-                  setShowSubBar(false);
                 } else {
                   setActiveCategory(c.id);
                   setActiveSub(null);
-                  setShowSubBar(true);
                 }
               }}
-              className={`flex flex-col items-center space-y-2 min-w-fit cursor-pointer ${
-                isActive ? 'border-b-2 border-slate-900 pb-1' : 'opacity-60 hover:opacity-100 transition-opacity'
-              }`}
+              className="flex min-w-fit cursor-pointer flex-col items-center gap-2"
             >
-              <div className={`p-2 rounded-xl ${isActive ? 'bg-slate-100' : ''}`}>
-                <Icon size={24} className={isActive ? 'text-slate-900' : ''} />
+              <div className={`flex h-[60px] w-[60px] items-center justify-center rounded-full transition-all ${
+                isActive ? 'bg-primary-50' : 'bg-neutral-100 border border-neutral-200 hover:bg-neutral-100'
+              }`}>
+                <Icon size={22} className={isActive ? 'text-primary-700' : 'text-neutral-400'} />
               </div>
-              <span className={`text-xs whitespace-nowrap ${isActive ? 'font-semibold' : 'font-medium'}`}>{c.label}</span>
+              <span className={`text-[11px] ${isActive ? 'font-bold text-neutral-900 border-b-2 border-primary-500 pb-1' : 'font-semibold text-neutral-400 pb-1'}`}>
+                {c.label.replace(' & ', ' & ')}
+              </span>
             </button>
           );
         })}
       </section>
 
-        {activeCategory && activeCatDef && subsForActiveCat.length > 0 && (
-          <div className="border-t border-neutral-100 bg-neutral-50 px-5 py-2.5 flex gap-2 overflow-x-auto no-scrollbar scroll-smooth">
-            <button
-              onClick={() => setActiveSub(null)}
-              className={`flex-shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
-                !activeSub ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-600 border border-neutral-200 hover:border-neutral-900'
-              }`}
-            >
-              Tout {activeCatDef.label}
-            </button>
-            {subsForActiveCat.map((sub) => {
-              const isSubActive = activeSub === sub.id;
-              return (
-                <button
-                  key={sub.id}
-                  onClick={() => setActiveSub(isSubActive ? null : sub.id)}
-                  className={`flex-shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
-                    isSubActive ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-600 border border-neutral-200 hover:border-neutral-900'
-                  }`}
-                >
-                  {sub.label}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      {/* Results count */}
-      <div className="px-6 pt-5 pb-2 flex items-center justify-between">
-        <p className="text-sm text-neutral-500">
-          {!loading && (
-            <>
-              <span className="font-semibold text-neutral-900">{filtered.length}</span>{' '}
-              membre{filtered.length > 1 ? 's' : ''}
-              {activeCategory && activeCatDef && (
-                <span>
-                  {' '}
-                  en <span className="font-semibold text-neutral-900">{activeCatDef.label}</span>
-                </span>
-              )}
-            </>
-          )}
-        </p>
-        {isShoppingTheme && (
-          <button onClick={() => setAddPlaceOpen(true)} className="btn-secondary btn-sm shrink-0">
-            <Plus size={14} /> Proposer un lieu
+      {/* Subcategories */}
+      {activeCategory && subsForActiveCat.length > 0 && (
+        <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 py-2 mt-1 mb-2 animate-fade-in">
+          <button
+            onClick={() => setActiveSub(null)}
+            className={`shrink-0 rounded-xl px-4 py-2 text-[13px] font-semibold transition-colors ${
+              !activeSub
+                ? 'bg-neutral-900 text-white shadow-sm'
+                : 'border border-neutral-200 bg-neutral-100 text-neutral-500 hover:bg-neutral-100'
+            }`}
+          >
+            {activeCatDef?.slug === 'shopping-bonnes-adresses' ? 'Toutes les adresses' : 'Tous les membres'}
           </button>
-        )}
-      </div>
-
-      {isShoppingTheme && (
-        <div className="px-6 pb-2">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-400">
-            Lieux recommandés par la communauté
-          </h2>
-          {placesLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-28 rounded-2xl bg-neutral-100 animate-pulse" />)}
-            </div>
-          ) : filteredPlaces.length === 0 ? (
-            <p className="mb-2 text-sm text-neutral-400">Aucun lieu recommandé pour le moment. Soyez le premier à en proposer un !</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredPlaces.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => navigate(`/lieux/${p.id}`)}
-                  className="group flex gap-3 rounded-2xl border border-neutral-100 p-3 text-left hover:border-neutral-300 transition-colors"
-                >
-                  <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-neutral-100">
-                    {p.photo_url ? (
-                      <img src={p.photo_url} alt={p.name} className="h-full w-full object-cover" loading="lazy" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-neutral-300">
-                        <MapPin size={20} />
-                      </div>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-neutral-900 text-sm">{p.name}</p>
-                    {p.subcategory?.label && <p className="text-xs text-neutral-400">{p.subcategory.label}</p>}
-                    {p.city && (
-                      <p className="mt-1 flex items-center gap-1 text-xs text-neutral-500">
-                        <MapPin size={11} /> {p.city}
-                      </p>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
+          {subsForActiveCat.map((sub) => {
+            const isSubActive = activeSub === sub.id;
+            return (
+              <button
+                key={sub.id}
+                onClick={() => setActiveSub(sub.id)}
+                className={`shrink-0 rounded-xl px-4 py-2 text-[13px] font-semibold transition-colors ${
+                  isSubActive
+                    ? 'bg-neutral-900 text-white shadow-sm'
+                    : 'border border-neutral-200 bg-neutral-100 text-neutral-500 hover:bg-neutral-100'
+                }`}
+              >
+                {sub.label}
+              </button>
+            );
+          })}
         </div>
       )}
 
+      {/* Results count */}
+      <div className="container-app flex items-center justify-between py-2 mt-4">
+        <p className="text-[13px] font-medium text-neutral-500">
+          <span className="font-bold text-neutral-900">{filtered.length}</span>{' '}
+          membre{filtered.length > 1 ? 's' : ''} {activeSub && subcategoryById.get(activeSub) && <span>en <span className="font-bold text-neutral-900">{subcategoryById.get(activeSub)!.label}</span></span>}
+        </p>
+        <button onClick={() => setAddPlaceOpen(true)} className="flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-neutral-100 px-3 py-2 text-[11px] font-semibold text-neutral-900 hover:bg-neutral-100">
+          <Plus size={12} /> Proposer un lieu
+        </button>
+      </div>
+
       {error && (
-        <div className="mx-6 mb-4 rounded-xl bg-warning-50 p-3 text-sm text-warning-800">
+        <div className="container-app mb-4 rounded-xl bg-warning-50 p-3 text-sm text-warning-800">
           {error.toLowerCase().includes('fetch')
             ? "Impossible de joindre le serveur : aucun projet Supabase n'est encore connecté. Les thèmes ci-dessus restent consultables ; les membres s'afficheront une fois le backend branché."
             : error}
@@ -396,7 +346,7 @@ export function DirectoryPage() {
       {activeCatDef?.slug === 'communaute-vie-lgbtq' && (
         <button
           onClick={() => navigate('/ressources')}
-          className="mx-6 mb-4 flex w-[calc(100%-3rem)] items-center gap-3 rounded-2xl bg-primary-50 p-4 text-left hover:bg-primary-100 transition-colors"
+          className="container-app mb-4 flex w-full items-center gap-3 rounded-2xl bg-primary-50 p-4 text-left hover:bg-primary-100 transition-colors"
         >
           <LifeBuoy size={20} className="shrink-0 text-primary-600" />
           <span className="min-w-0 flex-1">
@@ -406,22 +356,25 @@ export function DirectoryPage() {
         </button>
       )}
 
-      <main className="p-3 pb-24 grid grid-cols-3 gap-3" data-purpose="provider-directory">
-        {loading ? (
-          Array.from({ length: 9 }).map((_, i) => (
-            <article key={i} className="bg-white rounded-[24px] p-3 shadow-sm border border-slate-100 flex flex-col items-center gap-2">
-              <div className="w-14 h-14 rounded-full bg-neutral-100 animate-pulse" />
+      {activeCatDef?.slug !== 'shopping-bonnes-adresses' && (
+        <main className="container-app grid grid-cols-2 gap-4 pb-12 pt-2 sm:grid-cols-3 lg:grid-cols-4" data-purpose="provider-directory">
+          {loading ? (
+          Array.from({ length: 8 }).map((_, i) => (
+            <article key={i} className="flex flex-col items-center gap-2 rounded-2xl border border-neutral-200 bg-white p-4 shadow-card">
+              <div className="h-16 w-16 rounded-full bg-neutral-100 animate-pulse" />
               <div className="h-2.5 w-3/4 rounded bg-neutral-100 animate-pulse mt-1" />
               <div className="h-2 w-1/2 rounded bg-neutral-100 animate-pulse" />
             </article>
           ))
         ) : filtered.length === 0 ? (
-          <div className="col-span-full py-20 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-neutral-100">
-              <Search size={28} className="text-neutral-400" />
+          <div className="col-span-full py-16 text-center">
+            <div className="mx-auto mb-5 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-neutral-100">
+              <Search size={28} className="text-neutral-400" strokeWidth={1.5} />
             </div>
-            <h3 className="text-lg font-semibold text-neutral-900">Aucun résultat</h3>
-            <p className="mt-1 text-sm text-neutral-500">Essayez un autre mot-clé ou changez de catégorie.</p>
+            <h3 className="font-display text-[17px] font-bold text-neutral-900">Aucun résultat</h3>
+            <p className="mt-3 text-[13px] text-neutral-500 mx-auto max-w-[280px] leading-relaxed">
+              Essayez un autre mot-clé ou parcourez une différente catégorie pour trouver ce que vous cherchez.
+            </p>
           </div>
         ) : (
           filtered.map((p) => {
@@ -429,52 +382,51 @@ export function DirectoryPage() {
               <article
                 key={p.id}
                 onClick={() => navigate(`/profil/${p.id}`)}
-                className="bg-white rounded-[24px] p-3 shadow-sm border border-slate-100 flex flex-col items-center text-center relative group hover:shadow-md transition-all cursor-pointer min-h-[220px]"
+                className="group relative flex cursor-pointer flex-col items-center rounded-2xl border border-neutral-200 bg-white p-4 text-center shadow-card transition-all hover:-translate-y-0.5 hover:shadow-lift"
               >
                 <div className="relative mb-3 mt-1">
-                  <div className="w-[60px] h-[60px] rounded-full bg-[#10b981] text-white flex items-center justify-center text-lg font-bold">
+                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-neutral-100 shadow-soft ring-2 ring-white text-xl font-bold uppercase text-neutral-400">
                     {p.photo_url ? (
-                      <img src={p.photo_url} alt="" className="w-full h-full object-cover rounded-full" loading="lazy" />
+                      <img src={p.photo_url} alt={p.display_name} className="h-full w-full object-cover" loading="lazy" />
                     ) : (
                       p.display_name.substring(0, 2).toUpperCase()
                     )}
                   </div>
-                  
+
                   {p.verification_status === 'verified' && (
-                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-1.5 py-0.5 rounded-full shadow-sm border border-emerald-100 flex items-center z-10 whitespace-nowrap">
-                      <span className="text-[7px] font-bold text-[#10b981] uppercase tracking-wider">
-                        VÉRIFIÉ
-                      </span>
+                    <div className="absolute -bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center whitespace-nowrap rounded-full border border-primary-100 bg-white px-1.5 py-0.5 shadow-sm">
+                      <ShieldCheck size={9} className="mr-0.5 text-primary-500" />
+                      <span className="text-[7px] font-bold uppercase tracking-wider text-primary-600">Vérifié</span>
                     </div>
                   )}
                 </div>
-                
-                <h3 className="font-bold text-slate-900 text-[11px] line-clamp-1 w-full px-0.5">{p.display_name}</h3>
-                
-                <div className="flex items-center gap-1 text-[10px] font-bold text-slate-900 mt-0.5">
-                  <Star size={10} className="text-yellow-400 fill-yellow-400" />
+
+                <h3 className="w-full truncate px-0.5 font-display text-[13px] font-semibold text-neutral-900">{p.display_name}</h3>
+
+                <div className="mt-0.5 flex items-center gap-1 text-[11px] font-bold text-neutral-900">
+                  <Star size={11} className="fill-yellow-400 text-yellow-400" />
                   {p.avgRating > 0 ? (
-                    <span>{p.avgRating.toFixed(1)} <span className="font-normal text-slate-400">({p.reviewCount})</span></span>
+                    <span>{p.avgRating.toFixed(1)} <span className="font-normal text-neutral-400">({p.reviewCount})</span></span>
                   ) : (
-                    <span className="font-normal text-slate-400">-</span>
+                    <span className="font-normal text-neutral-400">-</span>
                   )}
                 </div>
-                
-                <div className="flex items-center text-slate-500 text-[9px] mt-0.5 mb-2 truncate max-w-full px-0.5 gap-0.5">
-                  <MapPin size={10} /> {p.city || 'Partout'}
+
+                <div className="mt-0.5 flex items-center gap-0.5 truncate px-0.5 text-[10px] text-neutral-500">
+                  <MapPin size={11} /> {p.city || 'Partout'}
                 </div>
-                
-                <div className="flex flex-col gap-1.5 w-full items-center mt-1">
+
+                <div className="mt-2 flex w-full flex-col items-center gap-1.5">
                   {p.skills.slice(0, 2).map((s) => (
-                    <span key={s} className="bg-slate-50 text-[9px] px-2 py-0.5 rounded-full text-slate-600 border border-slate-100 truncate w-[90%]">
+                    <span key={s} className="w-[90%] truncate rounded-full border border-primary-100 bg-primary-50 px-2 py-0.5 text-[10px] font-medium text-primary-600">
                       {s}
                     </span>
                   ))}
                 </div>
 
                 {p.indicative_rates && (
-                  <div className="mt-auto pt-2 w-full flex justify-center">
-                    <span className="bg-slate-50 text-[10px] font-bold text-slate-900 px-2.5 py-1 rounded-full border border-slate-100 truncate max-w-full">
+                  <div className="mt-auto w-full pt-2">
+                    <span className="inline-block max-w-full truncate rounded-full border border-neutral-200 bg-neutral-100 px-2.5 py-1 text-[10px] font-bold text-neutral-900">
                       {p.indicative_rates}
                     </span>
                   </div>
@@ -484,6 +436,54 @@ export function DirectoryPage() {
           })
         )}
       </main>
+      )}
+
+      {/* Places (Lieux recommandés) - Only shown when a category is selected */}
+      {activeCategory && (filteredPlaces.length > 0 || placesLoading) && (
+        <div className="container-app pb-28 pt-6 border-t border-neutral-200">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="font-display text-lg font-bold text-neutral-900">Lieux &amp; Commerces</h2>
+              <p className="text-sm text-neutral-500">Recommandés par la communauté</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
+            {placesLoading
+              ? Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex flex-col gap-2 rounded-2xl border border-neutral-200 bg-white p-2 shadow-sm">
+                    <div className="aspect-square w-full rounded-xl bg-neutral-100 animate-pulse" />
+                    <div className="h-3 w-3/4 rounded bg-neutral-100 animate-pulse mt-1" />
+                    <div className="h-2 w-1/2 rounded bg-neutral-100 animate-pulse" />
+                  </div>
+                ))
+              : filteredPlaces.map((place) => (
+                  <article key={place.id} onClick={() => navigate(`/lieux/${place.id}`)} className="group relative flex cursor-pointer flex-col gap-2 rounded-2xl border border-neutral-200 bg-white p-2 shadow-sm transition-all hover:shadow-md">
+                    {place.photo_url ? (
+                      <div className="aspect-square w-full overflow-hidden rounded-xl bg-neutral-100">
+                        <img src={place.photo_url} alt={place.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      </div>
+                    ) : (
+                      <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-neutral-100 border border-neutral-200">
+                        <MapPin size={24} className="text-neutral-400" />
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="font-display text-[12px] font-bold text-neutral-900 line-clamp-1">{place.name}</h3>
+                      {place.subcategory && (
+                        <p className="mt-0.5 text-[10px] text-neutral-500 line-clamp-1">{place.subcategory.label}</p>
+                      )}
+                      {place.city && (
+                        <p className="mt-0.5 flex items-center gap-0.5 text-[10px] text-neutral-400">
+                          <MapPin size={10} />
+                          <span className="line-clamp-1">{place.city}</span>
+                        </p>
+                      )}
+                    </div>
+                  </article>
+                ))}
+          </div>
+        </div>
+      )}
 
       {addPlaceOpen && (
         <AddPlaceModal

@@ -1,22 +1,27 @@
 import { useState, useEffect } from 'react';
 import { Download, Share, PlusSquare, X } from 'lucide-react';
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+}
+
 export function InstallPWABanner() {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [show, setShow] = useState(false);
 
   useEffect(() => {
     // Check if already installed
-    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) {
+    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as Navigator & { standalone?: boolean }).standalone) {
       setIsStandalone(true);
       return;
     }
 
     // Check if iOS
     const ua = window.navigator.userAgent;
-    const isIOSDevice = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+    const isIOSDevice = /iPad|iPhone|iPod/.test(ua) && !(window as Window & { MSStream?: boolean }).MSStream;
     setIsIOS(isIOSDevice);
 
     if (isIOSDevice) {
@@ -26,9 +31,9 @@ export function InstallPWABanner() {
       }
     }
 
-    const handleBeforeInstallPrompt = (e: any) => {
+    const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
       const hasDismissed = localStorage.getItem('pwa_prompt_dismissed');
       if (!hasDismissed) {
         setShow(true);
@@ -76,7 +81,7 @@ export function InstallPWABanner() {
             <h3 className="font-display font-semibold text-white">Installer l'application</h3>
             
             {isIOS ? (
-              <div className="mt-1.5 text-xs text-neutral-300 space-y-1.5">
+              <div className="mt-1.5 text-xs text-neutral-400 space-y-1.5">
                 <p>Pour une meilleure expérience, ajoutez Queer Service à votre écran d'accueil.</p>
                 <div className="flex items-center gap-1.5 rounded-lg bg-white/10 px-2.5 py-2">
                   <span className="flex items-center gap-1">1. Appuyez sur <Share size={14} className="mx-0.5" /></span>
@@ -87,12 +92,12 @@ export function InstallPWABanner() {
               </div>
             ) : (
               <>
-                <p className="mt-1 text-xs text-neutral-300">
+                <p className="mt-1 text-xs text-neutral-400">
                   Installez Queer Service pour un accès rapide, hors-ligne, et des notifications instantanées.
                 </p>
                 <button
                   onClick={handleInstall}
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-500"
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-600"
                 >
                   <Download size={16} /> Installer maintenant
                 </button>

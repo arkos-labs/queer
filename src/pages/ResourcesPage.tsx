@@ -67,8 +67,8 @@ export function ResourcesPage() {
       }
       
       navigate(`/messages/${connId}`);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue.');
     } finally {
       setContactingSupport(false);
     }
@@ -108,7 +108,7 @@ export function ResourcesPage() {
             <ArrowLeft size={16} /> Retour
           </button>
           <div className="mt-3 flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 text-white shadow-soft">
               <LifeBuoy size={20} />
             </div>
             <div>
@@ -125,15 +125,16 @@ export function ResourcesPage() {
         {/* Hotlines */}
         <section>
           <h2 className="font-display text-lg font-semibold text-neutral-900">Numéros utiles</h2>
+          <span className="mt-1.5 block h-1 w-10 rounded-full bg-amber-400" aria-hidden />
           <p className="mt-1 text-sm text-neutral-500">Des professionnel·le·s et bénévoles formé·e·s, à votre écoute.</p>
 
           <div className="mt-4 space-y-3">
             {hotlines.map((r) => (
-              <div key={r.id} className="card p-5">
+              <div key={r.id} className="card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h3 className="font-semibold text-neutral-900">{r.title}</h3>
-                    <p className="mt-1 text-sm text-neutral-600">{r.description}</p>
+                    <p className="mt-1 text-sm text-neutral-500">{r.description}</p>
                     {r.hours && (
                       <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-neutral-400">
                         <Clock size={12} /> {r.hours}
@@ -183,8 +184,8 @@ export function ResourcesPage() {
                     <ChevronDown size={18} className={cn('mt-1 shrink-0 text-neutral-400 transition-transform', open && 'rotate-180')} />
                   </button>
                   {open && g.content && (
-                    <div className="border-t border-neutral-100 px-5 py-4">
-                      <p className="whitespace-pre-line text-sm leading-relaxed text-neutral-600">{g.content}</p>
+                    <div className="border-t border-neutral-200 px-5 py-4">
+                      <p className="whitespace-pre-line text-sm leading-relaxed text-neutral-500">{g.content}</p>
                     </div>
                   )}
                 </div>
@@ -194,9 +195,9 @@ export function ResourcesPage() {
         </section>
 
         {!loading && (
-          <div className="card p-6 text-center mt-12 bg-neutral-50/50">
+          <div className="card p-6 text-center mt-12 bg-neutral-100/50">
             <h2 className="font-display text-lg font-semibold text-neutral-900">Besoin d'autre chose ?</h2>
-            <p className="mt-2 text-sm text-neutral-600 mb-6">
+            <p className="mt-2 text-sm text-neutral-500 mb-6">
               Vous avez un problème technique, une question, ou vous gérez une association qui devrait figurer sur cette page ?
             </p>
             <button

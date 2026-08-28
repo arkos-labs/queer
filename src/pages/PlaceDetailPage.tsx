@@ -126,7 +126,7 @@ export function PlaceDetailPage({ id }: { id: string }) {
                 {isSubmitter && place.status !== 'approved' && (
                   <div className={
                     'mb-4 flex items-start gap-2 rounded-xl p-3 text-sm ' +
-                    (place.status === 'rejected' ? 'bg-warning-50 text-warning-800' : 'bg-neutral-100 text-neutral-600')
+                    (place.status === 'rejected' ? 'bg-warning-50 text-warning-800' : 'bg-neutral-100 text-neutral-500')
                   }>
                     {place.status === 'rejected' ? <AlertTriangle size={16} className="mt-0.5 shrink-0" /> : <Clock size={16} className="mt-0.5 shrink-0" />}
                     <span>
@@ -155,7 +155,7 @@ export function PlaceDetailPage({ id }: { id: string }) {
                 {place.description && (
                   <div className="mt-6">
                     <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">Description</h3>
-                    <p className="mt-2 whitespace-pre-line text-neutral-700">{place.description}</p>
+                    <p className="mt-2 whitespace-pre-line text-neutral-900">{place.description}</p>
                   </div>
                 )}
 
@@ -180,7 +180,7 @@ export function PlaceDetailPage({ id }: { id: string }) {
               ) : (
                 <div className="mt-5 space-y-5">
                   {approvedReviews.map((r) => (
-                    <div key={r.id} className="border-b border-neutral-100 pb-5 last:border-0">
+                    <div key={r.id} className="border-b border-neutral-200 pb-5 last:border-0">
                       <div className="flex items-center gap-3">
                         <Avatar name={r.author?.display_name ?? 'Anonyme'} src={r.author?.photo_url} size={36} />
                         <div className="flex-1">
@@ -189,7 +189,7 @@ export function PlaceDetailPage({ id }: { id: string }) {
                         </div>
                         <StarRating value={r.rating} size={14} />
                       </div>
-                      {r.comment && <p className="mt-3 text-sm text-neutral-700">{r.comment}</p>}
+                      {r.comment && <p className="mt-3 text-sm text-neutral-900">{r.comment}</p>}
                     </div>
                   ))}
                 </div>
@@ -205,7 +205,7 @@ export function PlaceDetailPage({ id }: { id: string }) {
               </h3>
 
               {myReview ? (
-                <div className="mt-4 rounded-xl bg-neutral-50 p-3 text-sm text-neutral-600">
+                <div className="mt-4 rounded-xl bg-neutral-100 p-3 text-sm text-neutral-500">
                   {myReview.status === 'approved' && 'Vous avez déjà laissé un avis sur ce lieu.'}
                   {myReview.status === 'pending' && 'Votre avis est en attente de validation par la modération.'}
                   {myReview.status === 'rejected' && (myReview.rejection_reason ?? "Votre avis n'a pas pu être publié.")}

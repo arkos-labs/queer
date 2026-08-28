@@ -315,7 +315,7 @@ export function ProfileEditPage() {
                   onClick={() => setForm({ ...form, account_type: v })}
                   className={cn(
                     'rounded-xl border px-3 py-3 text-sm font-medium transition',
-                    form.account_type === v ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300',
+                    form.account_type === v ? 'border-primary-500 bg-primary-50 text-primary-600' : 'border-neutral-200 bg-white text-neutral-500 hover:border-neutral-200',
                   )}
                 >
                   {l}
@@ -345,7 +345,7 @@ export function ProfileEditPage() {
                 if (subs.length === 0) return null;
                 return (
                   <div key={cat.id}>
-                    <h3 className="text-sm font-semibold text-neutral-700">{cat.label}</h3>
+                    <h3 className="text-sm font-semibold text-neutral-900">{cat.label}</h3>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {subs.map((s) => (
                         <button
@@ -356,7 +356,7 @@ export function ProfileEditPage() {
                             'rounded-full px-3 py-1.5 text-xs font-medium transition',
                             selectedSubs.has(s.id)
                               ? 'bg-primary-600 text-white'
-                              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200',
+                              : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200',
                           )}
                         >
                           {s.label}
@@ -387,9 +387,9 @@ export function ProfileEditPage() {
             {form.skills.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {form.skills.map((s) => (
-                  <span key={s} className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1.5 text-sm text-primary-700">
+                  <span key={s} className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1.5 text-sm text-primary-600">
                     {s}
-                    <button onClick={() => removeSkill(s)} className="text-primary-400 hover:text-primary-700">
+                    <button onClick={() => removeSkill(s)} className="text-primary-400 hover:text-primary-600">
                       <X size={14} />
                     </button>
                   </span>
@@ -408,7 +408,7 @@ export function ProfileEditPage() {
                 <select
                   value={rateUnit}
                   onChange={(e) => setRateUnit(e.target.value)}
-                  className="input w-auto shrink-0 bg-neutral-50"
+                  className="input w-auto shrink-0 bg-neutral-100"
                 >
                   <option value="/ heure">/ heure</option>
                   <option value="/ jour">/ jour</option>
@@ -462,7 +462,7 @@ export function ProfileEditPage() {
                 <select
                   value={budgetUnit}
                   onChange={(e) => setBudgetUnit(e.target.value)}
-                  className="input w-auto shrink-0 bg-neutral-50"
+                  className="input w-auto shrink-0 bg-neutral-100"
                 >
                   <option value="/ heure">/ heure</option>
                   <option value="/ jour">/ jour</option>
@@ -478,7 +478,7 @@ export function ProfileEditPage() {
 
           {error && <div className="mt-6 rounded-xl bg-error-50 p-3 text-sm text-error-700">{error}</div>}
 
-          <div className="mt-8 flex items-center justify-end gap-3 border-t border-neutral-100 pt-6">
+          <div className="mt-8 flex items-center justify-end gap-3 border-t border-neutral-200 pt-6">
             {saved && (
               <span className="inline-flex items-center gap-1.5 text-sm font-medium text-success-600">
                 <CheckCircle2 size={16} /> Enregistré

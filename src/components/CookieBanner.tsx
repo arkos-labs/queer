@@ -29,7 +29,7 @@ export function CookieBanner() {
     <div
       role="dialog"
       aria-label="Information sur les cookies"
-      className="fixed inset-x-0 bottom-0 z-[60] mx-auto w-full max-w-[440px] animate-slide-up p-3"
+      className="fixed inset-x-0 bottom-0 z-[60] mx-auto w-full max-w-2xl animate-slide-up p-3"
     >
       <div className="flex items-start gap-3 rounded-2xl bg-neutral-900 p-4 text-white shadow-2xl">
         <Cookie size={18} className="mt-0.5 shrink-0 text-primary-300" />

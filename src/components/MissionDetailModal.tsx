@@ -49,7 +49,7 @@ export function MissionDetailModal({ mission, onClose, onApply, onDelete }: Miss
       <div className="absolute inset-0" onClick={onClose} />
       
       <div className="relative z-10 flex flex-col w-full max-w-2xl bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-hidden animate-scale-in mt-auto md:mt-0">
-        <div className="flex items-center justify-between p-4 md:p-6 border-b border-neutral-100 bg-white sticky top-0 z-10">
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-neutral-200 bg-white sticky top-0 z-10">
           <h3 className="font-display text-lg font-semibold text-neutral-900 truncate pr-4">
             Détails de l'annonce
           </h3>
@@ -78,19 +78,19 @@ export function MissionDetailModal({ mission, onClose, onApply, onDelete }: Miss
           <div>
             <h2 className="font-display text-2xl font-bold text-neutral-900 mb-4">{mission.title}</h2>
             {mission.budget && (
-              <div className="mb-6 inline-flex items-center gap-2 rounded-xl bg-primary-50 px-4 py-2 text-primary-700 font-medium">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-xl bg-primary-50 px-4 py-2 text-primary-600 font-medium">
                 <span className="text-xs uppercase tracking-wider text-primary-600/70 font-semibold">Budget indicatif :</span>
                 <span className="text-sm font-bold">{mission.budget}</span>
               </div>
             )}
             
-            <div className="prose prose-sm max-w-none text-neutral-700 whitespace-pre-line leading-relaxed">
+            <div className="prose prose-sm max-w-none text-neutral-900 whitespace-pre-line leading-relaxed">
               {mission.description}
             </div>
           </div>
         </div>
 
-        <div className="p-4 md:p-6 border-t border-neutral-100 bg-neutral-50/50 mt-auto">
+        <div className="p-4 md:p-6 border-t border-neutral-200 bg-neutral-100/50 mt-auto">
           {user && user.id !== mission.created_by ? (
             <button onClick={onApply} className="btn-primary w-full py-3 text-[15px]">
               <Send size={18} /> Contacter & proposer un tarif

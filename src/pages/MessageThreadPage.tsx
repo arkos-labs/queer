@@ -13,18 +13,18 @@ import { ArrowLeft, Send, CheckCircle2, XCircle, Clock, Flag, CreditCard, AlertT
 
 const STATUS_META: Record<Connection['status'], { label: string; cls: string; icon: typeof Clock }> = {
   pending: { label: 'En attente', cls: 'bg-warning-100 text-warning-700', icon: Clock },
-  accepted: { label: 'Acceptée', cls: 'bg-primary-100 text-primary-700', icon: CheckCircle2 },
+  accepted: { label: 'Acceptée', cls: 'bg-primary-100 text-primary-600', icon: CheckCircle2 },
   completed: { label: 'Terminée', cls: 'bg-success-100 text-success-700', icon: CheckCircle2 },
-  cancelled: { label: 'Annulée', cls: 'bg-neutral-100 text-neutral-600', icon: XCircle },
+  cancelled: { label: 'Annulée', cls: 'bg-neutral-100 text-neutral-500', icon: XCircle },
 };
 
 const PAYMENT_STATUS_META: Record<Payment['status'], { label: string; cls: string }> = {
   pending: { label: 'En attente de paiement', cls: 'bg-warning-100 text-warning-700' },
-  authorized: { label: 'Carte autorisée', cls: 'bg-primary-100 text-primary-700' },
+  authorized: { label: 'Carte autorisée', cls: 'bg-primary-100 text-primary-600' },
   captured: { label: 'Payé', cls: 'bg-success-100 text-success-700' },
-  canceled: { label: 'Paiement annulé', cls: 'bg-neutral-100 text-neutral-600' },
+  canceled: { label: 'Paiement annulé', cls: 'bg-neutral-100 text-neutral-500' },
   failed: { label: 'Paiement échoué', cls: 'bg-error-100 text-error-700' },
-  refunded: { label: 'Remboursé', cls: 'bg-neutral-100 text-neutral-600' },
+  refunded: { label: 'Remboursé', cls: 'bg-neutral-100 text-neutral-500' },
 };
 
 const formatEuros = (cents: number) => (cents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
@@ -112,8 +112,33 @@ export function MessageThreadPage({ id }: { id: string }) {
       }
     };
     load();
+
+    const channel = supabase
+      .channel(`connection-${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `connection_id=eq.${id}`,
+        },
+        (payload) => {
+          const newMessage = payload.new as Message;
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === newMessage.id)) return prev;
+            return [...prev, newMessage];
+          });
+          if (newMessage.sender_id !== user.id) {
+            supabase.from('messages').update({ read_at: new Date().toISOString() }).eq('id', newMessage.id).then();
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       cancelled = true;
+      supabase.removeChannel(channel);
     };
   }, [id, user, navigate]);
 
@@ -342,8 +367,8 @@ export function MessageThreadPage({ id }: { id: string }) {
         />
       )}
       {/* Thread header */}
-      <div ref={headerRef} className="fixed top-[96px] w-full max-w-[440px] z-40 border-b border-neutral-100 bg-white">
-        <div className="flex items-center gap-3 px-4 py-3">
+      <div ref={headerRef} className="fixed top-[84px] z-40 mx-auto w-full max-w-6xl border-b border-neutral-200 bg-white/90 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
           <button onClick={() => navigate('/messages')} aria-label="Retour aux messages" className="rounded-full p-1.5 text-neutral-500 hover:bg-neutral-100">
             <ArrowLeft size={18} />
           </button>
@@ -359,9 +384,9 @@ export function MessageThreadPage({ id }: { id: string }) {
         </div>
 
         {payment && (
-          <div className="flex items-center gap-2 border-t border-neutral-100 bg-neutral-50 px-4 py-2 text-xs">
+          <div className="flex items-center gap-2 border-t border-neutral-200 bg-neutral-100 px-4 py-2 text-xs">
             <CreditCard size={13} className="shrink-0 text-neutral-500" />
-            <span className="font-semibold text-neutral-800">{formatEuros(payment.amount)}</span>
+            <span className="font-semibold text-neutral-900">{formatEuros(payment.amount)}</span>
             <span className={`inline-flex items-center rounded-full px-2 py-0.5 font-medium ${PAYMENT_STATUS_META[payment.status].cls}`}>
               {PAYMENT_STATUS_META[payment.status].label}
             </span>
@@ -382,7 +407,7 @@ export function MessageThreadPage({ id }: { id: string }) {
         )}
 
         {connection.status !== 'cancelled' && connection.status !== 'completed' && (
-          <div className="flex flex-wrap items-center gap-2 border-t border-neutral-100 px-4 py-2">
+          <div className="flex flex-wrap items-center gap-2 border-t border-neutral-200 px-4 py-2">
             {connection.status === 'pending' && !isInitiator && !payment && (
               <button
                 onClick={() => updateStatus('accepted')}
@@ -514,13 +539,13 @@ export function MessageThreadPage({ id }: { id: string }) {
       )}
 
       {/* Composer */}
-      <div ref={footerRef} className="fixed bottom-[calc(61px+env(safe-area-inset-bottom))] w-full max-w-[440px] z-30">
+      <div ref={footerRef} className="fixed bottom-[calc(61px+env(safe-area-inset-bottom))] z-30 mx-auto w-full max-w-6xl">
         {!profile?.charte_accepted ? (
           <div className="flex items-center gap-2 border-t border-neutral-200 bg-warning-50 px-4 py-3 text-xs text-warning-800">
             <Flag size={14} /> Acceptez la charte de respect depuis votre profil pour pouvoir écrire.
           </div>
         ) : (
-          <form onSubmit={sendMessage} className="flex items-end gap-2 border-t border-neutral-200 bg-white px-4 py-3">
+          <form onSubmit={sendMessage} className="mx-auto flex max-w-6xl items-end gap-2 border-t border-neutral-200 bg-white px-4 py-3 backdrop-blur-xl">
             <label htmlFor="thread-composer" className="sr-only">Votre message</label>
             <textarea
               id="thread-composer"
