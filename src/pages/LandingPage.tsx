@@ -1,8 +1,13 @@
+import { useState } from 'react';
 import { useRouter } from '@/lib/router';
 import {
   ShieldCheck,
-  Users,
-  Sparkles,
+  BadgeCheck,
+  Heart,
+  Search,
+  UserPlus,
+  ArrowRight,
+  LifeBuoy,
   Wrench,
   SprayCan,
   PawPrint,
@@ -10,169 +15,247 @@ import {
   Monitor,
   Truck,
   Baby,
-  Scissors,
-  ArrowRight,
-  BadgeCheck,
-  Lock,
-  Heart,
+  Scissors
 } from 'lucide-react';
-
-const CATEGORIES = [
-  { label: 'Bricolage', icon: Wrench },
-  { label: 'Ménage', icon: SprayCan },
-  { label: 'Animaux', icon: PawPrint },
-  { label: 'Jardin', icon: Leaf },
-  { label: 'Tech', icon: Monitor },
-  { label: 'Transport', icon: Truck },
-  { label: 'Enfants', icon: Baby },
-  { label: 'Beauté', icon: Scissors },
-];
-
-const VALUES = [
-  {
-    icon: ShieldCheck,
-    title: 'Charte de respect',
-    desc: 'Chaque membre accepte une charte de respect avant de pouvoir échanger. Tout manquement peut entraîner une suspension.',
-  },
-  {
-    icon: BadgeCheck,
-    title: 'Badges de confiance',
-    desc: 'Identité vérifiée, accueil handi-inclusif, expertise sur cheveux texturés… des badges attribués par la communauté et la modération.',
-  },
-  {
-    icon: Lock,
-    title: 'Vos données, vos droits',
-    desc: 'Export et suppression de vos données à tout moment, hébergement dans l\'Union Européenne, conformément au RGPD.',
-  },
-];
+import { cn } from '@/lib/utils';
 
 export function LandingPage() {
   const { navigate } = useRouter();
+  const [activeTab, setActiveTab] = useState<'signup' | 'login'>('signup');
 
   return (
-    <div className="min-h-screen bg-white font-sans animate-fade-in text-neutral-800">
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        {/* Subtle dark glowing orbs (Patina and Gold) */}
-        <div className="pointer-events-none absolute -right-32 -top-24 h-80 w-80 rounded-full bg-primary-100/30 blur-[100px]" />
-        <div className="pointer-events-none absolute -left-32 top-32 h-80 w-80 rounded-full bg-primary-50 blur-[100px]" />
-        
-        <div className="container-app relative py-14 text-center sm:py-24">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-sm bg-white shadow-card ring-1 ring-neutral-200">
-            <img src="/logo.png" alt="Queer Service" className="h-14 w-14 object-contain" />
-          </div>
+    <div className="min-h-screen bg-paper-base font-sans text-ink-base flex flex-col relative overflow-hidden">
+      
+        {/* Top Pride Bar */}
+      <div className="absolute top-0 inset-x-0 h-1.5 z-50" style={{ background: 'linear-gradient(90deg, #FF0018 0%, #FFA52C 20%, #FFFF41 40%, #008018 60%, #0000F9 80%, #86007D 100%)' }} />
 
-          <h1 className="mx-auto mt-8 max-w-3xl font-display text-5xl font-light leading-[1.08] text-neutral-900 sm:text-7xl tracking-tight">
+      {/* Subtle Pride ambient blurs in the background */}
+      <div className="pointer-events-none absolute -left-40 top-10 h-[500px] w-[500px] rounded-full bg-pink-500/10 blur-[120px]" />
+      <div className="pointer-events-none absolute -right-40 top-40 h-[500px] w-[500px] rounded-full bg-blue-500/10 blur-[120px]" />
+      <div className="pointer-events-none absolute left-1/3 top-0 h-[400px] w-[400px] rounded-full bg-yellow-500/10 blur-[120px]" />
+
+      {/* Main Content */}
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-12 max-w-5xl mx-auto w-full">
+        
+        {/* Hero Section */}
+        <div className="text-center max-w-3xl mx-auto mb-16 flex flex-col items-center">
+          
+          <h1 className="font-display text-5xl sm:text-7xl font-bold tracking-tight text-ink-base mb-6 mt-4">
             Fait pour nous,
             <br />
-            <span className="text-primary-600 italic font-medium">par nous.</span>
+            <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(90deg, #FF0018 0%, #FFA52C 20%, #008018 60%, #0000F9 80%, #86007D 100%)' }}>
+              par nous.
+            </span>
           </h1>
-          <p className="mx-auto mt-6 max-w-xl text-[16px] leading-relaxed text-neutral-500 sm:text-lg">
-            Queer Service est l'annuaire d'entraide de la communauté LGBTQI+&nbsp;: trouvez et proposez des services
-            en toute confiance, entre membres.
+          <p className="text-lg sm:text-xl text-text-light-muted max-w-2xl mx-auto leading-relaxed">
+            La plateforme de mise en relation gay-friendly. Trouvez de l'aide, proposez vos services ou venez juste discuter sur le forum.
           </p>
+        </div>
 
-          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <button onClick={() => navigate('/inscription')} className="btn-primary btn-lg w-full sm:w-auto uppercase tracking-widest text-sm">
-              Rejoindre la communauté <ArrowRight size={16} className="ml-2" />
+        {/* Interactive CTA Card (Tabs System) */}
+        <div className="w-full max-w-md mx-auto bg-paper-raised rounded-3xl p-2 sm:p-3 shadow-card ring-1 ring-gold-hairline">
+          
+          {/* Tabs header */}
+          <div className="flex p-1 bg-paper-deep rounded-2xl mb-6">
+            <button
+              onClick={() => setActiveTab('signup')}
+              className={cn(
+                "flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-200",
+                activeTab === 'signup' 
+                  ? "bg-paper-raised text-ink-base shadow-sm ring-1 ring-gold-hairline" 
+                  : "text-text-light-muted hover:text-ink-base"
+              )}
+            >
+              Nouveau membre
             </button>
-            <button onClick={() => navigate('/connexion')} className="btn-outline btn-lg w-full sm:w-auto uppercase tracking-widest text-sm">
-              Se connecter
+            <button
+              onClick={() => setActiveTab('login')}
+              className={cn(
+                "flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-200",
+                activeTab === 'login' 
+                  ? "bg-paper-raised text-ink-base shadow-sm ring-1 ring-gold-hairline" 
+                  : "text-text-light-muted hover:text-ink-base"
+              )}
+            >
+              Déjà inscrit
             </button>
           </div>
 
-          <p className="mt-6 text-xs text-neutral-400 tracking-wider uppercase">
-            <span className="inline-flex items-center gap-1.5"><Heart size={12} className="fill-primary-600 text-primary-600" /> Rejoins plus de membres de la communauté</span>
-          </p>
-        </div>
-      </section>
+          {/* Tab Content */}
+          <div className="px-4 pb-6 sm:px-6">
+            {activeTab === 'signup' ? (
+              <div className="animate-fade-in text-center">
+                <p className="text-sm text-text-light-muted mb-6">
+                  Rejoignez la communauté pour proposer vos services ou contacter des membres de confiance.
+                </p>
+                <button 
+                  onClick={() => navigate('/inscription')} 
+                  className="w-full flex items-center justify-center gap-2 bg-patina-deep hover:bg-patina-verdigris text-white py-4 rounded-xl font-semibold text-lg transition-colors shadow-sm"
+                >
+                  <UserPlus size={20} />
+                  S'inscrire
+                </button>
+              </div>
+            ) : (
+              <div className="animate-fade-in text-center">
+                <p className="text-sm text-text-light-muted mb-6">
+                  Bon retour parmi nous. Connectez-vous pour retrouver vos messages et vos favoris.
+                </p>
+                <button 
+                  onClick={() => navigate('/connexion')} 
+                  className="w-full flex items-center justify-center gap-2 bg-paper-deep hover:bg-neutral-100 text-ink-base border border-gold-hairline py-4 rounded-xl font-semibold text-lg transition-colors"
+                >
+                  Connexion
+                  <ArrowRight size={20} />
+                </button>
+              </div>
+            )}
 
-      {/* Categories preview */}
-      <section className="container-app py-12 sm:py-20 border-t border-neutral-100">
-        <div className="mx-auto max-w-3xl">
-          <h2 className="text-center text-xs font-medium uppercase tracking-widest text-neutral-500">
-            Des services pour tous les besoins
-          </h2>
-          <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
-            {CATEGORIES.map(({ label, icon: Icon }) => (
+            {/* Subtle Explorer link */}
+            <div className="mt-6 pt-6 border-t border-gold-hairline text-center">
+              <button 
+                onClick={() => navigate('/annuaire')}
+                className="inline-flex items-center gap-2 text-sm font-medium text-text-light-muted hover:text-patina-deep transition-colors"
+              >
+                <Search size={16} />
+                <span>Explorer l'annuaire librement</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Trust Badges */}
+        <div className="mt-24 grid grid-cols-1 sm:grid-cols-3 gap-8 w-full">
+          <div className="flex flex-col items-center text-center p-6 bg-paper-raised rounded-2xl shadow-sm ring-1 ring-gold-hairline">
+            <div className="h-12 w-12 rounded-full bg-patina-verdigris/10 flex items-center justify-center mb-4 text-patina-deep">
+              <ShieldCheck size={24} />
+            </div>
+            <h3 className="text-base font-bold text-ink-base mb-2">Modération</h3>
+            <p className="text-sm text-text-light-muted leading-relaxed">
+              Une charte de respect stricte et une modération active pour un espace sécurisant.
+            </p>
+          </div>
+
+          <div className="flex flex-col items-center text-center p-6 bg-paper-raised rounded-2xl shadow-sm ring-1 ring-gold-hairline">
+            <div className="h-12 w-12 rounded-full bg-kinpaku-gold/10 flex items-center justify-center mb-4 text-kinpaku-gold">
+              <BadgeCheck size={24} />
+            </div>
+            <h3 className="text-base font-bold text-ink-base mb-2">Vérifié</h3>
+            <p className="text-sm text-text-light-muted leading-relaxed">
+              Des badges de confiance attribués pour rassurer et guider vos échanges.
+            </p>
+          </div>
+
+          <div className="flex flex-col items-center text-center p-6 bg-paper-raised rounded-2xl shadow-sm ring-1 ring-gold-hairline">
+            <div className="h-12 w-12 rounded-full bg-error-50 flex items-center justify-center mb-4 text-error-600">
+              <Heart size={24} />
+            </div>
+            <h3 className="text-base font-bold text-ink-base mb-2">Bienveillant</h3>
+            <p className="text-sm text-text-light-muted leading-relaxed">
+              Pensé pour et par la communauté, privilégiant l'entraide et l'inclusivité.
+            </p>
+          </div>
+        </div>
+
+        {/* Comprehensive Presentation & Categories (Bento-style) */}
+        <div className="mt-32 w-full">
+          
+          <div className="text-center mb-16">
+            <h2 className="font-display text-4xl sm:text-5xl font-bold text-ink-base mb-6 tracking-tight">
+              C'est quoi Queer Service ?
+            </h2>
+            <p className="text-lg text-text-light-muted max-w-2xl mx-auto leading-relaxed">
+              Pas juste un annuaire. C'est avant tout un espace de mise en relation pour la communauté. Que ce soit pour un coup de main, trouver un·e pro ou échanger sur le forum, vous êtes au bon endroit.
+            </p>
+          </div>
+
+          {/* Categories Grid - Bento Style */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-5xl mx-auto mb-24">
+            {[
+              { label: 'Bricolage & Travaux', icon: Wrench, color: 'text-amber-600', bg: 'bg-amber-50', border: 'ring-amber-200' },
+              { label: 'Ménage & Aide', icon: SprayCan, color: 'text-cyan-600', bg: 'bg-cyan-50', border: 'ring-cyan-200' },
+              { label: 'Garde d\'animaux', icon: PawPrint, color: 'text-orange-600', bg: 'bg-orange-50', border: 'ring-orange-200' },
+              { label: 'Jardinage', icon: Leaf, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'ring-emerald-200' },
+              { label: 'Tech & Informatique', icon: Monitor, color: 'text-blue-600', bg: 'bg-blue-50', border: 'ring-blue-200' },
+              { label: 'Transport & Déménagement', icon: Truck, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'ring-indigo-200' },
+              { label: 'Garde d\'enfants', icon: Baby, color: 'text-pink-600', bg: 'bg-pink-50', border: 'ring-pink-200' },
+              { label: 'Beauté & Bien-être', icon: Scissors, color: 'text-rose-600', bg: 'bg-rose-50', border: 'ring-rose-200' },
+            ].map(({ label, icon: Icon, color, bg, border }) => (
               <button
                 key={label}
                 onClick={() => navigate('/annuaire')}
-                className="group flex flex-col items-center gap-4 rounded-md bg-white p-6 text-center shadow-card ring-1 ring-neutral-200 transition hover:-translate-y-1 hover:shadow-lift hover:ring-primary-500"
+                className="group flex flex-col items-center gap-4 rounded-3xl bg-paper-raised p-6 text-center shadow-sm ring-1 ring-gold-hairline transition-all hover:-translate-y-1 hover:shadow-card hover:ring-patina-deep"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 border border-neutral-200 text-primary-600 transition group-hover:bg-primary-50">
-                  <Icon size={20} strokeWidth={1.5} />
+                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${bg} ring-1 ${border} ${color} transition-transform group-hover:scale-110`}>
+                  <Icon size={24} strokeWidth={1.5} />
                 </div>
-                <span className="text-[13px] font-medium tracking-wide uppercase text-neutral-900">{label}</span>
+                <span className="text-[13px] font-bold tracking-wide text-ink-base">{label}</span>
               </button>
             ))}
           </div>
-          <p className="mt-10 text-center text-xs tracking-wider text-neutral-400 uppercase">
-            Et bien d'autres&nbsp;: santé &amp; bien-être, administratif &amp; juridique, coaching, communauté…
-          </p>
-        </div>
-      </section>
 
-      {/* Trust values */}
-      <section className="border-y border-neutral-200 bg-neutral-100 py-16 sm:py-24">
-        <div className="container-app">
-          <h2 className="section-title text-center">La confiance au cœur</h2>
-          <p className="mx-auto mt-4 max-w-md text-center text-[15px] text-neutral-500">
-            Une plateforme pensée pour protéger et valoriser chaque membre.
-          </p>
-          <div className="mx-auto mt-12 grid max-w-5xl gap-6 sm:grid-cols-3">
-            {VALUES.map((v) => (
-              <div key={v.title} className="rounded-md bg-white p-8 shadow-card ring-1 ring-neutral-200 transition-colors hover:ring-primary-500">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-50 text-primary-600">
-                  <v.icon size={22} strokeWidth={1.5} />
+          {/* Detailed 3-Step Process */}
+          <div className="bg-paper-deep rounded-[3rem] p-8 sm:p-16 ring-1 ring-gold-hairline relative overflow-hidden">
+            <div className="pointer-events-none absolute -right-20 top-0 h-64 w-64 rounded-full bg-kinpaku-gold/10 blur-[80px]" />
+            <div className="pointer-events-none absolute -left-20 bottom-0 h-64 w-64 rounded-full bg-patina-verdigris/10 blur-[80px]" />
+            
+            <h2 className="font-display text-3xl sm:text-4xl font-bold text-ink-base mb-12 text-center relative z-10">
+              Comment ça marche ?
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
+              <div className="flex flex-col items-center text-center">
+                <div className="h-16 w-16 rounded-2xl bg-white shadow-sm ring-1 ring-gold-hairline flex items-center justify-center text-xl font-black text-patina-deep mb-6 rotate-3">
+                  1
                 </div>
-                <h3 className="mt-6 font-display text-[20px] font-medium text-neutral-900 tracking-wide uppercase">{v.title}</h3>
-                <p className="mt-3 text-[14px] leading-relaxed text-neutral-500">{v.desc}</p>
+                <h3 className="text-xl font-bold text-ink-base mb-3">Créez votre profil</h3>
+                <p className="text-[15px] text-text-light-muted leading-relaxed">
+                  Inscrivez-vous gratuitement en tant que particulier, professionnel·le ou association. Remplissez votre bio et précisez si vous êtes là pour offrir ou chercher des services.
+                </p>
               </div>
-            ))}
+
+              <div className="flex flex-col items-center text-center">
+                <div className="h-16 w-16 rounded-2xl bg-white shadow-sm ring-1 ring-gold-hairline flex items-center justify-center text-xl font-black text-patina-deep mb-6 -rotate-3">
+                  2
+                </div>
+                <h3 className="text-xl font-bold text-ink-base mb-3">Déclarez vos besoins</h3>
+                <p className="text-[15px] text-text-light-muted leading-relaxed">
+                  Ajoutez des "Compétences" (les talents que vous mettez à disposition) ou des "Besoins" (ce que vous recherchez). Le moteur de recherche fera le reste !
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center text-center">
+                <div className="h-16 w-16 rounded-2xl bg-white shadow-sm ring-1 ring-gold-hairline flex items-center justify-center text-xl font-black text-patina-deep mb-6 rotate-6">
+                  3
+                </div>
+                <h3 className="text-xl font-bold text-ink-base mb-3">Échangez en sécurité</h3>
+                <p className="text-[15px] text-text-light-muted leading-relaxed">
+                  Utilisez la messagerie intégrée pour discuter des modalités. Après la prestation, laissez un avis pour faire grandir la confiance au sein de la communauté.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-      </section>
 
-      {/* Community CTA */}
-      <section className="container-app py-16 text-center sm:py-24">
-        <div className="relative mx-auto max-w-3xl overflow-hidden rounded-md bg-white p-12 text-neutral-900 shadow-lift ring-1 ring-primary-500 sm:p-16">
-          <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary-100/30 blur-[80px]" />
-          <div className="pointer-events-none absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-primary-50 blur-[80px]" />
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-primary-400/50" />
-
-          <div className="relative z-10 mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary-50 ring-1 ring-primary-300">
-            <Users size={24} className="text-primary-600" strokeWidth={1.5} />
-          </div>
-          <h2 className="relative z-10 mt-8 font-display text-3xl font-light tracking-tight sm:text-4xl text-neutral-900">
-            Particulier·e, professionnel·le ou association&nbsp;?
-          </h2>
-          <p className="relative z-10 mx-auto mt-4 max-w-md text-[15px] text-neutral-500 leading-relaxed">
-            Créez votre profil en quelques minutes et rejoignez un annuaire pensé pour et par la communauté.
-          </p>
-          <button onClick={() => navigate('/inscription')} className="btn-primary btn-lg mt-10 relative z-10 uppercase tracking-widest text-sm">
-            <Sparkles size={16} className="mr-2" /> Créer mon profil
-          </button>
-        </div>
-      </section>
+      </main>
 
       {/* Footer / legal links */}
-      <footer className="border-t border-neutral-200 px-6 py-12 pb-32 text-center sm:pb-12 bg-white">
-        <p className="text-[11px] uppercase tracking-widest text-neutral-400">© {new Date().getFullYear()} Queer Service</p>
+      <footer className="border-t border-gold-hairline px-6 py-12 pb-32 text-center sm:pb-12 bg-paper-raised mt-20">
+        <p className="text-[11px] uppercase tracking-widest text-text-light-faint">© {new Date().getFullYear()} Queer Service</p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-          <a href="#/ressources" className="text-[11px] uppercase tracking-widest font-medium text-primary-600 hover:text-primary-500 transition-colors">
+          <a href="#/ressources" className="text-[11px] uppercase tracking-widest font-medium text-patina-deep hover:text-patina-verdigris transition-colors">
             Ressources &amp; numéros d'aide
           </a>
-          <a href="#/mentions-legales" className="text-[11px] uppercase tracking-widest text-neutral-500 hover:text-primary-600 transition-colors">
+          <a href="#/mentions-legales" className="text-[11px] uppercase tracking-widest text-text-light-muted hover:text-patina-deep transition-colors">
             Mentions légales
           </a>
-          <a href="#/cgu" className="text-[11px] uppercase tracking-widest text-neutral-500 hover:text-primary-600 transition-colors">
+          <a href="#/cgu" className="text-[11px] uppercase tracking-widest text-text-light-muted hover:text-patina-deep transition-colors">
             CGU
           </a>
-          <a href="#/confidentialite" className="text-[11px] uppercase tracking-widest text-neutral-500 hover:text-primary-600 transition-colors">
+          <a href="#/confidentialite" className="text-[11px] uppercase tracking-widest text-text-light-muted hover:text-patina-deep transition-colors">
             Confidentialité
           </a>
-          <a href="#/cookies" className="text-[11px] uppercase tracking-widest text-neutral-500 hover:text-primary-600 transition-colors">
+          <a href="#/cookies" className="text-[11px] uppercase tracking-widest text-text-light-muted hover:text-patina-deep transition-colors">
             Cookies
           </a>
         </div>

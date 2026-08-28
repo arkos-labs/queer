@@ -178,17 +178,21 @@ export function Layout({ children }: { children: ReactNode }) {
                 )}
               </div>
             ) : (
-              <button
-                onClick={() => go('/installer')}
-                className="flex items-center space-x-1 bg-white border border-neutral-200 px-3 py-1.5 rounded-sm text-sm font-medium text-neutral-900 hover:bg-neutral-100 transition-colors"
-              >
-                <LifeBuoy size={16} className="text-primary-500" />
-                <span>Aide</span>
-              </button>
+              <div className="w-[42px]" />
             )}
 
-            <div className="flex-1 text-center font-display text-[22px] font-medium text-neutral-900 tracking-widest uppercase">
-              {getPageTitle(path)}
+            <div className="flex-1 flex flex-col items-center justify-center relative min-h-[30px]">
+              {isLanding ? (
+                <img 
+                  src="/logo.png" 
+                  alt="Queer Service" 
+                  className="absolute top-1/2 -translate-y-[65%] h-32 w-32 object-contain drop-shadow-md z-10" 
+                />
+              ) : (
+                <span className="font-display text-[22px] font-medium text-neutral-900 tracking-widest uppercase">
+                  {getPageTitle(path)}
+                </span>
+              )}
             </div>
 
             {user && profile ? (
