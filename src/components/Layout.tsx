@@ -186,7 +186,7 @@ export function Layout({ children }: { children: ReactNode }) {
                 <img 
                   src="/logo.png" 
                   alt="Queer Service" 
-                  className="absolute top-1/2 -translate-y-[65%] h-32 w-32 object-contain drop-shadow-md z-10" 
+                  className="absolute top-1/2 -translate-y-[65%] h-36 w-36 object-contain drop-shadow-md z-10" 
                 />
               ) : (
                 <span className="font-display text-[22px] font-medium text-neutral-900 tracking-widest uppercase">
