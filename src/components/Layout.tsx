@@ -184,17 +184,11 @@ export function Layout({ children }: { children: ReactNode }) {
             )}
 
             <div className="flex-1 flex flex-col items-center justify-center relative min-h-[30px]">
-              {isLanding ? (
-                <img 
-                  src="/logo.png" 
-                  alt="Queer Service" 
-                  className="absolute top-1/2 -translate-y-[65%] h-36 w-36 object-contain drop-shadow-md z-10" 
-                />
-              ) : (
-                <span className="font-display text-[22px] font-medium text-neutral-900 tracking-widest uppercase">
-                  {getPageTitle(path)}
-                </span>
-              )}
+              <img 
+                src="/logo.png" 
+                alt="Queer Service" 
+                className="absolute top-1/2 -translate-y-[65%] h-36 w-36 object-contain drop-shadow-md z-10" 
+              />
             </div>
 
             {user && profile ? (
