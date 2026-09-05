@@ -26,9 +26,6 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-paper-base font-sans text-ink-base flex flex-col relative overflow-hidden">
       
-        {/* Top Pride Bar */}
-      <div className="absolute top-0 inset-x-0 h-1.5 z-50" style={{ background: 'linear-gradient(90deg, #FF0018 0%, #FFA52C 20%, #FFFF41 40%, #008018 60%, #0000F9 80%, #86007D 100%)' }} />
-
       {/* Subtle Pride ambient blurs in the background */}
       <div className="pointer-events-none absolute -left-40 top-10 h-[500px] w-[500px] rounded-full bg-pink-500/10 blur-[120px]" />
       <div className="pointer-events-none absolute -right-40 top-40 h-[500px] w-[500px] rounded-full bg-blue-500/10 blur-[120px]" />

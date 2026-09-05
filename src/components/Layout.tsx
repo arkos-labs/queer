@@ -134,7 +134,9 @@ export function Layout({ children }: { children: ReactNode }) {
     <div className="mobile-shell">
       <div className="mobile-frame">
         {/* Status-bar style top accent */}
-        <div className="sticky top-0 z-50 flex flex-col bg-white/80 backdrop-blur-xl border-b border-neutral-200 text-neutral-900 pt-14 px-4 shadow-sm w-full">
+        <div className="fixed top-0 inset-x-0 z-50 flex flex-col bg-primary-100/90 backdrop-blur-xl border-b border-neutral-200 text-neutral-900 pt-14 px-4 shadow-sm w-full">
+          {/* Top Pride Bar */}
+          <div className="absolute top-0 inset-x-0 h-1.5" style={{ background: 'linear-gradient(90deg, #FF0018 0%, #FFA52C 20%, #FFFF41 40%, #008018 60%, #0000F9 80%, #86007D 100%)' }} />
           <div className="flex items-center justify-between pb-3">
             {user && profile ? (
               <div className="relative">
@@ -269,7 +271,7 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Scrollable app content */}
-        <main className="mobile-content">{children}</main>
+        <main className="mobile-content pt-[110px]">{children}</main>
 
         {/* Bottom tab bar */}
         {user && profile && tabs.length > 0 && (

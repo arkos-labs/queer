@@ -95,11 +95,11 @@ export function MyProfilePage() {
   return (
     <div className="animate-fade-in container-app py-6 max-w-2xl mx-auto">
       {showWelcome && (
-        <div className="mb-4 flex items-start gap-3 rounded-xl border border-primary-100 bg-primary-50 p-4">
-          <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-primary-600" />
+        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-gold-hairline bg-white/60 backdrop-blur-sm p-4 shadow-soft">
+          <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-patina-deep" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-primary-900">Bienvenue, votre inscription est terminée !</p>
-            <p className="mt-0.5 text-xs text-primary-600">Votre profil est prêt, vous pouvez le compléter à tout moment.</p>
+            <p className="text-sm font-medium text-ink-base">Bienvenue, votre inscription est terminée !</p>
+            <p className="mt-0.5 text-xs text-ink-muted">Votre profil est prêt, vous pouvez le compléter à tout moment.</p>
           </div>
           <button
             onClick={() => {
@@ -107,7 +107,7 @@ export function MyProfilePage() {
               navigate('/profil');
             }}
             aria-label="Fermer"
-            className="rounded-lg p-1 text-primary-400 hover:bg-primary-100"
+            className="rounded-lg p-1 text-ink-muted hover:bg-paper-base transition-colors"
           >
             <X size={16} />
           </button>
@@ -126,40 +126,46 @@ export function MyProfilePage() {
       </div>
       <div className="flex flex-col gap-6">
           {/* Main Card */}
-          <div className="card overflow-hidden pb-8">
-            {/* Rainbow banner */}
-            <div aria-hidden="true" className="h-28 bg-amber-400 bg-[length:200%_100%] animate-gradient-x sm:h-32" />
+          <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft overflow-hidden pb-8 relative">
+            {/* Elegant Kinpaku banner */}
+            <div aria-hidden="true" className="h-28 sm:h-32 bg-paper-base relative overflow-hidden">
+               <div className="absolute top-0 inset-x-0 h-1.5 z-10" style={{ background: 'linear-gradient(90deg, #FF0018 0%, #FFA52C 20%, #FFFF41 40%, #008018 60%, #0000F9 80%, #86007D 100%)' }} />
+               <div className="absolute -left-20 -top-20 h-40 w-40 rounded-full bg-pink-500/10 blur-[50px]" />
+               <div className="absolute -right-20 top-10 h-40 w-40 rounded-full bg-blue-500/10 blur-[50px]" />
+            </div>
             <div className="relative -mt-14 flex justify-center sm:-mt-16">
-              <Avatar name={profile.display_name} src={profile.photo_url} size={112} className="bg-primary-600 text-white" />
+              <div className="rounded-full bg-white p-1.5 shadow-sm">
+                <Avatar name={profile.display_name} src={profile.photo_url} size={112} className="bg-paper-raised text-ink-muted border border-gold-hairline" />
+              </div>
               {profile.verification_status === 'verified' && (
-                <div className="absolute bottom-0 right-1/2 translate-x-12 translate-y-1 rounded-full bg-white p-0.5 shadow-sm">
-                  <ShieldCheck size={20} className="text-emerald-500 fill-emerald-50" />
+                <div className="absolute bottom-1 right-1/2 translate-x-12 translate-y-1 rounded-full bg-white p-0.5 shadow-sm border border-gold-hairline">
+                  <ShieldCheck size={20} className="text-patina-deep" />
                 </div>
               )}
             </div>
             
             <div className="px-6 mt-6 text-center">
-              <h1 className="font-display text-3xl font-bold text-neutral-900">{profile.display_name}</h1>
+              <h1 className="font-display text-3xl font-bold text-ink-base">{profile.display_name}</h1>
                 {typeMeta && (
-                  <span className="mt-2 inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-600">
+                  <span className="mt-2 inline-flex items-center rounded-full bg-paper-base border border-gold-hairline px-3 py-1 text-xs font-semibold text-ink-base shadow-sm">
                     {typeMeta.label}
                   </span>
                 )}
 
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-neutral-500">
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-ink-muted">
                 {profile.city && (
-                  <span className="inline-flex items-center gap-1"><MapPin size={13} className="text-error-500" /> {profile.city}</span>
+                  <span className="inline-flex items-center gap-1"><MapPin size={13} className="text-patina-deep" /> {profile.city}</span>
                 )}
               </div>
 
               {profile.bio && (
-                <p className="mt-6 text-[15px] italic text-neutral-500 leading-relaxed whitespace-pre-line px-2">
+                <p className="mt-6 text-[15px] italic text-ink-muted leading-relaxed whitespace-pre-line px-2">
                   "{profile.bio}"
                 </p>
               )}
 
               <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <button onClick={() => navigate('/profil/modifier')} className="btn-primary w-full">
+                <button onClick={() => navigate('/profil/modifier')} className="flex items-center justify-center rounded-xl bg-ink-base px-6 py-2.5 font-semibold text-white shadow-soft transition-transform hover:-translate-y-0.5 w-full sm:w-auto">
                   Modifier mon profil
                 </button>
                 <button 
@@ -167,7 +173,7 @@ export function MyProfilePage() {
                     await signOut();
                     navigate('/');
                   }} 
-                  className="btn-outline w-full sm:w-auto text-error-600 hover:bg-error-50 border-error-200"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-error-200 bg-error-50/50 px-6 py-2.5 font-semibold text-error-600 transition-colors hover:bg-error-50 w-full sm:w-auto"
                 >
                   <LogOut size={16} />
                   Se déconnecter
@@ -176,10 +182,10 @@ export function MyProfilePage() {
 
               {profile.skills.length > 0 && (
                 <div className="mt-8">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-400 mb-3">Compétences proposées</h3>
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3">Compétences proposées</h3>
                   <div className="flex flex-wrap justify-center gap-2">
                     {profile.skills.map((s) => (
-                      <span key={s} className="badge-chip bg-primary-50 text-primary-600 ring-1 ring-primary-100">
+                      <span key={s} className="rounded-full bg-white border border-gold-hairline px-3 py-1 text-[11px] font-semibold text-ink-base shadow-sm">
                         {s}
                       </span>
                     ))}
@@ -189,10 +195,10 @@ export function MyProfilePage() {
               
               {profile.needs.length > 0 && (
                 <div className="mt-6">
-                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 mb-3">Recherche</h3>
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-3">Recherche</h3>
                   <div className="flex flex-wrap justify-center gap-2">
                     {profile.needs.map((s) => (
-                      <span key={s} className="badge-chip bg-primary-50 text-neutral-900 ring-1 ring-neutral-200">
+                      <span key={s} className="rounded-full bg-paper-base border border-gold-hairline px-3 py-1 text-[11px] font-semibold text-ink-base shadow-sm">
                         {s}
                       </span>
                     ))}
@@ -206,19 +212,19 @@ export function MyProfilePage() {
 
           {/* Additional info if applicable */}
           {(profile.intervention_zone || profile.indicative_rates) && (
-            <div className="card p-6">
-              <h2 className="font-display text-lg font-semibold text-neutral-900 mb-4">Informations complémentaires</h2>
-              <div className="flex flex-col gap-4 text-sm text-neutral-500">
+            <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft p-6">
+              <h2 className="font-display text-lg font-semibold text-ink-base mb-4">Informations complémentaires</h2>
+              <div className="flex flex-col gap-4 text-sm text-ink-muted">
                 {profile.intervention_zone && (
                   <div>
-                    <span className="block text-xs text-neutral-400 mb-1">Zone d'intervention</span>
-                    <span className="font-medium text-neutral-900">{profile.intervention_zone}</span>
+                    <span className="block text-xs text-patina-deep mb-1">Zone d'intervention</span>
+                    <span className="font-medium text-ink-base">{profile.intervention_zone}</span>
                   </div>
                 )}
                 {profile.indicative_rates && (
                   <div>
-                    <span className="block text-xs text-neutral-400 mb-1">Tarifs indicatifs</span>
-                    <span className="font-medium text-neutral-900">{profile.indicative_rates}</span>
+                    <span className="block text-xs text-patina-deep mb-1">Tarifs indicatifs</span>
+                    <span className="font-medium text-ink-base">{profile.indicative_rates}</span>
                   </div>
                 )}
               </div>
@@ -228,13 +234,13 @@ export function MyProfilePage() {
           <TrustPanel profile={profile} badges={badges} reviewCount={reviews.length} avgRating={avgRating} />
 
           {/* Mises en relation */}
-          <div className="card p-6">
-            <h2 className="mb-4 font-display text-lg font-bold text-neutral-900">Mises en relation</h2>
+          <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft p-6">
+            <h2 className="mb-4 font-display text-lg font-bold text-ink-base">Mises en relation</h2>
             {connections.length === 0 ? (
-              <div className="rounded-2xl bg-neutral-100 p-8 text-center">
-                <MessageCircle size={28} className="mx-auto text-neutral-400" />
-                <p className="mt-3 text-sm text-neutral-500">Aucune mise en relation pour l'instant.</p>
-                <button onClick={() => navigate('/annuaire')} className="btn-outline btn-sm mt-4">
+              <div className="rounded-2xl bg-paper-base border border-gold-hairline p-8 text-center shadow-inner">
+                <MessageCircle size={28} className="mx-auto text-patina-deep/50" />
+                <p className="mt-3 text-sm text-ink-muted">Aucune mise en relation pour l'instant.</p>
+                <button onClick={() => navigate('/annuaire')} className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-white border border-gold-hairline px-4 py-2 font-semibold text-ink-base shadow-sm transition-transform hover:-translate-y-0.5 mx-auto">
                   Explorer l'annuaire <ArrowRight size={14} />
                 </button>
               </div>
@@ -244,15 +250,15 @@ export function MyProfilePage() {
                   <button
                     key={c.id}
                     onClick={() => navigate(`/messages/${c.id}`)}
-                    className="flex w-full items-center gap-4 rounded-xl border border-neutral-200 p-4 text-left hover:border-primary-300 hover:bg-primary-50/30 transition-colors"
+                    className="flex w-full items-center gap-4 rounded-xl border border-gold-hairline bg-white/50 p-4 text-left hover:bg-paper-base hover:shadow-sm transition-all"
                   >
-                    <Avatar name={c.other?.display_name ?? 'Inconnu'} src={c.other?.photo_url} size={44} />
+                    <Avatar name={c.other?.display_name ?? 'Inconnu'} src={c.other?.photo_url} size={44} className="border border-gold-hairline bg-paper-base text-ink-muted" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between">
-                        <p className="truncate text-[15px] font-semibold text-neutral-900">{c.other?.display_name ?? 'Membre'}</p>
-                        <p className="mt-0.5 text-xs font-medium text-neutral-400 shrink-0">{timeAgo(c.created_at)}</p>
+                        <p className="truncate text-[15px] font-semibold text-ink-base">{c.other?.display_name ?? 'Membre'}</p>
+                        <p className="mt-0.5 text-xs font-medium text-patina-deep shrink-0">{timeAgo(c.created_at)}</p>
                       </div>
-                      {c.service_label && <p className="truncate text-[13px] text-neutral-500 mt-1">{c.service_label}</p>}
+                      {c.service_label && <p className="truncate text-[13px] text-ink-muted mt-1">{c.service_label}</p>}
                     </div>
                     <StatusBadge status={c.status} />
                   </button>
@@ -262,25 +268,25 @@ export function MyProfilePage() {
           </div>
 
           {/* Avis reçus */}
-          <div className="card p-6">
-            <h2 className="mb-4 font-display text-lg font-bold text-neutral-900">Avis reçus</h2>
+          <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft p-6">
+            <h2 className="mb-4 font-display text-lg font-bold text-ink-base">Avis reçus</h2>
             {reviews.length === 0 ? (
-              <p className="text-sm text-neutral-500">Aucun avis pour le moment.</p>
+              <p className="text-sm text-ink-muted">Aucun avis pour le moment.</p>
             ) : (
               <div className="space-y-6">
                 {reviews.map((r) => (
-                  <div key={r.id} className="border-b border-neutral-200 pb-6 last:border-0 last:pb-0">
+                  <div key={r.id} className="border-b border-gold-hairline pb-6 last:border-0 last:pb-0">
                     <div className="flex gap-4">
-                      <Avatar name={r.author?.display_name ?? 'Anonyme'} src={r.author?.photo_url} size={44} />
+                      <Avatar name={r.author?.display_name ?? 'Anonyme'} src={r.author?.photo_url} size={44} className="border border-gold-hairline bg-paper-base text-ink-muted" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <p className="text-[15px] font-bold text-neutral-900 truncate pr-2">{r.author?.display_name ?? 'Anonyme'}</p>
-                          <p className="text-[13px] font-medium text-neutral-400 shrink-0">{timeAgo(r.created_at)}</p>
+                          <p className="text-[15px] font-bold text-ink-base truncate pr-2">{r.author?.display_name ?? 'Anonyme'}</p>
+                          <p className="text-[13px] font-medium text-patina-deep shrink-0">{timeAgo(r.created_at)}</p>
                         </div>
-                        <div className="mt-0.5">
+                        <div className="mt-0.5 text-[#D4AF37]">
                           <StarRating value={r.rating} size={13} />
                         </div>
-                        {r.comment && <p className="mt-2.5 text-[15px] text-neutral-900 leading-relaxed">{r.comment}</p>}
+                        {r.comment && <p className="mt-2.5 text-[15px] text-ink-base leading-relaxed">{r.comment}</p>}
                       </div>
                     </div>
                   </div>
@@ -290,10 +296,10 @@ export function MyProfilePage() {
           </div>
 
           {/* Badges obtenus */}
-          <div className="card p-6">
-            <h2 className="mb-4 font-display text-lg font-bold text-neutral-900">Badges obtenus</h2>
+          <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft p-6">
+            <h2 className="mb-4 font-display text-lg font-bold text-ink-base">Badges obtenus</h2>
             {badges.length === 0 ? (
-              <p className="text-sm text-neutral-500">Aucun badge pour le moment.</p>
+              <p className="text-sm text-ink-muted">Aucun badge obtenu.</p>
             ) : (
               <BadgeList badges={badges} className="gap-2" />
             )}

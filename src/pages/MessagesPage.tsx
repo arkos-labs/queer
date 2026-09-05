@@ -115,12 +115,12 @@ export function MessagesPage() {
   if (!user) return null;
 
   return (
-    <div className="animate-fade-in">
-      <div className="border-b border-neutral-200 bg-white">
+    <div className="min-h-full bg-paper-base animate-fade-in pb-20">
+      <div className="border-b border-gold-hairline bg-white/60 backdrop-blur-md sticky top-0 z-20">
         <div className="container-app py-6">
-          <h1 className="font-display text-3xl font-semibold text-neutral-900">Messages</h1>
-          <p className="mt-2 text-neutral-500">Vos conversations avec la communauté.</p>
-          <div aria-hidden className="mt-3 h-1 w-16 rounded-full bg-amber-400" />
+          <h1 className="font-display text-3xl font-semibold text-ink-base">Messages</h1>
+          <p className="mt-2 text-ink-muted">Vos conversations avec la communauté.</p>
+          <div aria-hidden className="mt-3 h-1 w-16 rounded-full" style={{ background: 'linear-gradient(90deg, #FF0018 0%, #FFA52C 20%, #FFFF41 40%, #008018 60%, #0000F9 80%, #86007D 100%)' }} />
         </div>
       </div>
 
@@ -130,19 +130,19 @@ export function MessagesPage() {
         {loading ? (
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="card h-20 animate-pulse bg-neutral-100" />
+              <div key={i} className="h-20 rounded-3xl border border-gold-hairline bg-white/60 animate-pulse shadow-soft" />
             ))}
           </div>
         ) : rows.length === 0 ? (
-          <div className="card p-10 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
-              <MessageCircle size={26} />
+          <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm p-10 text-center shadow-soft">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-paper-base border border-gold-hairline shadow-sm">
+              <MessageCircle size={26} className="text-patina-deep" />
             </div>
-            <h3 className="text-lg font-semibold text-neutral-900">Aucune conversation</h3>
-            <p className="mt-1 text-sm text-neutral-500">
+            <h3 className="text-lg font-semibold text-ink-base">Aucune conversation</h3>
+            <p className="mt-1 text-sm text-ink-muted">
               Contactez un membre depuis l'annuaire pour démarrer un échange.
             </p>
-            <button onClick={() => navigate('/annuaire')} className="btn-outline mt-5">
+            <button onClick={() => navigate('/annuaire')} className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-white border border-gold-hairline px-6 py-2.5 font-semibold text-ink-base shadow-sm transition-transform hover:-translate-y-0.5 mx-auto">
               Explorer l'annuaire <ArrowRight size={14} />
             </button>
           </div>
@@ -152,24 +152,24 @@ export function MessagesPage() {
               <button
                 key={r.connection.id}
                 onClick={() => navigate(`/messages/${r.connection.id}`)}
-                className="card flex w-full items-center gap-3 p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-lift"
+                className="flex w-full items-center gap-4 rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-lift hover:bg-white/80 shadow-soft"
               >
-                <Avatar name={r.other?.display_name ?? 'Membre'} src={r.other?.photo_url} size={48} />
+                <Avatar name={r.other?.display_name ?? 'Membre'} src={r.other?.photo_url} size={48} className="bg-paper-raised text-ink-muted border border-gold-hairline" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate font-medium text-neutral-900">{r.other?.display_name ?? 'Membre'}</p>
+                    <p className="truncate font-bold text-ink-base">{r.other?.display_name ?? 'Membre'}</p>
                     {r.lastMessage && (
-                      <span className="shrink-0 text-xs text-neutral-400">{timeAgo(r.lastMessage.created_at)}</span>
+                      <span className="shrink-0 text-xs font-medium text-patina-deep">{timeAgo(r.lastMessage.created_at)}</span>
                     )}
                   </div>
-                  <p className={`mt-0.5 truncate text-sm ${r.unreadCount > 0 ? 'font-semibold text-neutral-900' : 'text-neutral-500'}`}>
+                  <p className={`mt-0.5 truncate text-sm ${r.unreadCount > 0 ? 'font-bold text-ink-base' : 'text-ink-muted'}`}>
                     {r.lastMessage
                       ? `${r.lastMessage.sender_id === user.id ? 'Vous : ' : ''}${r.lastMessage.body}`
                       : r.connection.service_label ?? 'Nouvelle mise en relation'}
                   </p>
                 </div>
                 {r.unreadCount > 0 && (
-                  <span className="flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-primary-600 px-1.5 text-[11px] font-semibold text-white">
+                  <span className="flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-patina-deep px-1.5 text-[11px] font-bold text-white shadow-sm">
                     {r.unreadCount}
                   </span>
                 )}

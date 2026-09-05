@@ -336,7 +336,7 @@ export function MessageThreadPage({ id }: { id: string }) {
   ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
   return (
-    <div className="flex flex-col animate-fade-in">
+    <div className="flex flex-col animate-fade-in min-h-screen bg-paper-base">
       {payNowSecret && (
         <PayNowModal
           clientSecret={payNowSecret}
@@ -367,15 +367,15 @@ export function MessageThreadPage({ id }: { id: string }) {
         />
       )}
       {/* Thread header */}
-      <div ref={headerRef} className="fixed top-[84px] z-40 mx-auto w-full max-w-6xl border-b border-neutral-200 bg-white/90 backdrop-blur-xl">
+      <div ref={headerRef} className="fixed top-[84px] z-40 mx-auto w-full max-w-6xl border-b border-gold-hairline bg-white/60 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate('/messages')} aria-label="Retour aux messages" className="rounded-full p-1.5 text-neutral-500 hover:bg-neutral-100">
+          <button onClick={() => navigate('/messages')} aria-label="Retour aux messages" className="rounded-full p-1.5 text-ink-muted hover:bg-paper-base">
             <ArrowLeft size={18} />
           </button>
           <button onClick={() => other && navigate(`/profil/${other.id}`)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
-            <Avatar name={other?.display_name ?? 'Membre'} src={other?.photo_url} size={36} />
+            <Avatar name={other?.display_name ?? 'Membre'} src={other?.photo_url} size={36} className="bg-paper-raised text-ink-muted border border-gold-hairline" />
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-neutral-900">{other?.display_name ?? 'Membre'}</p>
+              <p className="truncate text-sm font-semibold text-ink-base">{other?.display_name ?? 'Membre'}</p>
               <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${statusMeta.cls}`}>
                 <statusMeta.icon size={10} /> {statusMeta.label}
               </span>
@@ -384,30 +384,30 @@ export function MessageThreadPage({ id }: { id: string }) {
         </div>
 
         {payment && (
-          <div className="flex items-center gap-2 border-t border-neutral-200 bg-neutral-100 px-4 py-2 text-xs">
-            <CreditCard size={13} className="shrink-0 text-neutral-500" />
-            <span className="font-semibold text-neutral-900">{formatEuros(payment.amount)}</span>
+          <div className="flex items-center gap-2 border-t border-gold-hairline bg-paper-base px-4 py-2 text-xs">
+            <CreditCard size={13} className="shrink-0 text-patina-deep" />
+            <span className="font-semibold text-ink-base">{formatEuros(payment.amount)}</span>
             <span className={`inline-flex items-center rounded-full px-2 py-0.5 font-medium ${PAYMENT_STATUS_META[payment.status].cls}`}>
               {PAYMENT_STATUS_META[payment.status].label}
             </span>
             {payment.status === 'pending' && !payment.stripe_payment_intent_id && (
-              <span className="text-neutral-400">
+              <span className="text-patina-deep/80">
                 {connection.status === 'accepted'
                   ? `en attente que ${isPayer ? 'vous payiez' : 'le client paye'}`
                   : `en attente que ${isPayer ? 'le·la prestataire accepte' : 'vous acceptiez'} la mission`}
               </span>
             )}
             {payment.status === 'pending' && payment.stripe_payment_intent_id && (
-              <span className="text-neutral-400">paiement en cours de confirmation…</span>
+              <span className="text-patina-deep/80">paiement en cours de confirmation…</span>
             )}
             {payment.status === 'authorized' && (
-              <span className="text-neutral-400">débité quand {isPayer ? 'vous confirmerez' : 'le client confirmera'} la fin de la prestation</span>
+              <span className="text-patina-deep/80">débité quand {isPayer ? 'vous confirmerez' : 'le client confirmera'} la fin de la prestation</span>
             )}
           </div>
         )}
 
         {connection.status !== 'cancelled' && connection.status !== 'completed' && (
-          <div className="flex flex-wrap items-center gap-2 border-t border-neutral-200 px-4 py-2">
+          <div className="flex flex-wrap items-center gap-2 border-t border-gold-hairline px-4 py-2 bg-white/40">
             {connection.status === 'pending' && !isInitiator && !payment && (
               <button
                 onClick={() => updateStatus('accepted')}
@@ -419,23 +419,23 @@ export function MessageThreadPage({ id }: { id: string }) {
             )}
             {connection.status === 'accepted' && payment && payment.status === 'pending' && !payment.stripe_payment_intent_id && (
               isPayer ? (
-                <button onClick={payNow} disabled={payNowLoading} className="btn-primary btn-sm">
+                <button onClick={payNow} disabled={payNowLoading} className="flex items-center gap-1.5 rounded-lg bg-ink-base px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:brightness-110">
                   <CreditCard size={14} /> {payNowLoading ? 'Préparation…' : 'Payer maintenant'}
                 </button>
               ) : (
-                <span className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-500">
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-gold-hairline px-3 py-1.5 text-xs font-medium text-ink-muted">
                   <Clock size={13} /> En attente que le client règle le paiement
                 </span>
               )
             )}
             {connection.status === 'accepted' && payment && payment.status === 'pending' && payment.stripe_payment_intent_id && (
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-500">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-gold-hairline px-3 py-1.5 text-xs font-medium text-ink-muted">
                 <Clock size={13} /> Paiement en cours de confirmation…
               </span>
             )}
             {connection.status === 'accepted' && (!payment || payment.status === 'authorized') && (
               payment && !isPayer ? (
-                <span className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-500">
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-gold-hairline px-3 py-1.5 text-xs font-medium text-ink-muted">
                   <Clock size={13} /> En attente que le client confirme la fin de la prestation
                 </span>
               ) : (
@@ -444,7 +444,7 @@ export function MessageThreadPage({ id }: { id: string }) {
                 </button>
               )
             )}
-            <button onClick={() => updateStatus('cancelled')} disabled={statusLoading} className="btn-ghost btn-sm text-neutral-500">
+            <button onClick={() => updateStatus('cancelled')} disabled={statusLoading} className="btn-ghost btn-sm text-error-600 hover:bg-error-50">
               <XCircle size={14} /> Annuler
             </button>
           </div>
@@ -458,7 +458,7 @@ export function MessageThreadPage({ id }: { id: string }) {
         style={{ paddingTop: headerHeight ? headerHeight + 12 : undefined, paddingBottom: footerHeight ? footerHeight + 12 : undefined }}
       >
         {timeline.length === 0 ? (
-          <p className="py-10 text-center text-sm text-neutral-400">
+          <p className="py-10 text-center text-sm text-ink-muted">
             Aucun message pour l'instant. Dites bonjour à {other?.display_name?.split(' ')[0] ?? 'ce membre'} !
           </p>
         ) : (
@@ -468,7 +468,7 @@ export function MessageThreadPage({ id }: { id: string }) {
             return (
               <div key={item.kind === 'message' ? item.data.id : `payment-${item.data.id}`}>
                 {showDate && (
-                  <p className="my-3 text-center text-xs font-medium text-neutral-400">{formatDate(item.created_at)}</p>
+                  <p className="my-3 text-center text-xs font-medium text-patina-deep">{formatDate(item.created_at)}</p>
                 )}
                 {item.kind === 'payment' ? (
                   <PaymentOfferCard
@@ -494,14 +494,14 @@ export function MessageThreadPage({ id }: { id: string }) {
                     return (
                       <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
                         <div
-                          className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
+                          className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm shadow-sm border border-gold-hairline ${
                             mine
-                              ? 'rounded-br-sm bg-primary-600 text-white'
-                              : 'rounded-bl-sm bg-neutral-100 text-neutral-900'
+                              ? 'rounded-br-sm bg-patina-deep text-white'
+                              : 'rounded-bl-sm bg-white text-ink-base'
                           }`}
                         >
                           <p className="whitespace-pre-wrap break-words">{m.body}</p>
-                          <p className={`mt-1 text-[10px] ${mine ? 'text-primary-100' : 'text-neutral-400'}`}>{timeAgo(m.created_at)}</p>
+                          <p className={`mt-1 text-[10px] ${mine ? 'text-white/80' : 'text-patina-deep'}`}>{timeAgo(m.created_at)}</p>
                         </div>
                       </div>
                     );
@@ -541,11 +541,11 @@ export function MessageThreadPage({ id }: { id: string }) {
       {/* Composer */}
       <div ref={footerRef} className="fixed bottom-[calc(61px+env(safe-area-inset-bottom))] z-30 mx-auto w-full max-w-6xl">
         {!profile?.charte_accepted ? (
-          <div className="flex items-center gap-2 border-t border-neutral-200 bg-warning-50 px-4 py-3 text-xs text-warning-800">
+          <div className="flex items-center gap-2 border-t border-gold-hairline bg-warning-50 px-4 py-3 text-xs text-warning-800">
             <Flag size={14} /> Acceptez la charte de respect depuis votre profil pour pouvoir écrire.
           </div>
         ) : (
-          <form onSubmit={sendMessage} className="mx-auto flex max-w-6xl items-end gap-2 border-t border-neutral-200 bg-white px-4 py-3 backdrop-blur-xl">
+          <form onSubmit={sendMessage} className="mx-auto flex max-w-6xl items-end gap-2 border-t border-gold-hairline bg-white/80 px-4 py-3 backdrop-blur-xl">
             <label htmlFor="thread-composer" className="sr-only">Votre message</label>
             <textarea
               id="thread-composer"
@@ -559,13 +559,13 @@ export function MessageThreadPage({ id }: { id: string }) {
               }}
               rows={1}
               placeholder="Écrire un message…"
-              className="input max-h-28 flex-1 resize-none"
+              className="flex-1 resize-none rounded-xl border border-gold-hairline bg-white px-4 py-3 text-[15px] shadow-sm outline-none ring-gold-hairline focus:border-patina-deep focus:ring-1 max-h-28"
               onInput={(e) => {
                 e.currentTarget.style.height = 'auto';
                 e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
               }}
             />
-            <button type="submit" disabled={sending || !body.trim()} className="btn-primary shrink-0 !px-4" aria-label="Envoyer">
+            <button type="submit" disabled={sending || !body.trim()} className="flex items-center justify-center rounded-xl bg-ink-base px-4 py-3 font-semibold text-white shadow-soft transition-transform hover:-translate-y-0.5 shrink-0" aria-label="Envoyer">
               <Send size={16} />
             </button>
           </form>

@@ -132,11 +132,11 @@ export function OnboardingPage() {
   const canProceed = step === 0 ? displayName.trim().length > 0 : step === 2 ? !!intent : step === 3 ? charteAccepted : true;
 
   return (
-    <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-neutral-100 px-4 py-12">
+    <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-paper-base px-4 py-12">
       <div className="absolute top-4 right-4 z-10">
         <button 
           onClick={async () => { await signOut(); navigate('/'); }}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-neutral-200 text-sm font-medium text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 transition-colors shadow-sm"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-paper-raised border border-gold-hairline text-sm font-medium text-ink-muted hover:bg-paper-base hover:text-ink-base transition-colors shadow-sm"
         >
           <LogOut size={16} /> Se déconnecter
         </button>
@@ -153,24 +153,24 @@ export function OnboardingPage() {
               key={i}
               className={cn(
                 'h-2 rounded-full transition-all duration-300',
-                i === step ? 'w-10 bg-amber-400' : i < step ? 'w-8 bg-primary-400' : 'w-8 bg-neutral-200',
+                i === step ? 'w-10 bg-[linear-gradient(90deg,#FF0018_0%,#FFA52C_20%,#FFFF41_40%,#008018_60%,#0000F9_80%,#86007D_100%)]' : i < step ? 'w-8 bg-patina-deep/80' : 'w-8 bg-gold-hairline',
               )}
             />
           ))}
         </div>
 
-        <div className="card animate-scale-in overflow-hidden">
+        <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft animate-scale-in overflow-hidden">
           {/* Rainbow brand strip */}
-          <div aria-hidden="true" className="h-1.5 bg-amber-400 bg-[length:200%_100%] animate-gradient-x" />
+          <div aria-hidden className="h-1.5 w-full" style={{ background: 'linear-gradient(90deg, #FF0018 0%, #FFA52C 20%, #FFFF41 40%, #008018 60%, #0000F9 80%, #86007D 100%)' }} />
           <div className="p-8 md:p-10">
           {step === 0 && (
             <div>
               <div className="mb-6 text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-paper-base border border-gold-hairline shadow-sm text-patina-deep">
                   <Sparkles size={22} />
                 </div>
-                <h2 className="font-display text-2xl font-semibold text-neutral-900">Bienvenue, qui es-tu ?</h2>
-                <p className="mt-2 text-sm text-neutral-500">Choisis ton nom d'affichage, ta civilité et tes pronoms.</p>
+                <h2 className="font-display text-2xl font-semibold text-ink-base">Bienvenue, qui es-tu ?</h2>
+                <p className="mt-2 text-sm text-ink-muted">Choisis ton nom d'affichage, ta civilité et tes pronoms.</p>
               </div>
 
               <div className="space-y-5">
@@ -204,10 +204,10 @@ export function OnboardingPage() {
                         type="button"
                         onClick={() => setCivilite(c.value)}
                         className={cn(
-                          'rounded-xl border px-3 py-3 text-sm font-medium transition',
+                          'rounded-xl border px-3 py-3 text-sm font-medium transition-all shadow-sm',
                           civilite === c.value
-                            ? 'border-primary-500 bg-primary-50 text-primary-600 ring-2 ring-primary-200'
-                            : 'border-neutral-200 bg-white text-neutral-500 hover:border-neutral-200 hover:bg-neutral-100',
+                            ? 'border-patina-deep bg-paper-base text-patina-deep ring-2 ring-patina-deep/20'
+                            : 'border-gold-hairline bg-white/80 text-ink-muted hover:border-gold-hairline hover:bg-paper-base',
                         )}
                       >
                         {c.label}
@@ -224,7 +224,7 @@ export function OnboardingPage() {
                     className="input"
                     placeholder="Ex. iel / elle / il / ils / elles"
                   />
-                  <p className="mt-1.5 text-xs text-neutral-400">Personnalisable au-delà de M./Mme/Iel.</p>
+                  <p className="mt-1.5 text-xs text-patina-deep/70">Personnalisable au-delà de M./Mme/Iel.</p>
                 </div>
               </div>
             </div>
@@ -233,11 +233,11 @@ export function OnboardingPage() {
           {step === 1 && (
             <div>
               <div className="mb-6 text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary-50 text-secondary-600">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-paper-base border border-gold-hairline shadow-sm text-patina-deep">
                   <Heart size={22} fill="currentColor" />
                 </div>
-                <h2 className="font-display text-2xl font-semibold text-neutral-900">Ton rôle dans la communauté</h2>
-                <p className="mt-2 text-sm text-neutral-500">Tu pourras toujours modifier cela plus tard.</p>
+                <h2 className="font-display text-2xl font-semibold text-ink-base">Ton rôle dans la communauté</h2>
+                <p className="mt-2 text-sm text-ink-muted">Tu pourras toujours modifier cela plus tard.</p>
               </div>
 
               <div className="space-y-3">
@@ -247,19 +247,19 @@ export function OnboardingPage() {
                     type="button"
                     onClick={() => setAccountType(t.value)}
                     className={cn(
-                      'flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition',
+                      'flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition-all shadow-sm',
                       accountType === t.value
-                        ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-200'
-                        : 'border-neutral-200 bg-white hover:border-neutral-200',
+                        ? 'border-patina-deep bg-paper-base ring-2 ring-patina-deep/20'
+                        : 'border-gold-hairline bg-white/80 hover:bg-paper-base',
                     )}
                   >
                     <span className="text-2xl">{t.icon}</span>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-neutral-900">{t.label}</span>
-                        {accountType === t.value && <CheckCircle2 size={16} className="text-primary-600" />}
+                        <span className="font-medium text-ink-base">{t.label}</span>
+                        {accountType === t.value && <CheckCircle2 size={16} className="text-patina-deep" />}
                       </div>
-                      <p className="mt-0.5 text-sm text-neutral-500">{t.desc}</p>
+                      <p className="mt-0.5 text-sm text-ink-muted">{t.desc}</p>
                     </div>
                   </button>
                 ))}
@@ -270,11 +270,11 @@ export function OnboardingPage() {
           {step === 2 && (
             <div>
               <div className="mb-6 text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary-50 text-secondary-600">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-paper-base border border-gold-hairline shadow-sm text-patina-deep">
                   <Search size={22} />
                 </div>
-                <h2 className="font-display text-2xl font-semibold text-neutral-900">Que viens-tu faire ici ?</h2>
-                <p className="mt-2 text-sm text-neutral-500">Ça nous aide à personnaliser ton profil. Modifiable à tout moment.</p>
+                <h2 className="font-display text-2xl font-semibold text-ink-base">Que viens-tu faire ici ?</h2>
+                <p className="mt-2 text-sm text-ink-muted">Ça nous aide à personnaliser ton profil. Modifiable à tout moment.</p>
               </div>
 
               <div className="space-y-3">
@@ -284,19 +284,19 @@ export function OnboardingPage() {
                     type="button"
                     onClick={() => setIntent(t.value)}
                     className={cn(
-                      'flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition',
+                      'flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition-all shadow-sm',
                       intent === t.value
-                        ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-200'
-                        : 'border-neutral-200 bg-white hover:border-neutral-200',
+                        ? 'border-patina-deep bg-paper-base ring-2 ring-patina-deep/20'
+                        : 'border-gold-hairline bg-white/80 hover:bg-paper-base',
                     )}
                   >
-                    <t.icon size={20} className="mt-0.5 shrink-0 text-primary-600" />
+                    <t.icon size={20} className="mt-0.5 shrink-0 text-patina-deep" />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-neutral-900">{t.label}</span>
-                        {intent === t.value && <CheckCircle2 size={16} className="text-primary-600" />}
+                        <span className="font-medium text-ink-base">{t.label}</span>
+                        {intent === t.value && <CheckCircle2 size={16} className="text-patina-deep" />}
                       </div>
-                      <p className="mt-0.5 text-sm text-neutral-500">{t.desc}</p>
+                      <p className="mt-0.5 text-sm text-ink-muted">{t.desc}</p>
                     </div>
                   </button>
                 ))}
@@ -320,9 +320,9 @@ export function OnboardingPage() {
                   {skills.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {skills.map((s) => (
-                        <span key={s} className="badge-chip bg-primary-50 text-primary-600 ring-1 ring-primary-100">
+                        <span key={s} className="rounded-full bg-white border border-gold-hairline px-3 py-1 text-[11px] font-semibold text-ink-base shadow-sm inline-flex items-center gap-1">
                           {s}
-                          <button type="button" onClick={() => setSkills((arr) => arr.filter((x) => x !== s))} className="text-primary-400 hover:text-primary-600">
+                          <button type="button" onClick={() => setSkills((arr) => arr.filter((x) => x !== s))} className="text-patina-deep/70 hover:text-patina-deep">
                             <X size={14} />
                           </button>
                         </span>
@@ -341,7 +341,7 @@ export function OnboardingPage() {
                       <select
                         value={rateUnit}
                         onChange={(e) => setRateUnit(e.target.value)}
-                        className="input w-auto shrink-0 bg-neutral-100"
+                        className="input w-auto shrink-0 bg-paper-base"
                       >
                         <option value="/ heure">/ heure</option>
                         <option value="/ jour">/ jour</option>
@@ -349,7 +349,7 @@ export function OnboardingPage() {
                         <option value="/ prestation">/ prestation</option>
                       </select>
                     </div>
-                    <p className="mt-1.5 text-xs text-neutral-400">
+                    <p className="mt-1.5 text-xs text-patina-deep/70">
                       Ça donne aux client·es une idée du prix avant qu'iels ne demandent un devis.
                     </p>
                   </div>
@@ -374,9 +374,9 @@ export function OnboardingPage() {
                   {needs.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {needs.map((s) => (
-                        <span key={s} className="badge-chip bg-primary-50 text-neutral-900 ring-1 ring-neutral-200">
+                        <span key={s} className="rounded-full bg-paper-base border border-gold-hairline px-3 py-1 text-[11px] font-semibold text-ink-base shadow-sm inline-flex items-center gap-1">
                           {s}
-                          <button type="button" onClick={() => setNeeds((arr) => arr.filter((x) => x !== s))} className="text-secondary-400 hover:text-secondary-700">
+                          <button type="button" onClick={() => setNeeds((arr) => arr.filter((x) => x !== s))} className="text-patina-deep/70 hover:text-patina-deep">
                             <X size={14} />
                           </button>
                         </span>
@@ -395,7 +395,7 @@ export function OnboardingPage() {
                       <select
                         value={budgetUnit}
                         onChange={(e) => setBudgetUnit(e.target.value)}
-                        className="input w-auto shrink-0 bg-neutral-100"
+                        className="input w-auto shrink-0 bg-paper-base"
                       >
                         <option value="/ heure">/ heure</option>
                         <option value="/ jour">/ jour</option>
@@ -403,7 +403,7 @@ export function OnboardingPage() {
                         <option value="/ prestation">/ prestation</option>
                       </select>
                     </div>
-                    <p className="mt-1.5 text-xs text-neutral-400">
+                    <p className="mt-1.5 text-xs text-patina-deep/70">
                       Indique à quel prix tu recherches ce service — ça aide les prestataires à savoir si leur tarif
                       correspond.
                     </p>
@@ -416,39 +416,39 @@ export function OnboardingPage() {
           {step === 3 && (
             <div>
               <div className="mb-6 text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-50 text-accent-600">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-paper-base border border-gold-hairline shadow-sm text-patina-deep">
                   <ShieldCheck size={22} />
                 </div>
-                <h2 className="font-display text-2xl font-semibold text-neutral-900">Charte de respect</h2>
-                <p className="mt-2 text-sm text-neutral-500">
+                <h2 className="font-display text-2xl font-semibold text-ink-base">Charte de respect</h2>
+                <p className="mt-2 text-sm text-ink-muted">
                   L'acceptation de la charte conditionne l'accès à la messagerie et aux échanges.
                 </p>
               </div>
 
-              <div className="space-y-3 rounded-2xl bg-neutral-100 p-5">
+              <div className="space-y-3 rounded-2xl border border-gold-hairline bg-white/60 backdrop-blur-sm p-5 shadow-inner">
                 {chartePoints.map((p, i) => (
                   <div key={i} className="flex items-start gap-3">
-                    <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-primary-500" />
-                    <span className="text-sm text-neutral-900">{p}</span>
+                    <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-patina-deep" />
+                    <span className="text-sm text-ink-base">{p}</span>
                   </div>
                 ))}
               </div>
 
               <label
                 className={cn(
-                  'mt-5 flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition',
+                  'mt-5 flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-all shadow-sm',
                   charteAccepted
-                    ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-200'
-                    : 'border-neutral-200 hover:bg-neutral-100',
+                    ? 'border-patina-deep bg-paper-base ring-2 ring-patina-deep/20'
+                    : 'border-gold-hairline bg-white/80 hover:bg-paper-base',
                 )}
               >
                 <input
                   type="checkbox"
                   checked={charteAccepted}
                   onChange={(e) => setCharteAccepted(e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-neutral-200 text-primary-600 focus:ring-primary-500"
+                  className="mt-1 h-4 w-4 rounded border-gold-hairline text-patina-deep focus:ring-patina-deep"
                 />
-                <span className="text-sm font-medium text-neutral-900">
+                <span className="text-sm font-medium text-ink-base">
                   J'ai lu et j'accepte la charte de respect de Queer Service.
                 </span>
               </label>
@@ -462,16 +462,16 @@ export function OnboardingPage() {
           <div className="mt-8 flex items-center justify-between">
             <button
               onClick={step === 0 ? () => navigate('/') : back}
-              className="btn-ghost"
+              className="flex items-center gap-2 rounded-xl bg-white border border-gold-hairline px-4 py-2 text-sm font-semibold text-ink-muted hover:text-ink-base hover:bg-paper-base shadow-sm transition-all"
             >
               <ArrowLeft size={16} /> {step === 0 ? 'Annuler' : 'Retour'}
             </button>
             {step < 3 ? (
-              <button onClick={next} disabled={!canProceed} className="btn-primary">
+              <button onClick={next} disabled={!canProceed} className="flex items-center justify-center gap-2 rounded-xl bg-ink-base px-6 py-2.5 font-semibold text-white shadow-soft transition-transform hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0">
                 Continuer <ArrowRight size={16} />
               </button>
             ) : (
-              <button onClick={finishOnboarding} disabled={!canProceed || loading} className="btn-primary">
+              <button onClick={finishOnboarding} disabled={!canProceed || loading} className="flex items-center justify-center gap-2 rounded-xl bg-ink-base px-6 py-2.5 font-semibold text-white shadow-soft transition-transform hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0">
                 {loading ? 'Enregistrement…' : 'Finaliser mon inscription'}
                 {!loading && <ArrowRight size={16} />}
               </button>

@@ -203,12 +203,22 @@ export function DirectoryPage() {
     let list = profiles.filter((p) => p.id !== myProfile?.id);
 
     if (activeCategory) {
-      const subIdsInCat = new Set(subcategories.filter((s) => s.category_id === activeCategory).map((s) => s.id));
-      list = list.filter((p) => Array.from(p.subIds).some((id) => subIdsInCat.has(id)));
+      const subsInCat = subcategories.filter((s) => s.category_id === activeCategory);
+      const subIdsInCat = new Set(subsInCat.map((s) => s.id));
+      const subLabelsInCat = new Set(subsInCat.map((s) => s.label.toLowerCase()));
+
+      list = list.filter((p) => 
+        Array.from(p.subIds).some((id) => subIdsInCat.has(id)) ||
+        p.skills.some((skill) => subLabelsInCat.has(skill.toLowerCase()))
+      );
     }
 
     if (activeSub) {
-      list = list.filter((p) => p.subIds.has(activeSub));
+      const subDef = subcategoryById.get(activeSub);
+      list = list.filter((p) => 
+        p.subIds.has(activeSub) ||
+        (subDef && p.skills.some((skill) => skill.toLowerCase() === subDef.label.toLowerCase()))
+      );
     }
 
     if (search.trim()) {
@@ -238,7 +248,7 @@ export function DirectoryPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-full bg-white animate-fade-in">
+    <div className="min-h-full bg-paper-base animate-fade-in">
       <div className="pt-4">
         <AnnouncementsBanner />
       </div>
@@ -253,11 +263,11 @@ export function DirectoryPage() {
           className="flex min-w-fit cursor-pointer flex-col items-center gap-2"
         >
           <div className={`flex h-[60px] w-[60px] items-center justify-center rounded-full transition-all ${
-            !activeCategory ? 'bg-primary-50' : 'bg-neutral-100 border border-neutral-200 hover:bg-neutral-100'
+            !activeCategory ? 'bg-patina-deep shadow-soft text-white' : 'bg-white border border-gold-hairline shadow-sm hover:shadow-soft text-ink-muted'
           }`}>
-            <Users size={22} className={!activeCategory ? 'text-primary-700' : 'text-neutral-400'} />
+            <Users size={22} />
           </div>
-          <span className={`text-[11px] ${!activeCategory ? 'font-bold text-neutral-900 border-b-2 border-primary-500 pb-1' : 'font-semibold text-neutral-400 pb-1'}`}>
+          <span className={`text-[11px] ${!activeCategory ? 'font-bold text-ink-base border-b-2 border-patina-deep pb-1' : 'font-semibold text-ink-muted pb-1'}`}>
             Tous les membres
           </span>
         </button>
@@ -280,11 +290,11 @@ export function DirectoryPage() {
               className="flex min-w-fit cursor-pointer flex-col items-center gap-2"
             >
               <div className={`flex h-[60px] w-[60px] items-center justify-center rounded-full transition-all ${
-                isActive ? 'bg-primary-50' : 'bg-neutral-100 border border-neutral-200 hover:bg-neutral-100'
+                isActive ? 'bg-patina-deep shadow-soft text-white' : 'bg-white border border-gold-hairline shadow-sm hover:shadow-soft text-ink-muted'
               }`}>
-                <Icon size={22} className={isActive ? 'text-primary-700' : 'text-neutral-400'} />
+                <Icon size={22} />
               </div>
-              <span className={`text-[11px] ${isActive ? 'font-bold text-neutral-900 border-b-2 border-primary-500 pb-1' : 'font-semibold text-neutral-400 pb-1'}`}>
+              <span className={`text-[11px] ${isActive ? 'font-bold text-ink-base border-b-2 border-patina-deep pb-1' : 'font-semibold text-ink-muted pb-1'}`}>
                 {c.label.replace(' & ', ' & ')}
               </span>
             </button>
@@ -295,26 +305,16 @@ export function DirectoryPage() {
       {/* Subcategories */}
       {activeCategory && subsForActiveCat.length > 0 && (
         <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 py-2 mt-1 mb-2 animate-fade-in">
-          <button
-            onClick={() => setActiveSub(null)}
-            className={`shrink-0 rounded-xl px-4 py-2 text-[13px] font-semibold transition-colors ${
-              !activeSub
-                ? 'bg-neutral-900 text-white shadow-sm'
-                : 'border border-neutral-200 bg-neutral-100 text-neutral-500 hover:bg-neutral-100'
-            }`}
-          >
-            {activeCatDef?.slug === 'shopping-bonnes-adresses' ? 'Toutes les adresses' : 'Tous les membres'}
-          </button>
           {subsForActiveCat.map((sub) => {
             const isSubActive = activeSub === sub.id;
             return (
               <button
                 key={sub.id}
-                onClick={() => setActiveSub(sub.id)}
-                className={`shrink-0 rounded-xl px-4 py-2 text-[13px] font-semibold transition-colors ${
+                onClick={() => setActiveSub(isSubActive ? null : sub.id)}
+                className={`shrink-0 rounded-xl px-4 py-2 text-[13px] font-semibold transition-all ${
                   isSubActive
-                    ? 'bg-neutral-900 text-white shadow-sm'
-                    : 'border border-neutral-200 bg-neutral-100 text-neutral-500 hover:bg-neutral-100'
+                    ? 'bg-ink-base text-paper-base shadow-soft'
+                    : 'border border-gold-hairline bg-white/50 backdrop-blur-md text-ink-muted hover:bg-white/80'
                 }`}
               >
                 {sub.label}
@@ -326,11 +326,11 @@ export function DirectoryPage() {
 
       {/* Results count */}
       <div className="container-app flex items-center justify-between py-2 mt-4">
-        <p className="text-[13px] font-medium text-neutral-500">
-          <span className="font-bold text-neutral-900">{filtered.length}</span>{' '}
-          membre{filtered.length > 1 ? 's' : ''} {activeSub && subcategoryById.get(activeSub) && <span>en <span className="font-bold text-neutral-900">{subcategoryById.get(activeSub)!.label}</span></span>}
+        <p className="text-[13px] font-medium text-ink-muted">
+          <span className="font-bold text-ink-base">{filtered.length}</span>{' '}
+          membre{filtered.length > 1 ? 's' : ''} {activeSub && subcategoryById.get(activeSub) && <span>en <span className="font-bold text-ink-base">{subcategoryById.get(activeSub)!.label}</span></span>}
         </p>
-        <button onClick={() => setAddPlaceOpen(true)} className="flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-neutral-100 px-3 py-2 text-[11px] font-semibold text-neutral-900 hover:bg-neutral-100">
+        <button onClick={() => setAddPlaceOpen(true)} className="flex items-center gap-1.5 rounded-xl border border-gold-hairline bg-white/50 px-3 py-2 text-[11px] font-semibold text-ink-base hover:bg-white/80 transition-all shadow-sm">
           <Plus size={12} /> Proposer un lieu
         </button>
       </div>
@@ -360,19 +360,19 @@ export function DirectoryPage() {
         <main className="container-app grid grid-cols-2 gap-4 pb-12 pt-2 sm:grid-cols-3 lg:grid-cols-4" data-purpose="provider-directory">
           {loading ? (
           Array.from({ length: 8 }).map((_, i) => (
-            <article key={i} className="flex flex-col items-center gap-2 rounded-2xl border border-neutral-200 bg-white p-4 shadow-card">
-              <div className="h-16 w-16 rounded-full bg-neutral-100 animate-pulse" />
-              <div className="h-2.5 w-3/4 rounded bg-neutral-100 animate-pulse mt-1" />
-              <div className="h-2 w-1/2 rounded bg-neutral-100 animate-pulse" />
+            <article key={i} className="flex flex-col items-center gap-2 rounded-2xl border border-gold-hairline bg-white/60 backdrop-blur-sm p-4 shadow-soft">
+              <div className="h-16 w-16 rounded-full bg-paper-base animate-pulse" />
+              <div className="h-2.5 w-3/4 rounded bg-paper-base animate-pulse mt-1" />
+              <div className="h-2 w-1/2 rounded bg-paper-base animate-pulse" />
             </article>
           ))
         ) : filtered.length === 0 ? (
           <div className="col-span-full py-16 text-center">
-            <div className="mx-auto mb-5 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-neutral-100">
-              <Search size={28} className="text-neutral-400" strokeWidth={1.5} />
+            <div className="mx-auto mb-5 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-white border border-gold-hairline shadow-soft">
+              <Search size={28} className="text-patina-deep" strokeWidth={1.5} />
             </div>
-            <h3 className="font-display text-[17px] font-bold text-neutral-900">Aucun résultat</h3>
-            <p className="mt-3 text-[13px] text-neutral-500 mx-auto max-w-[280px] leading-relaxed">
+            <h3 className="font-display text-[17px] font-bold text-ink-base">Aucun résultat</h3>
+            <p className="mt-3 text-[13px] text-ink-muted mx-auto max-w-[280px] leading-relaxed">
               Essayez un autre mot-clé ou parcourez une différente catégorie pour trouver ce que vous cherchez.
             </p>
           </div>
@@ -382,10 +382,10 @@ export function DirectoryPage() {
               <article
                 key={p.id}
                 onClick={() => navigate(`/profil/${p.id}`)}
-                className="group relative flex cursor-pointer flex-col items-center rounded-2xl border border-neutral-200 bg-white p-4 text-center shadow-card transition-all hover:-translate-y-0.5 hover:shadow-lift"
+                className="group relative flex cursor-pointer flex-col items-center rounded-2xl border border-gold-hairline bg-white/60 backdrop-blur-sm p-4 text-center shadow-soft transition-all hover:-translate-y-1 hover:shadow-lift"
               >
                 <div className="relative mb-3 mt-1">
-                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-neutral-100 shadow-soft ring-2 ring-white text-xl font-bold uppercase text-neutral-400">
+                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-paper-base shadow-sm ring-2 ring-white text-xl font-bold uppercase text-ink-muted">
                     {p.photo_url ? (
                       <img src={p.photo_url} alt={p.display_name} className="h-full w-full object-cover" loading="lazy" />
                     ) : (
@@ -394,31 +394,31 @@ export function DirectoryPage() {
                   </div>
 
                   {p.verification_status === 'verified' && (
-                    <div className="absolute -bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center whitespace-nowrap rounded-full border border-primary-100 bg-white px-1.5 py-0.5 shadow-sm">
-                      <ShieldCheck size={9} className="mr-0.5 text-primary-500" />
-                      <span className="text-[7px] font-bold uppercase tracking-wider text-primary-600">Vérifié</span>
+                    <div className="absolute -bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center whitespace-nowrap rounded-full border border-gold-hairline bg-white px-1.5 py-0.5 shadow-sm">
+                      <ShieldCheck size={9} className="mr-0.5 text-patina-deep" />
+                      <span className="text-[7px] font-bold uppercase tracking-wider text-patina-deep">Vérifié</span>
                     </div>
                   )}
                 </div>
 
-                <h3 className="w-full truncate px-0.5 font-display text-[13px] font-semibold text-neutral-900">{p.display_name}</h3>
+                <h3 className="w-full truncate px-0.5 font-display text-[13px] font-semibold text-ink-base">{p.display_name}</h3>
 
-                <div className="mt-0.5 flex items-center gap-1 text-[11px] font-bold text-neutral-900">
-                  <Star size={11} className="fill-yellow-400 text-yellow-400" />
+                <div className="mt-0.5 flex items-center gap-1 text-[11px] font-bold text-ink-base">
+                  <Star size={11} className="fill-[#D4AF37] text-[#D4AF37]" />
                   {p.avgRating > 0 ? (
-                    <span>{p.avgRating.toFixed(1)} <span className="font-normal text-neutral-400">({p.reviewCount})</span></span>
+                    <span>{p.avgRating.toFixed(1)} <span className="font-normal text-ink-muted">({p.reviewCount})</span></span>
                   ) : (
-                    <span className="font-normal text-neutral-400">-</span>
+                    <span className="font-normal text-ink-muted">-</span>
                   )}
                 </div>
 
-                <div className="mt-0.5 flex items-center gap-0.5 truncate px-0.5 text-[10px] text-neutral-500">
+                <div className="mt-0.5 flex items-center gap-0.5 truncate px-0.5 text-[10px] text-ink-muted">
                   <MapPin size={11} /> {p.city || 'Partout'}
                 </div>
 
                 <div className="mt-2 flex w-full flex-col items-center gap-1.5">
                   {p.skills.slice(0, 2).map((s) => (
-                    <span key={s} className="w-[90%] truncate rounded-full border border-primary-100 bg-primary-50 px-2 py-0.5 text-[10px] font-medium text-primary-600">
+                    <span key={s} className="w-[90%] truncate rounded-full border border-gold-hairline bg-white px-2 py-0.5 text-[10px] font-medium text-ink-base shadow-sm">
                       {s}
                     </span>
                   ))}
@@ -426,7 +426,7 @@ export function DirectoryPage() {
 
                 {p.indicative_rates && (
                   <div className="mt-auto w-full pt-2">
-                    <span className="inline-block max-w-full truncate rounded-full border border-neutral-200 bg-neutral-100 px-2.5 py-1 text-[10px] font-bold text-neutral-900">
+                    <span className="inline-block max-w-full truncate rounded-full bg-paper-base border border-gold-hairline px-2.5 py-1 text-[10px] font-bold text-ink-base shadow-sm">
                       {p.indicative_rates}
                     </span>
                   </div>
@@ -440,40 +440,40 @@ export function DirectoryPage() {
 
       {/* Places (Lieux recommandés) - Only shown when a category is selected */}
       {activeCategory && (filteredPlaces.length > 0 || placesLoading) && (
-        <div className="container-app pb-28 pt-6 border-t border-neutral-200">
+        <div className="container-app pb-28 pt-6 border-t border-gold-hairline">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h2 className="font-display text-lg font-bold text-neutral-900">Lieux &amp; Commerces</h2>
-              <p className="text-sm text-neutral-500">Recommandés par la communauté</p>
+              <h2 className="font-display text-lg font-bold text-ink-base">Lieux &amp; Commerces</h2>
+              <p className="text-sm text-ink-muted">Recommandés par la communauté</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
             {placesLoading
               ? Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="flex flex-col gap-2 rounded-2xl border border-neutral-200 bg-white p-2 shadow-sm">
-                    <div className="aspect-square w-full rounded-xl bg-neutral-100 animate-pulse" />
-                    <div className="h-3 w-3/4 rounded bg-neutral-100 animate-pulse mt-1" />
-                    <div className="h-2 w-1/2 rounded bg-neutral-100 animate-pulse" />
+                  <div key={i} className="flex flex-col gap-2 rounded-2xl border border-gold-hairline bg-white/60 p-2 shadow-soft">
+                    <div className="aspect-square w-full rounded-xl bg-paper-base animate-pulse" />
+                    <div className="h-3 w-3/4 rounded bg-paper-base animate-pulse mt-1" />
+                    <div className="h-2 w-1/2 rounded bg-paper-base animate-pulse" />
                   </div>
                 ))
               : filteredPlaces.map((place) => (
-                  <article key={place.id} onClick={() => navigate(`/lieux/${place.id}`)} className="group relative flex cursor-pointer flex-col gap-2 rounded-2xl border border-neutral-200 bg-white p-2 shadow-sm transition-all hover:shadow-md">
+                  <article key={place.id} onClick={() => navigate(`/lieux/${place.id}`)} className="group relative flex cursor-pointer flex-col gap-2 rounded-2xl border border-gold-hairline bg-white/60 backdrop-blur-sm p-2 shadow-soft transition-all hover:shadow-lift hover:-translate-y-0.5">
                     {place.photo_url ? (
-                      <div className="aspect-square w-full overflow-hidden rounded-xl bg-neutral-100">
+                      <div className="aspect-square w-full overflow-hidden rounded-xl bg-paper-base">
                         <img src={place.photo_url} alt={place.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       </div>
                     ) : (
-                      <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-neutral-100 border border-neutral-200">
-                        <MapPin size={24} className="text-neutral-400" />
+                      <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-paper-base border border-gold-hairline">
+                        <MapPin size={24} className="text-patina-deep/50" />
                       </div>
                     )}
                     <div>
-                      <h3 className="font-display text-[12px] font-bold text-neutral-900 line-clamp-1">{place.name}</h3>
+                      <h3 className="font-display text-[12px] font-bold text-ink-base line-clamp-1">{place.name}</h3>
                       {place.subcategory && (
-                        <p className="mt-0.5 text-[10px] text-neutral-500 line-clamp-1">{place.subcategory.label}</p>
+                        <p className="mt-0.5 text-[10px] text-ink-muted line-clamp-1">{place.subcategory.label}</p>
                       )}
                       {place.city && (
-                        <p className="mt-0.5 flex items-center gap-0.5 text-[10px] text-neutral-400">
+                        <p className="mt-0.5 flex items-center gap-0.5 text-[10px] text-patina-deep">
                           <MapPin size={10} />
                           <span className="line-clamp-1">{place.city}</span>
                         </p>

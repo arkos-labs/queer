@@ -88,8 +88,8 @@ export default {
           raised: '#27272a',
         },
         paper: {
-          base: '#fafafa',
-          deep: '#f4f4f5',
+          base: '#ede9fe',
+          deep: '#ddd6fe',
           raised: '#ffffff',
         },
         ink: {
@@ -110,8 +110,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', '"Albert Sans"', 'system-ui', 'sans-serif'],
-        display: ['Inter', '"Albert Sans"', 'sans-serif'],
+        sans: ['"Baloo 2"', 'system-ui', 'sans-serif'],
+        display: ['"Baloo 2"', 'sans-serif'],
       },
       borderRadius: {
         DEFAULT: '12px',

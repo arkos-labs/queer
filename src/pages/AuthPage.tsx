@@ -51,19 +51,18 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
 
   if (confirmationSent) {
     return (
-      <div className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden px-4 py-12">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary-50 via-white to-secondary-50" />
+      <div className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden px-4 py-12 bg-paper-base">
         <div className="w-full max-w-md animate-scale-in">
-          <div className="card p-8 text-center md:p-10">
-            <MailCheck size={40} className="mx-auto mb-4 text-primary-600" />
-            <h1 className="font-display text-xl font-semibold text-neutral-900">Vérifiez votre boîte mail</h1>
-            <p className="mt-3 text-sm text-neutral-500">
+          <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm p-8 text-center md:p-10 shadow-soft">
+            <MailCheck size={40} className="mx-auto mb-4 text-patina-deep" />
+            <h1 className="font-display text-xl font-semibold text-ink-base">Vérifiez votre boîte mail</h1>
+            <p className="mt-3 text-sm text-ink-muted">
               Nous avons envoyé un lien de confirmation à <strong>{email}</strong>. Cliquez dessus pour activer votre
               compte, vous pourrez ensuite compléter votre profil.
             </p>
-            <p className="mt-4 text-xs text-neutral-400">
+            <p className="mt-4 text-xs text-patina-deep/70">
               Rien reçu ? Vérifiez vos spams, ou{' '}
-              <button onClick={() => setConfirmationSent(false)} className="font-medium text-primary-600 hover:underline">
+              <button onClick={() => setConfirmationSent(false)} className="font-medium text-patina-deep hover:underline">
                 réessayez
               </button>
               .
@@ -75,21 +74,20 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
   }
 
   return (
-    <div className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden px-4 py-12">
-      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary-50 via-white to-secondary-50" />
-      <div className="absolute -right-20 top-0 -z-10 h-72 w-72 rounded-full bg-primary-200/40 blur-3xl" />
-      <div className="absolute -left-20 bottom-0 -z-10 h-72 w-72 rounded-full bg-secondary-200/30 blur-3xl" />
+    <div className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden px-4 py-12 bg-paper-base">
+      <div className="absolute -right-20 top-0 -z-10 h-72 w-72 rounded-full bg-yellow-500/10 blur-3xl" />
+      <div className="absolute -left-20 bottom-0 -z-10 h-72 w-72 rounded-full bg-pink-500/10 blur-3xl" />
 
       <div className="w-full max-w-md animate-scale-in">
-        <div className="overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-neutral-200">
-          <div aria-hidden className="h-1.5 w-full bg-amber-400 animate-gradient-x bg-[length:200%_100%]" />
+        <div className="overflow-hidden rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft">
+          <div aria-hidden className="h-1.5 w-full" style={{ background: 'linear-gradient(90deg, #FF0018 0%, #FFA52C 20%, #FFFF41 40%, #008018 60%, #0000F9 80%, #86007D 100%)' }} />
           <div className="p-8 md:p-10">
           <div className="mb-8 text-center">
             <img src="/logo.png" alt="Queer Service" className="mx-auto mb-4 h-16 w-16 object-contain" />
-            <h1 className="font-display text-2xl font-semibold text-neutral-900">
+            <h1 className="font-display text-2xl font-semibold text-ink-base">
               {isSignup ? 'Rejoignez la communauté' : 'Bon retour parmi nous'}
             </h1>
-            <p className="mt-2 text-sm text-neutral-500">
+            <p className="mt-2 text-sm text-ink-muted">
               {isSignup
                 ? 'Fait pour nous, par nous. Je suis parce que nous sommes.'
                 : 'Connectez-vous pour accéder à l\'annuaire et vos échanges.'}
@@ -126,22 +124,22 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
             </div>
 
             {isSignup && (
-              <div className="space-y-2.5 rounded-xl bg-neutral-100 p-4">
+              <div className="space-y-2.5 rounded-2xl bg-white border border-gold-hairline p-4 shadow-sm">
                 <label className="flex cursor-pointer items-start gap-2.5">
                   <input
                     type="checkbox"
                     checked={acceptTerms}
                     onChange={(e) => setAcceptTerms(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-neutral-200 text-primary-600 focus:ring-primary-500"
+                    className="mt-0.5 h-4 w-4 rounded border-gold-hairline text-patina-deep focus:ring-patina-deep"
                     required
                   />
-                  <span className="text-xs text-neutral-500">
+                  <span className="text-xs text-ink-muted">
                     J'ai lu et j'accepte les{' '}
-                    <a href="#/cgu" target="_blank" rel="noopener noreferrer" className="font-medium text-primary-600 hover:underline">
+                    <a href="#/cgu" target="_blank" rel="noopener noreferrer" className="font-semibold text-patina-deep hover:underline">
                       CGU
                     </a>{' '}
                     et la{' '}
-                    <a href="#/confidentialite" target="_blank" rel="noopener noreferrer" className="font-medium text-primary-600 hover:underline">
+                    <a href="#/confidentialite" target="_blank" rel="noopener noreferrer" className="font-semibold text-patina-deep hover:underline">
                       politique de confidentialité
                     </a>
                     .
@@ -152,10 +150,10 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
                     type="checkbox"
                     checked={acceptSensitiveData}
                     onChange={(e) => setAcceptSensitiveData(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-neutral-200 text-primary-600 focus:ring-primary-500"
+                    className="mt-0.5 h-4 w-4 rounded border-gold-hairline text-patina-deep focus:ring-patina-deep"
                     required
                   />
-                  <span className="text-xs text-neutral-500">
+                  <span className="text-xs text-ink-muted">
                     Je comprends que mon inscription à cet annuaire communautaire implique le traitement de données
                     relatives à l'orientation sexuelle et/ou à l'identité de genre (catégorie particulière de
                     données), et j'y consens explicitement (art. 9 du RGPD).
@@ -171,24 +169,24 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
               </div>
             )}
 
-            <button type="submit" disabled={loading || !canSubmit} className="btn-primary w-full">
+            <button type="submit" disabled={loading || !canSubmit} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-ink-base px-4 py-3 font-semibold text-white shadow-soft transition-transform hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0">
               {loading ? 'Veuillez patienter…' : isSignup ? 'Créer mon compte' : 'Se connecter'}
               {!loading && <ArrowRight size={16} />}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-neutral-500">
+          <p className="mt-6 text-center text-sm text-ink-muted">
             {isSignup ? (
               <>
                 Déjà un compte ?{' '}
-                <button onClick={() => navigate('/connexion')} className="font-medium text-primary-600 hover:underline">
+                <button onClick={() => navigate('/connexion')} className="font-semibold text-patina-deep hover:underline">
                   Se connecter
                 </button>
               </>
             ) : (
               <>
                 Pas encore de compte ?{' '}
-                <button onClick={() => navigate('/inscription')} className="font-medium text-primary-600 hover:underline">
+                <button onClick={() => navigate('/inscription')} className="font-semibold text-patina-deep hover:underline">
                   Rejoindre la communauté
                 </button>
               </>
@@ -196,10 +194,10 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
           </p>
           </div>
         </div>
-        <p className="mt-6 text-center text-xs text-neutral-400">
+        <p className="mt-6 text-center text-xs text-patina-deep/70">
           En vous inscrivant, vous acceptez de respecter la charte communautaire de Queer Service.
           {' '}
-          <a href="#/mentions-legales" target="_blank" rel="noopener noreferrer" className="underline hover:text-neutral-500">
+          <a href="#/mentions-legales" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink-muted">
             Mentions légales
           </a>
         </p>

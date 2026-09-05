@@ -168,9 +168,9 @@ export function ProfileDetailPage({ id }: { id: string }) {
   if (!target) {
     return (
       <div className="container-app py-16 text-center">
-        <h2 className="font-display text-2xl font-semibold text-neutral-900">Profil introuvable</h2>
-        <p className="mt-2 text-neutral-500">Ce membre n'existe plus ou n'est pas accessible.</p>
-        <button onClick={() => navigate('/annuaire')} className="btn-primary mt-6">
+        <h2 className="font-display text-2xl font-semibold text-ink-base">Profil introuvable</h2>
+        <p className="mt-2 text-ink-muted">Ce membre n'existe plus ou n'est pas accessible.</p>
+        <button onClick={() => navigate('/annuaire')} className="mt-6 flex items-center justify-center rounded-xl bg-ink-base px-6 py-2.5 font-semibold text-white shadow-soft transition-transform hover:-translate-y-0.5 mx-auto">
           Retour à l'annuaire
         </button>
       </div>
@@ -190,74 +190,80 @@ export function ProfileDetailPage({ id }: { id: string }) {
         <button
           onClick={() => navigate('/annuaire')}
           aria-label="Retour à l'annuaire"
-          className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-paper-raised border border-gold-hairline text-ink-base shadow-card transition-all hover:scale-105 hover:border-patina-deep hover:text-patina-deep"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={18} strokeWidth={1.5} />
         </button>
-        <h1 className="font-display text-lg font-semibold text-neutral-900">Profil</h1>
+        <h1 className="font-display text-lg font-semibold text-ink-base">Profil</h1>
         {isSelf ? (
           <button
             onClick={() => navigate('/parametres')}
             aria-label="Réglages"
             title="Réglages"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-paper-raised border border-gold-hairline text-ink-base shadow-card transition-all hover:scale-105"
           >
-            <Settings size={20} />
+            <Settings size={18} strokeWidth={1.5} />
           </button>
         ) : (
           <button
             onClick={() => setReportOpen(true)}
             aria-label="Signaler ce profil"
             title="Signaler ce profil"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-400 hover:bg-error-50 hover:text-error-600"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-paper-raised border border-error-200 text-error-600 shadow-card transition-all hover:scale-105 hover:bg-error-50"
           >
-            <Flag size={18} />
+            <Flag size={18} strokeWidth={1.5} />
           </button>
         )}
       </div>
 
       <div className="flex flex-col gap-6">
           {/* Main Card */}
-          <div className="card overflow-hidden pb-8">
-            {/* Rainbow banner */}
-            <div aria-hidden="true" className="h-28 bg-amber-400 bg-[length:200%_100%] animate-gradient-x sm:h-32" />
+          <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft overflow-hidden pb-8 relative">
+            {/* Elegant Kinpaku banner */}
+            <div aria-hidden="true" className="h-28 sm:h-32 bg-paper-base relative overflow-hidden">
+               <div className="absolute top-0 inset-x-0 h-1.5 z-10" style={{ background: 'linear-gradient(90deg, #FF0018 0%, #FFA52C 20%, #FFFF41 40%, #008018 60%, #0000F9 80%, #86007D 100%)' }} />
+               <div className="absolute -left-20 -top-20 h-40 w-40 rounded-full bg-pink-500/10 blur-[50px]" />
+               <div className="absolute -right-20 top-10 h-40 w-40 rounded-full bg-blue-500/10 blur-[50px]" />
+            </div>
             <div className="relative -mt-14 flex justify-center sm:-mt-16">
-              <Avatar name={target.display_name} src={target.photo_url} size={112} className="bg-primary-600 text-white" />
+              <div className="rounded-full bg-white p-1.5 shadow-sm">
+                <Avatar name={target.display_name} src={target.photo_url} size={112} className="bg-paper-raised text-ink-muted border border-gold-hairline" />
+              </div>
               {target.verification_status === 'verified' && (
-                <div className="absolute bottom-0 right-1/2 translate-x-12 translate-y-1 rounded-full bg-white p-0.5 shadow-sm">
-                  <ShieldCheck size={20} className="text-emerald-500 fill-emerald-50" />
+                <div className="absolute bottom-1 right-1/2 translate-x-12 translate-y-1 rounded-full bg-white p-0.5 shadow-sm border border-gold-hairline">
+                  <ShieldCheck size={20} className="text-patina-deep" />
                 </div>
               )}
             </div>
             
             <div className="px-6 mt-6 text-center">
-              <h1 className="font-display text-3xl font-bold text-neutral-900">{target.display_name}</h1>
+              <h1 className="font-display text-3xl font-bold text-ink-base">{target.display_name}</h1>
               {typeMeta && (
-                <span className="mt-2 inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-600">
+                <span className="mt-2 inline-flex items-center rounded-full bg-paper-base border border-gold-hairline px-3 py-1 text-xs font-semibold text-ink-base shadow-sm">
                   {typeMeta.label}
                 </span>
               )}
 
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-neutral-500">
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-ink-muted">
                 {target.city && (
-                  <span className="inline-flex items-center gap-1"><MapPin size={13} className="text-error-500" /> {target.city}</span>
+                  <span className="inline-flex items-center gap-1"><MapPin size={13} className="text-patina-deep" /> {target.city}</span>
                 )}
               </div>
 
               {target.bio && (
-                <p className="mt-6 text-[15px] italic text-neutral-500 leading-relaxed whitespace-pre-line px-2">
+                <p className="mt-6 text-[15px] italic text-ink-muted leading-relaxed whitespace-pre-line px-2">
                   "{target.bio}"
                 </p>
               )}
 
-              <div className="mt-6 flex items-center justify-center gap-3">
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
                 {isSelf ? (
-                   <button onClick={() => navigate('/profil/modifier')} className="btn-primary w-full">
+                   <button onClick={() => navigate('/profil/modifier')} className="flex items-center justify-center rounded-xl bg-ink-base px-6 py-2.5 font-semibold text-white shadow-soft transition-transform hover:-translate-y-0.5 w-full sm:w-auto">
                      Modifier mon profil
                    </button>
                 ) : (
                   <>
-                    <button onClick={() => setContactOpen(true)} className="btn-primary w-full font-semibold text-[15px]">
+                    <button onClick={() => setContactOpen(true)} className="flex items-center justify-center rounded-xl bg-ink-base px-6 py-2.5 font-semibold text-white shadow-soft transition-transform hover:-translate-y-0.5 w-full sm:w-auto">
                        <MessageSquare size={18} className="mr-1.5" /> Message
                     </button>
                   </>
@@ -268,20 +274,20 @@ export function ProfileDetailPage({ id }: { id: string }) {
                 target.stripe_charges_enabled ? (
                   <div className="mt-4">
                     {target.indicative_rates && (
-                      <p className="mb-2 text-center text-xs text-neutral-500">
-                        Tarifs indicatifs de {target.display_name} : <span className="font-medium text-neutral-900">{target.indicative_rates}</span>
+                      <p className="mb-2 text-center text-xs text-ink-muted">
+                        Tarifs indicatifs de {target.display_name} : <span className="font-medium text-ink-base">{target.indicative_rates}</span>
                       </p>
                     )}
                     <button
                       onClick={() => setPaymentOpen(true)}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-3 text-[15px] font-semibold text-white shadow-sm hover:bg-primary-700 transition-colors"
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-patina-deep px-4 py-3 text-[15px] font-semibold text-white shadow-sm hover:brightness-110 transition-colors"
                     >
                       <CreditCard size={18} /> Demander un devis
                     </button>
                   </div>
                 ) : (
-                  <div className="mt-4 flex items-center gap-2 rounded-xl bg-neutral-100 px-4 py-3 text-left text-xs text-neutral-500">
-                    <CreditCard size={16} className="shrink-0 text-neutral-400" />
+                  <div className="mt-4 flex items-center gap-2 rounded-xl border border-gold-hairline bg-white/50 px-4 py-3 text-left text-xs text-ink-muted">
+                    <CreditCard size={16} className="shrink-0 text-patina-deep" />
                     <span>{target.display_name} n'a pas encore activé les paiements en ligne. Contactez-le·la par message pour convenir d'un prix.</span>
                   </div>
                 )
@@ -289,10 +295,10 @@ export function ProfileDetailPage({ id }: { id: string }) {
 
               {target.skills.length > 0 && (
                 <div className="mt-8">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-400 mb-3">Compétences proposées</h3>
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3">Compétences proposées</h3>
                   <div className="flex flex-wrap justify-center gap-2">
                     {target.skills.map((s) => (
-                      <span key={s} className="badge-chip bg-primary-50 text-primary-600 ring-1 ring-primary-100">
+                      <span key={s} className="rounded-full bg-white border border-gold-hairline px-3 py-1 text-[11px] font-semibold text-ink-base shadow-sm">
                         {s}
                       </span>
                     ))}
@@ -302,17 +308,17 @@ export function ProfileDetailPage({ id }: { id: string }) {
               
               {target.needs.length > 0 && (
                 <div className="mt-6">
-                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 mb-3">Recherche</h3>
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-3">Recherche</h3>
                   <div className="flex flex-wrap justify-center gap-2">
                     {target.needs.map((s) => (
-                      <span key={s} className="badge-chip bg-primary-50 text-neutral-900 ring-1 ring-neutral-200">
+                      <span key={s} className="rounded-full bg-paper-base border border-gold-hairline px-3 py-1 text-[11px] font-semibold text-ink-base shadow-sm">
                         {s}
                       </span>
                     ))}
                   </div>
                   {target.budget_indicatif && (
-                    <p className="mt-3 text-center text-xs text-neutral-500">
-                      Budget indicatif : <span className="font-medium text-neutral-900">{target.budget_indicatif}</span>
+                    <p className="mt-3 text-center text-xs text-ink-muted">
+                      Budget indicatif : <span className="font-medium text-ink-base">{target.budget_indicatif}</span>
                     </p>
                   )}
                 </div>
@@ -324,12 +330,12 @@ export function ProfileDetailPage({ id }: { id: string }) {
 
           {/* Structure fields if applicable */}
           {target.intervention_zone && (
-            <div className="card p-6">
-              <h2 className="font-display text-lg font-semibold text-neutral-900 mb-4">Informations complémentaires</h2>
-              <div className="flex flex-col gap-4 text-sm text-neutral-500">
+            <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft p-6">
+              <h2 className="font-display text-lg font-semibold text-ink-base mb-4">Informations complémentaires</h2>
+              <div className="flex flex-col gap-4 text-sm text-ink-muted">
                 <div>
-                  <span className="block text-xs text-neutral-400 mb-1">Zone d'intervention</span>
-                  <span className="font-medium text-neutral-900">{target.intervention_zone}</span>
+                  <span className="block text-xs text-patina-deep mb-1">Zone d'intervention</span>
+                  <span className="font-medium text-ink-base">{target.intervention_zone}</span>
                 </div>
               </div>
             </div>
@@ -338,32 +344,32 @@ export function ProfileDetailPage({ id }: { id: string }) {
           <TrustPanel profile={target} badges={badges} reviewCount={reviews.length} avgRating={avgRating} />
 
           {/* Avis de la communauté */}
-          <div className="card p-6">
-            <h2 className="mb-4 font-display text-lg font-bold text-neutral-900">Avis de la communauté</h2>
+          <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft p-6">
+            <h2 className="mb-4 font-display text-lg font-bold text-ink-base">Avis de la communauté</h2>
             {reviews.length === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-sm text-neutral-500">Aucun avis pour le moment. Soyez le premier à partager votre expérience.</p>
+                <p className="text-sm text-ink-muted">Aucun avis pour le moment. Soyez le premier à partager votre expérience.</p>
               </div>
             ) : (
               <div className="space-y-6">
                 {reviews.map((r) => (
-                  <div key={r.id} className="border-b border-neutral-200 pb-6 last:border-0 last:pb-0">
+                  <div key={r.id} className="border-b border-gold-hairline pb-6 last:border-0 last:pb-0">
                     <div className="flex gap-4">
-                      <Avatar name={r.author?.display_name ?? 'Anonyme'} src={r.author?.photo_url} size={44} />
+                      <Avatar name={r.author?.display_name ?? 'Anonyme'} src={r.author?.photo_url} size={44} className="border border-gold-hairline bg-paper-base text-ink-muted" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <p className="text-[15px] font-bold text-neutral-900 truncate pr-2">{r.author?.display_name ?? 'Anonyme'}</p>
-                          <p className="text-[13px] font-medium text-neutral-400 shrink-0">{timeAgo(r.created_at)}</p>
+                          <p className="text-[15px] font-bold text-ink-base truncate pr-2">{r.author?.display_name ?? 'Anonyme'}</p>
+                          <p className="text-[13px] font-medium text-patina-deep shrink-0">{timeAgo(r.created_at)}</p>
                         </div>
-                        <div className="mt-0.5">
+                        <div className="mt-0.5 text-[#D4AF37]">
                           <StarRating value={r.rating} size={13} />
                         </div>
-                        {r.comment && <p className="mt-2.5 text-[15px] text-neutral-900 leading-relaxed">{r.comment}</p>}
+                        {r.comment && <p className="mt-2.5 text-[15px] text-ink-base leading-relaxed">{r.comment}</p>}
                         {r.images && r.images.length > 0 && (
                           <div className="mt-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                             {r.images.map((imgUrl, idx) => (
                               <a href={imgUrl} target="_blank" rel="noopener noreferrer" key={idx} className="shrink-0">
-                                <img src={imgUrl} alt="Photo de l'avis" className="h-20 w-20 rounded-lg object-cover border border-neutral-200 shadow-sm" loading="lazy" />
+                                <img src={imgUrl} alt="Photo de l'avis" className="h-20 w-20 rounded-lg object-cover border border-gold-hairline shadow-sm" loading="lazy" />
                               </a>
                             ))}
                           </div>
@@ -377,10 +383,10 @@ export function ProfileDetailPage({ id }: { id: string }) {
           </div>
 
           {/* Badges obtenus */}
-          <div className="card p-6">
-            <h2 className="mb-4 font-display text-lg font-bold text-neutral-900">Badges obtenus</h2>
+          <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft p-6">
+            <h2 className="mb-4 font-display text-lg font-bold text-ink-base">Badges obtenus</h2>
             {badges.length === 0 ? (
-              <p className="text-sm text-neutral-500">Aucun badge pour le moment.</p>
+              <p className="text-sm text-ink-muted">Aucun badge pour le moment.</p>
             ) : (
               <BadgeList badges={badges} className="gap-2" />
             )}
