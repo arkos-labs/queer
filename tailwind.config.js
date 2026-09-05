@@ -110,8 +110,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['"Baloo 2"', 'system-ui', 'sans-serif'],
-        display: ['"Baloo 2"', 'sans-serif'],
+        sans: ['Quicksand', 'system-ui', 'sans-serif'],
+        display: ['Quicksand', 'sans-serif'],
       },
       borderRadius: {
         DEFAULT: '12px',

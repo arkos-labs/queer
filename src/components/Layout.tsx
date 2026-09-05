@@ -187,7 +187,10 @@ export function Layout({ children }: { children: ReactNode }) {
               <img 
                 src="/logo.png" 
                 alt="Queer Service" 
-                className="absolute top-1/2 -translate-y-[65%] h-36 w-36 object-contain drop-shadow-md z-10" 
+                className={isLanding 
+                  ? "absolute top-1/2 -translate-y-[65%] h-36 w-36 object-contain drop-shadow-md z-10"
+                  : "h-9 w-9 object-contain drop-shadow-sm"
+                } 
               />
             </div>
 

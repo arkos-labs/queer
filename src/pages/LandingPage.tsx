@@ -41,15 +41,15 @@ export function LandingPage() {
             <span className="block text-xl sm:text-2xl font-semibold text-ink-muted mb-3 tracking-normal">
               Annuaire LGBTQIA+ d'entraide entre membres
             </span>
-            <span className="block text-5xl sm:text-7xl" style={{ color: '#8898f5' }}>
-              Fait pour nous,
+            <span className="block text-5xl sm:text-7xl font-bold" style={{ color: '#6d28d9' }}>
+              Fait par nous,
             </span>
-            <span className="block text-5xl sm:text-7xl text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(90deg, #FF0018 0%, #FFA52C 20%, #008018 60%, #0000F9 80%, #86007D 100%)' }}>
-              par nous.
+            <span className="block text-5xl sm:text-7xl font-black text-transparent bg-clip-text bg-rainbow animate-gradient-x py-2">
+              pour nous.
             </span>
           </h1>
           <p className="mt-8 max-w-2xl text-lg sm:text-xl text-ink-muted mx-auto leading-relaxed font-medium">
-            Trouvez et proposez des services de confiance au sein de la communauté queer en France.
+            Trouvez ou proposez des services en toute confiance au sein de notre communauté queer.
           </p>
         </div>
 
