@@ -1,13 +1,9 @@
 # Queer Service — robots.txt
-# Domaine de production à renseigner dans la directive Sitemap.
 
 User-agent: *
 Allow: /
 
-# Routes privées / authentifiées : ne pas indexer.
-# NB : l'app utilise un routage par fragment (#/route) ; les fragments ne
-# peuvent pas être bloqués via Disallow. Le vrai correctif est de passer en
-# routage "history" (chemins propres) + réécritures serveur (voir audit SEO).
+# Routes privées / authentifiées
 Disallow: /admin
 Disallow: /messages
 Disallow: /profil

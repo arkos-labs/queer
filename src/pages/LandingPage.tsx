@@ -37,15 +37,19 @@ export function LandingPage() {
         {/* Hero Section */}
         <div className="text-center max-w-3xl mx-auto mb-16 flex flex-col items-center">
           
-          <h1 className="font-display text-5xl sm:text-7xl font-bold tracking-tight text-ink-base mb-6 mt-4">
-            Fait pour nous,
-            <br />
-            <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(90deg, #FF0018 0%, #FFA52C 20%, #008018 60%, #0000F9 80%, #86007D 100%)' }}>
+          <h1 className="font-display font-bold tracking-tight text-ink-base mb-6 mt-4">
+            <span className="block text-xl sm:text-2xl font-semibold text-ink-muted mb-3 tracking-normal">
+              Annuaire LGBTQIA+ d'entraide entre membres
+            </span>
+            <span className="block text-5xl sm:text-7xl" style={{ color: '#8898f5' }}>
+              Fait pour nous,
+            </span>
+            <span className="block text-5xl sm:text-7xl text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(90deg, #FF0018 0%, #FFA52C 20%, #008018 60%, #0000F9 80%, #86007D 100%)' }}>
               par nous.
             </span>
           </h1>
-          <p className="text-lg sm:text-xl text-text-light-muted max-w-2xl mx-auto leading-relaxed">
-            La plateforme de mise en relation gay-friendly. Trouvez de l'aide, proposez vos services ou venez juste discuter sur le forum.
+          <p className="mt-8 max-w-2xl text-lg sm:text-xl text-ink-muted mx-auto leading-relaxed font-medium">
+            Trouvez et proposez des services de confiance au sein de la communauté queer en France.
           </p>
         </div>
 
@@ -159,10 +163,10 @@ export function LandingPage() {
           
           <div className="text-center mb-16">
             <h2 className="font-display text-4xl sm:text-5xl font-bold text-ink-base mb-6 tracking-tight">
-              C'est quoi Queer Service ?
+              La plateforme de services LGBTQIA+ entre membres
             </h2>
             <p className="text-lg text-text-light-muted max-w-2xl mx-auto leading-relaxed">
-              Pas juste un annuaire. C'est avant tout un espace de mise en relation pour la communauté. Que ce soit pour un coup de main, trouver un·e pro ou échanger sur le forum, vous êtes au bon endroit.
+              Pas juste un annuaire. C'est avant tout un espace de mise en relation pour la communauté queer. Que ce soit pour un coup de main, trouver un·e pro ou échanger sur le forum, vous êtes au bon endroit.
             </p>
           </div>
 
@@ -197,7 +201,7 @@ export function LandingPage() {
             <div className="pointer-events-none absolute -left-20 bottom-0 h-64 w-64 rounded-full bg-patina-verdigris/10 blur-[80px]" />
             
             <h2 className="font-display text-3xl sm:text-4xl font-bold text-ink-base mb-12 text-center relative z-10">
-              Comment ça marche ?
+              Comment trouver un service LGBTQIA+ ?
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
@@ -240,21 +244,21 @@ export function LandingPage() {
       <footer className="border-t border-gold-hairline px-6 py-12 pb-32 text-center sm:pb-12 bg-paper-raised mt-20">
         <p className="text-[11px] uppercase tracking-widest text-text-light-faint">© {new Date().getFullYear()} Queer Service</p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-          <a href="#/ressources" className="text-[11px] uppercase tracking-widest font-medium text-patina-deep hover:text-patina-verdigris transition-colors">
+          <button onClick={() => navigate('/ressources')} className="text-[11px] uppercase tracking-widest font-medium text-patina-deep hover:text-patina-verdigris transition-colors">
             Ressources &amp; numéros d'aide
-          </a>
-          <a href="#/mentions-legales" className="text-[11px] uppercase tracking-widest text-text-light-muted hover:text-patina-deep transition-colors">
+          </button>
+          <button onClick={() => navigate('/mentions-legales')} className="text-[11px] uppercase tracking-widest text-text-light-muted hover:text-patina-deep transition-colors">
             Mentions légales
-          </a>
-          <a href="#/cgu" className="text-[11px] uppercase tracking-widest text-text-light-muted hover:text-patina-deep transition-colors">
+          </button>
+          <button onClick={() => navigate('/cgu')} className="text-[11px] uppercase tracking-widest text-text-light-muted hover:text-patina-deep transition-colors">
             CGU
-          </a>
-          <a href="#/confidentialite" className="text-[11px] uppercase tracking-widest text-text-light-muted hover:text-patina-deep transition-colors">
+          </button>
+          <button onClick={() => navigate('/confidentialite')} className="text-[11px] uppercase tracking-widest text-text-light-muted hover:text-patina-deep transition-colors">
             Confidentialité
-          </a>
-          <a href="#/cookies" className="text-[11px] uppercase tracking-widest text-text-light-muted hover:text-patina-deep transition-colors">
+          </button>
+          <button onClick={() => navigate('/cookies')} className="text-[11px] uppercase tracking-widest text-text-light-muted hover:text-patina-deep transition-colors">
             Cookies
-          </a>
+          </button>
         </div>
       </footer>
     </div>

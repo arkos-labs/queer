@@ -8,25 +8,25 @@ interface RouterContextValue {
 const RouterContext = createContext<RouterContextValue | undefined>(undefined);
 
 function currentPath() {
-  const hash = window.location.hash.replace(/^#/, '');
-  return hash || '/';
+  return window.location.pathname || '/';
 }
 
 export function RouterProvider({ children }: { children: ReactNode }) {
   const [path, setPath] = useState(currentPath());
 
   useEffect(() => {
-    const onHash = () => {
+    const onPop = () => {
       setPath(currentPath());
       window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
     };
-    window.addEventListener('hashchange', onHash);
-    if (!window.location.hash) window.location.hash = '/';
-    return () => window.removeEventListener('hashchange', onHash);
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
   }, []);
 
   const navigate = (to: string) => {
-    window.location.hash = to;
+    window.history.pushState({}, '', to);
+    setPath(to);
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
   };
 
   return (
