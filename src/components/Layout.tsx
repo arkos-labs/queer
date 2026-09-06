@@ -149,8 +149,8 @@ export function Layout({ children }: { children: ReactNode }) {
             className={cn(
               "fixed top-0 inset-x-0 z-50 flex items-center justify-center transition-all duration-300 pointer-events-none",
               scrolled
-                ? "pt-5 sm:pt-6 pb-8 sm:pb-10"
-                : "pt-6 sm:pt-8 pb-6"
+                ? "pt-0.5 sm:pt-1 pb-6 sm:pb-8"
+                : "pt-1 sm:pt-1.5 pb-2"
             )}
           >
             {/* Seamless dissolved frosted background only when scrolled — separate from logo so logo is never masked */}
@@ -171,7 +171,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               aria-label="Retour en haut"
-              className="relative z-10 pointer-events-auto flex items-center justify-center group focus:outline-none transition-transform active:scale-95"
+              className="relative z-10 pointer-events-auto flex items-center justify-center group focus:outline-none transition-transform active:scale-95 -mt-[1.5mm]"
             >
               <img
                 src="/logo.png"

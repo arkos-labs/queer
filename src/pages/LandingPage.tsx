@@ -112,7 +112,7 @@ export function LandingPage() {
       <main className="relative z-10 flex-1 w-full">
 
         {/* ── HERO ── */}
-        <div className="max-w-6xl mx-auto px-5 sm:px-8 pt-32 sm:pt-40 lg:pt-44 pb-16 sm:pb-20
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 pt-24 sm:pt-32 lg:pt-36 pb-16 sm:pb-20
                         grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-12 lg:gap-16 items-center">
 
           {/* Gauche — headline */}
