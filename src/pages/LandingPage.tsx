@@ -130,12 +130,14 @@ export function LandingPage() {
             <h1 className="font-display font-extrabold text-neutral-900 mb-6"
                 style={{ fontSize: 'clamp(2.75rem, 6.5vw, 4.5rem)', lineHeight: 1.0, letterSpacing: '-0.035em' }}>
               Fait par nous,<br />
-              <span style={{
-                background: 'linear-gradient(130deg, #7c3aed 0%, #a855f7 50%, #db2777 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}>
+              <span
+                className="bg-rainbow animate-gradient-x inline-block pb-1"
+                style={{
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
                 pour nous.
               </span>
             </h1>
