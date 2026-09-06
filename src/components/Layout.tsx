@@ -26,9 +26,19 @@ export function Layout({ children }: { children: ReactNode }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const unreadNotifsCount = notifications.filter(n => !n.read_at).length;
 
   const go = (to: string) => navigate(to);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -134,17 +144,23 @@ export function Layout({ children }: { children: ReactNode }) {
     <div className="mobile-shell">
       <div className="mobile-frame">
         {/* Premium glass header */}
-        <div className="fixed top-0 inset-x-0 z-50 flex flex-col pt-14 px-4 w-full"
+        <div className={cn(
+               "fixed top-0 inset-x-0 z-50 flex flex-col px-4 w-full transition-all duration-300",
+               scrolled ? "pt-7 sm:pt-9 pb-2" : "pt-10 sm:pt-12 pb-3"
+             )}
              style={{
-               background: 'rgba(255,255,255,0.88)',
-               backdropFilter: 'blur(28px) saturate(1.8)',
-               WebkitBackdropFilter: 'blur(28px) saturate(1.8)',
-               borderBottom: '1px solid rgba(139,92,246,0.08)',
-               boxShadow: '0 1px 0 0 rgba(139,92,246,0.06), 0 4px 24px -4px rgba(0,0,0,0.06)',
+               background: scrolled
+                 ? 'rgba(237, 233, 254, 0.82)'
+                 : (isLanding ? 'transparent' : 'rgba(255, 255, 255, 0.88)'),
+               backdropFilter: scrolled ? 'blur(24px) saturate(1.8)' : (isLanding ? 'none' : 'blur(24px) saturate(1.8)'),
+               WebkitBackdropFilter: scrolled ? 'blur(24px) saturate(1.8)' : (isLanding ? 'none' : 'blur(24px) saturate(1.8)'),
+               borderBottom: scrolled ? '1px solid rgba(139, 92, 246, 0.14)' : '1px solid transparent',
+               boxShadow: scrolled ? '0 8px 32px -4px rgba(124, 58, 237, 0.12)' : 'none',
              }}>
           {/* Pride bar — ultra thin, premium */}
-          <div className="absolute top-0 inset-x-0 h-[3px]" style={{ background: 'linear-gradient(90deg, #f43f5e, #f97316, #eab308, #22c55e, #3b82f6, #8b5cf6, #ec4899)', opacity: 0.85 }} />
-          <div className="flex items-center justify-between pb-3">
+          <div className={cn("absolute top-0 inset-x-0 transition-opacity duration-300", scrolled ? "h-[3px] opacity-100" : "h-[2px] opacity-60")}
+               style={{ background: 'linear-gradient(90deg, #f43f5e, #f97316, #eab308, #22c55e, #3b82f6, #8b5cf6, #ec4899)' }} />
+          <div className="flex items-center justify-between pb-1">
             {user && profile ? (
               <div className="relative">
                 <button
@@ -191,14 +207,19 @@ export function Layout({ children }: { children: ReactNode }) {
               <div className="w-[42px]" />
             )}
 
-            <div className="flex-1 flex flex-col items-center justify-center relative min-h-[30px]">
+            <div className="flex-1 flex flex-col items-center justify-center relative min-h-[36px]">
               <img 
                 src="/logo.png" 
                 alt="Queer Service" 
-                className={isLanding 
-                  ? "absolute top-1/2 -translate-y-[65%] h-36 w-36 object-contain drop-shadow-md z-10"
-                  : "h-9 w-9 object-contain drop-shadow-sm"
-                } 
+                className={cn(
+                  "object-contain transition-all duration-300",
+                  isLanding 
+                    ? (scrolled 
+                        ? "h-9 w-9 drop-shadow-sm scale-100" 
+                        : "h-20 w-20 sm:h-24 sm:w-24 drop-shadow-md scale-100"
+                      )
+                    : "h-9 w-9 drop-shadow-sm"
+                )} 
               />
             </div>
 
