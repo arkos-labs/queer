@@ -149,29 +149,30 @@ export function Layout({ children }: { children: ReactNode }) {
             className={cn(
               "fixed top-0 inset-x-0 z-50 flex items-center justify-center transition-all duration-300 pointer-events-none",
               scrolled
-                ? "pt-0.5 sm:pt-1 pb-6 sm:pb-8"
+                ? "pt-0.5 sm:pt-1 pb-12 sm:pb-16"
                 : "pt-1 sm:pt-1.5 pb-2"
             )}
+            style={{ isolation: 'isolate' }}
           >
-            {/* Seamless dissolved frosted background only when scrolled — separate from logo so logo is never masked */}
+            {/* Seamless dissolved frosted background only when scrolled — starts fading strictly below the logo */}
             <div
               className={cn(
-                "absolute inset-0 pointer-events-none transition-opacity duration-300",
+                "absolute inset-0 pointer-events-none transition-opacity duration-300 z-0",
                 scrolled ? "opacity-100" : "opacity-0"
               )}
               style={{
-                background: 'linear-gradient(to bottom, rgba(237, 233, 254, 0.98) 0%, rgba(237, 233, 254, 0.92) 65%, transparent 100%)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                maskImage: 'linear-gradient(to bottom, black 65%, transparent 100%)',
-                WebkitMaskImage: 'linear-gradient(to bottom, black 65%, transparent 100%)',
+                background: 'linear-gradient(to bottom, #ede9fe 0%, #ede9fe 72%, rgba(237, 233, 254, 0) 100%)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                maskImage: 'linear-gradient(to bottom, black 72%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, black 72%, transparent 100%)',
               }}
             />
 
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               aria-label="Retour en haut"
-              className="relative z-10 pointer-events-auto flex items-center justify-center group focus:outline-none transition-transform active:scale-95 -mt-[1.5mm]"
+              className="relative z-20 pointer-events-auto flex items-center justify-center group focus:outline-none transition-transform active:scale-95 -mt-[1.5mm]"
             >
               <img
                 src="/logo.png"
