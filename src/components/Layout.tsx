@@ -189,7 +189,7 @@ export function Layout({ children }: { children: ReactNode }) {
                scrolled ? "pt-7 sm:pt-9 pb-2" : "pt-10 sm:pt-12 pb-3"
              )}>
           <div className="flex items-center justify-end pb-1">
-            {user && profile && (
+            {user && profile ? (
               <div className="relative pointer-events-auto">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
