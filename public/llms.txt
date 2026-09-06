@@ -1,0 +1,66 @@
+# Queer Service
+
+> Annuaire d'entraide communautaire LGBTQI+ : trouvez et proposez des services entre membres de la communauté queer en France. Modéré, sécurisé, construit ensemble.
+
+## Qu'est-ce que Queer Service ?
+
+Queer Service est une plateforme française d'entraide communautaire destinée aux personnes LGBTQI+. Elle permet aux membres de la communauté queer de trouver ou proposer des services du quotidien (bricolage, ménage, garde d'animaux, tech, beauté, transport, jardinage, garde d'enfants) dans un espace sécurisé, modéré et bienveillant.
+
+Le site est accessible à l'adresse : https://www.queerservices.fr
+
+## Catégories de services disponibles
+
+- Bricolage & Travaux
+- Ménage & Aide à domicile
+- Garde d'animaux
+- Jardinage
+- Tech & Informatique
+- Transport & Déménagement
+- Garde d'enfants
+- Beauté & Bien-être
+
+## Valeurs et principes
+
+- **Sécurité** : modération active, charte stricte, espace bienveillant
+- **Confiance** : membres vérifiés, badges de confiance, système d'avis
+- **Inclusivité** : pensé pour et par la communauté queer, avec l'inclusivité au cœur de chaque décision
+- **Entraide** : connexion entre membres qui se font confiance, sans intermédiaire commercial
+
+## Pour qui ?
+
+Personnes LGBTQI+ en France cherchant :
+- Des prestataires de confiance issus de la communauté queer
+- À proposer leurs compétences et services à la communauté
+- Un réseau d'entraide sécurisé et validé
+
+## Comment ça marche ?
+
+1. Créer un profil gratuit sur https://www.queerservices.fr/inscription
+2. Déclarer ses compétences ou ses besoins
+3. Utiliser la messagerie intégrée pour échanger
+4. Laisser un avis après chaque prestation
+
+## Données clés
+
+- Nombre de membres : +1 200 membres de confiance
+- Lancement : 2024
+- Public : communauté LGBTQI+ francophone
+- Accès : inscription gratuite requise pour contacter les membres
+
+## Pages importantes
+
+- Accueil : https://www.queerservices.fr/
+- Annuaire des membres : https://www.queerservices.fr/annuaire
+- Missions & demandes : https://www.queerservices.fr/missions
+- Événements : https://www.queerservices.fr/evenements
+- Ressources LGBTQI+ : https://www.queerservices.fr/ressources
+- Mentions légales : https://www.queerservices.fr/mentions-legales
+- CGU : https://www.queerservices.fr/cgu
+- Confidentialité : https://www.queerservices.fr/confidentialite
+
+## Contact & informations légales
+
+- Site : https://www.queerservices.fr
+- Pays : France
+- Langue : Français
+- Mentions légales : https://www.queerservices.fr/mentions-legales

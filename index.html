@@ -63,9 +63,34 @@
         "@context": "https://schema.org",
         "@type": "Organization",
         "name": "Queer Service",
+        "alternateName": "QueerServices",
         "url": "https://www.queerservices.fr/",
-        "logo": "https://www.queerservices.fr/logo.png",
-        "description": "Annuaire d'entraide de la communauté LGBTQI+. Fait pour nous, par nous.",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://www.queerservices.fr/logo.png",
+          "width": 512,
+          "height": 512
+        },
+        "description": "Annuaire d'entraide communautaire LGBTQI+ : trouvez et proposez des services entre membres de la communauté queer en France. Bricolage, ménage, garde d'animaux, tech, beauté — modéré, sécurisé, construit ensemble.",
+        "foundingDate": "2024",
+        "areaServed": {
+          "@type": "Country",
+          "name": "France"
+        },
+        "audience": {
+          "@type": "Audience",
+          "audienceType": "Communauté LGBTQI+"
+        },
+        "knowsAbout": [
+          "Services LGBTQI+",
+          "Entraide communautaire queer",
+          "Annuaire prestataires LGBT",
+          "Bricolage",
+          "Ménage",
+          "Garde d'animaux",
+          "Tech",
+          "Beauté"
+        ],
         "sameAs": []
       }
     </script>
@@ -77,6 +102,8 @@
         "@type": "WebSite",
         "name": "Queer Service",
         "url": "https://www.queerservices.fr/",
+        "description": "Annuaire d'entraide de la communauté LGBTQI+ — trouvez ou proposez des services entre membres de confiance.",
+        "inLanguage": "fr-FR",
         "potentialAction": {
           "@type": "SearchAction",
           "target": {
@@ -85,6 +112,72 @@
           },
           "query-input": "required name=search_term_string"
         }
+      }
+    </script>
+
+    <!-- Structured data : OnlineBusiness / Service (signal GEO pour les IA) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "OnlineBusiness",
+        "name": "Queer Service",
+        "url": "https://www.queerservices.fr/",
+        "description": "Plateforme d'entraide communautaire LGBTQI+ permettant aux membres de la communauté queer de trouver et proposer des services du quotidien en toute confiance.",
+        "serviceType": "Annuaire communautaire",
+        "provider": {
+          "@type": "Organization",
+          "name": "Queer Service"
+        },
+        "areaServed": "France",
+        "availableLanguage": "French",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "EUR",
+          "description": "Inscription et consultation de l'annuaire gratuites"
+        }
+      }
+    </script>
+
+    <!-- Structured data : FAQPage (citabilité IA) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Qu'est-ce que Queer Service ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Queer Service est un annuaire d'entraide communautaire LGBTQI+ en France. Il permet aux membres de la communauté queer de trouver ou proposer des services du quotidien (bricolage, ménage, garde d'animaux, tech, beauté, etc.) dans un espace sécurisé et modéré."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Quels services sont disponibles sur Queer Service ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Queer Service propose des services dans 8 catégories : Bricolage & Travaux, Ménage & Aide à domicile, Garde d'animaux, Jardinage, Tech & Informatique, Transport & Déménagement, Garde d'enfants, Beauté & Bien-être."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Comment rejoindre Queer Service ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "L'inscription sur Queer Service est gratuite. Il suffit de créer un profil sur queerservices.fr, de renseigner ses compétences ou besoins, puis d'utiliser la messagerie intégrée pour échanger avec les membres."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Queer Service est-il gratuit ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Oui, l'inscription et la consultation de l'annuaire Queer Service sont entièrement gratuites. La plateforme est pensée comme un service d'entraide communautaire sans but lucratif."
+            }
+          }
+        ]
       }
     </script>
   </head>
