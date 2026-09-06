@@ -119,8 +119,6 @@ export function LandingPage() {
           <div>
             {/* Eyebrow */}
             <div className="inline-flex items-center gap-3 mb-7">
-              <div className="h-[2px] w-7 rounded-full"
-                   style={{ background: 'linear-gradient(90deg, #7c3aed, #db2777)' }} />
               <span className="text-[11px] font-bold tracking-[0.1em] uppercase text-primary-600">
                 Annuaire d'entraide communautaire
               </span>
@@ -131,11 +129,11 @@ export function LandingPage() {
                 style={{ fontSize: 'clamp(2.75rem, 6.5vw, 4.5rem)', lineHeight: 1.0, letterSpacing: '-0.035em' }}>
               Fait par nous,<br />
               <span
-                className="bg-rainbow animate-gradient-x inline-block pb-1"
+                className="bg-rainbow animate-gradient-x bg-clip-text text-transparent inline-block"
                 style={{
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
+                  color: 'transparent',
                 }}
               >
                 pour nous.
