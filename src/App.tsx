@@ -51,6 +51,12 @@ function Routes() {
     return null;
   }
 
+  // Redirect to directory if user already has a complete profile
+  if (user && profile && profile.display_name && (name === 'onboarding' || name === 'signin' || name === 'signup')) {
+    navigate('/annuaire');
+    return null;
+  }
+
   switch (name) {
     case 'home':
       return <LandingPage />;

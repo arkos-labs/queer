@@ -39,12 +39,16 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
       }
       navigate('/onboarding');
     } else {
-      const { error } = await signIn(email, password);
+      const res = await signIn(email, password);
       setLoading(false);
-      if (error) {
-        setError(error);
+      if (res.error) {
+        setError(res.error);
       } else {
-        navigate('/annuaire');
+        if (!res.profile || !res.profile.display_name) {
+          navigate('/onboarding');
+        } else {
+          navigate('/annuaire');
+        }
       }
     }
   };

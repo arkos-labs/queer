@@ -42,7 +42,7 @@ const chartePoints = [
 ];
 
 export function OnboardingPage() {
-  const { user, setProfile: setAuthProfile, signOut } = useAuth();
+  const { user, profile, setProfile: setAuthProfile, signOut } = useAuth();
   const { navigate } = useRouter();
   const [step, setStep] = useState(0);
   const [displayName, setDisplayName] = useState('');
@@ -65,6 +65,11 @@ export function OnboardingPage() {
 
   if (!user) {
     navigate('/connexion');
+    return null;
+  }
+
+  if (profile && profile.display_name) {
+    navigate('/annuaire');
     return null;
   }
 

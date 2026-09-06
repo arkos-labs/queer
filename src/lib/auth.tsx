@@ -9,7 +9,7 @@ interface AuthContextValue {
   profile: Profile | null;
   loading: boolean;
   signUp: (email: string, password: string) => Promise<{ error: string | null; needsConfirmation: boolean }>;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: string | null; profile?: Profile | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   /** Set the in-memory profile directly from a row you already have (e.g.
@@ -34,13 +34,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadProfile = async (uid: string) => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', uid)
-      .maybeSingle();
-    setProfile(data as Profile | null);
+  const loadProfile = async (uid: string): Promise<Profile | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', uid)
+        .maybeSingle();
+      if (error) {
+        console.error('Error loading profile:', error);
+      }
+      const p = (data as Profile | null) ?? null;
+      setProfile(p);
+      return p;
+    } catch (err) {
+      console.error('Error loading profile:', err);
+      setProfile(null);
+      return null;
+    }
   };
 
   useEffect(() => {
@@ -54,8 +65,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       (async () => {
+        setLoading(true);
         setSession(newSession);
         setUser(newSession?.user ?? null);
         if (newSession?.user) {
@@ -87,9 +99,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error ? error.message : null };
+  const signIn = async (email: string, password: string): Promise<{ error: string | null; profile?: Profile | null }> => {
+    setLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      setLoading(false);
+      return { error: error.message };
+    }
+    if (data.user) {
+      setSession(data.session);
+      setUser(data.user);
+      const loadedProfile = await loadProfile(data.user.id);
+      setLoading(false);
+      return { error: null, profile: loadedProfile };
+    }
+    setLoading(false);
+    return { error: null };
   };
 
   const signOut = async () => {
