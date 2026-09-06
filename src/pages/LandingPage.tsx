@@ -7,7 +7,6 @@ import {
   Search,
   UserPlus,
   ArrowRight,
-  LifeBuoy,
   Wrench,
   SprayCan,
   PawPrint,
@@ -15,250 +14,433 @@ import {
   Monitor,
   Truck,
   Baby,
-  Scissors
+  Scissors,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+function CategoryTile({
+  label,
+  image,
+  icon: Icon,
+  color,
+  bg,
+  scale = 1,
+  onClick,
+}: {
+  label: string;
+  image?: string;
+  icon: React.ElementType;
+  color: string;
+  bg: string;
+  scale?: number;
+  onClick: () => void;
+}) {
+  const [currentSrc, setCurrentSrc] = useState(image);
+  const [hasFailed, setHasFailed] = useState(false);
+
+  const handleError = () => {
+    if (currentSrc && !currentSrc.endsWith('.png.png')) {
+      setCurrentSrc(`${currentSrc}.png`);
+    } else {
+      setHasFailed(true);
+    }
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      className="group flex flex-col items-center justify-between gap-3 py-6 px-3 rounded-2xl bg-white text-center transition-all duration-200 overflow-hidden"
+      style={{
+        border: '1px solid rgba(0,0,0,0.07)',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+        minHeight: '220px',
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)';
+        (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 32px -8px rgba(0,0,0,0.1), 0 16px 48px -12px rgba(124,58,237,0.14)';
+        (e.currentTarget as HTMLElement).style.borderColor = `${color}40`;
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLElement).style.transform = '';
+        (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 4px rgba(0,0,0,0.05)';
+        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,0,0,0.07)';
+      }}
+    >
+      {currentSrc && !hasFailed ? (
+        <div className="w-full h-32 sm:h-40 flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
+          <img
+            src={currentSrc}
+            alt={label}
+            className="w-full h-full object-contain filter drop-shadow-md transition-transform duration-200"
+            style={{ transform: `scale(${scale})` }}
+            onError={handleError}
+          />
+        </div>
+      ) : (
+        <div
+          className="h-16 w-16 rounded-2xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110 my-auto"
+          style={{ background: bg }}
+        >
+          <Icon size={28} style={{ color }} strokeWidth={1.75} />
+        </div>
+      )}
+      <span className="text-[12px] sm:text-[13px] font-extrabold text-neutral-800 leading-snug line-clamp-2 mt-auto">
+        {label}
+      </span>
+    </button>
+  );
+}
 
 export function LandingPage() {
   const { navigate } = useRouter();
   const [activeTab, setActiveTab] = useState<'signup' | 'login'>('signup');
 
   return (
-    <div className="min-h-screen bg-paper-base font-sans text-ink-base flex flex-col relative overflow-hidden">
-      
-      {/* Subtle Pride ambient blurs in the background */}
-      <div className="pointer-events-none absolute -left-40 top-10 h-[500px] w-[500px] rounded-full bg-pink-500/10 blur-[120px]" />
-      <div className="pointer-events-none absolute -right-40 top-40 h-[500px] w-[500px] rounded-full bg-blue-500/10 blur-[120px]" />
-      <div className="pointer-events-none absolute left-1/3 top-0 h-[400px] w-[400px] rounded-full bg-yellow-500/10 blur-[120px]" />
+    <div className="min-h-screen font-sans text-neutral-900 flex flex-col relative overflow-hidden"
+         style={{ background: '#ede9fe' }}>
 
-      {/* Main Content */}
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-12 max-w-5xl mx-auto w-full">
-        
-        {/* Hero Section */}
-        <div className="text-center max-w-3xl mx-auto mb-16 flex flex-col items-center">
-          
-          <h1 className="font-display font-bold tracking-tight text-ink-base mb-6 mt-4">
-            <span className="block text-xl sm:text-2xl font-semibold text-ink-muted mb-3 tracking-normal">
-              Annuaire LGBTQIA+ d'entraide entre membres
-            </span>
-            <span className="block text-5xl sm:text-7xl font-bold" style={{ color: '#6d28d9' }}>
-              Fait par nous,
-            </span>
-            <span className="block text-5xl sm:text-7xl font-black text-transparent bg-clip-text bg-rainbow animate-gradient-x py-2">
-              pour nous.
-            </span>
-          </h1>
-          <p className="mt-8 max-w-2xl text-lg sm:text-xl text-ink-muted mx-auto leading-relaxed font-medium">
-            Trouvez ou proposez des services en toute confiance au sein de notre communauté queer.
-          </p>
-        </div>
+      {/* Fond ambient — blurs existants */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[700px] w-[900px] rounded-full"
+             style={{ background: 'radial-gradient(ellipse, rgba(139,92,246,0.12) 0%, transparent 70%)' }} />
+        <div className="absolute top-1/3 -left-60 h-[500px] w-[500px] rounded-full"
+             style={{ background: 'radial-gradient(ellipse, rgba(236,72,153,0.10) 0%, transparent 70%)' }} />
+        <div className="absolute top-1/4 -right-60 h-[500px] w-[500px] rounded-full"
+             style={{ background: 'radial-gradient(ellipse, rgba(139,92,246,0.10) 0%, transparent 70%)' }} />
+      </div>
 
-        {/* Interactive CTA Card (Tabs System) */}
-        <div className="w-full max-w-md mx-auto bg-paper-raised rounded-3xl p-2 sm:p-3 shadow-card ring-1 ring-gold-hairline">
-          
-          {/* Tabs header */}
-          <div className="flex p-1 bg-paper-deep rounded-2xl mb-6">
-            <button
-              onClick={() => setActiveTab('signup')}
-              className={cn(
-                "flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-200",
-                activeTab === 'signup' 
-                  ? "bg-paper-raised text-ink-base shadow-sm ring-1 ring-gold-hairline" 
-                  : "text-text-light-muted hover:text-ink-base"
-              )}
-            >
-              Nouveau membre
-            </button>
-            <button
-              onClick={() => setActiveTab('login')}
-              className={cn(
-                "flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-200",
-                activeTab === 'login' 
-                  ? "bg-paper-raised text-ink-base shadow-sm ring-1 ring-gold-hairline" 
-                  : "text-text-light-muted hover:text-ink-base"
-              )}
-            >
-              Déjà inscrit
-            </button>
-          </div>
+      <main className="relative z-10 flex-1 w-full">
 
-          {/* Tab Content */}
-          <div className="px-4 pb-6 sm:px-6">
-            {activeTab === 'signup' ? (
-              <div className="animate-fade-in text-center">
-                <p className="text-sm text-text-light-muted mb-6">
-                  Rejoignez la communauté pour proposer vos services ou contacter des membres de confiance.
-                </p>
-                <button 
-                  onClick={() => navigate('/inscription')} 
-                  className="w-full flex items-center justify-center gap-2 bg-patina-deep hover:bg-patina-verdigris text-white py-4 rounded-xl font-semibold text-lg transition-colors shadow-sm"
-                >
-                  <UserPlus size={20} />
-                  S'inscrire
-                </button>
+        {/* ── HERO ── */}
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 pt-12 pb-16 sm:pt-16 sm:pb-20
+                        grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-12 lg:gap-16 items-center">
+
+          {/* Gauche — headline */}
+          <div>
+            {/* Eyebrow */}
+            <div className="inline-flex items-center gap-3 mb-7">
+              <div className="h-[2px] w-7 rounded-full"
+                   style={{ background: 'linear-gradient(90deg, #7c3aed, #db2777)' }} />
+              <span className="text-[11px] font-bold tracking-[0.1em] uppercase text-primary-600">
+                Annuaire d'entraide communautaire
+              </span>
+            </div>
+
+            {/* Titre */}
+            <h1 className="font-display font-extrabold text-neutral-900 mb-6"
+                style={{ fontSize: 'clamp(2.75rem, 6.5vw, 4.5rem)', lineHeight: 1.0, letterSpacing: '-0.035em' }}>
+              Fait par nous,<br />
+              <span style={{
+                background: 'linear-gradient(130deg, #7c3aed 0%, #a855f7 50%, #db2777 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}>
+                pour nous.
+              </span>
+            </h1>
+
+            <p className="text-neutral-500 leading-relaxed max-w-md"
+               style={{ fontSize: '1.0625rem' }}>
+              Trouvez ou proposez des services en toute confiance au sein de votre communauté queer — modéré, sécurisé, construit ensemble.
+            </p>
+
+            {/* Social proof */}
+            <div className="flex items-center gap-4 mt-9 flex-wrap">
+              <div className="flex">
+                {[
+                  'linear-gradient(135deg,#f9a8d4,#c084fc)',
+                  'linear-gradient(135deg,#93c5fd,#818cf8)',
+                  'linear-gradient(135deg,#6ee7b7,#34d399)',
+                  'linear-gradient(135deg,#fde68a,#fb923c)',
+                  'linear-gradient(135deg,#c084fc,#818cf8)',
+                ].map((bg, i) => (
+                  <div key={i}
+                       className="h-[34px] w-[34px] rounded-full border-[2.5px] border-white flex items-center justify-center text-[11px] font-bold text-white"
+                       style={{ background: bg, marginLeft: i === 0 ? 0 : -9 }} />
+                ))}
               </div>
-            ) : (
-              <div className="animate-fade-in text-center">
-                <p className="text-sm text-text-light-muted mb-6">
-                  Bon retour parmi nous. Connectez-vous pour retrouver vos messages et vos favoris.
-                </p>
-                <button 
-                  onClick={() => navigate('/connexion')} 
-                  className="w-full flex items-center justify-center gap-2 bg-paper-deep hover:bg-neutral-100 text-ink-base border border-gold-hairline py-4 rounded-xl font-semibold text-lg transition-colors"
-                >
-                  Connexion
-                  <ArrowRight size={20} />
-                </button>
-              </div>
-            )}
-
-            {/* Subtle Explorer link */}
-            <div className="mt-6 pt-6 border-t border-gold-hairline text-center">
-              <button 
-                onClick={() => navigate('/annuaire')}
-                className="inline-flex items-center gap-2 text-sm font-medium text-text-light-muted hover:text-patina-deep transition-colors"
-              >
-                <Search size={16} />
-                <span>Explorer l'annuaire librement</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Trust Badges */}
-        <div className="mt-24 grid grid-cols-1 sm:grid-cols-3 gap-8 w-full">
-          <div className="flex flex-col items-center text-center p-6 bg-paper-raised rounded-2xl shadow-sm ring-1 ring-gold-hairline">
-            <div className="h-12 w-12 rounded-full bg-patina-verdigris/10 flex items-center justify-center mb-4 text-patina-deep">
-              <ShieldCheck size={24} />
-            </div>
-            <h3 className="text-base font-bold text-ink-base mb-2">Modération</h3>
-            <p className="text-sm text-text-light-muted leading-relaxed">
-              Une charte de respect stricte et une modération active pour un espace sécurisant.
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center text-center p-6 bg-paper-raised rounded-2xl shadow-sm ring-1 ring-gold-hairline">
-            <div className="h-12 w-12 rounded-full bg-kinpaku-gold/10 flex items-center justify-center mb-4 text-kinpaku-gold">
-              <BadgeCheck size={24} />
-            </div>
-            <h3 className="text-base font-bold text-ink-base mb-2">Vérifié</h3>
-            <p className="text-sm text-text-light-muted leading-relaxed">
-              Des badges de confiance attribués pour rassurer et guider vos échanges.
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center text-center p-6 bg-paper-raised rounded-2xl shadow-sm ring-1 ring-gold-hairline">
-            <div className="h-12 w-12 rounded-full bg-error-50 flex items-center justify-center mb-4 text-error-600">
-              <Heart size={24} />
-            </div>
-            <h3 className="text-base font-bold text-ink-base mb-2">Bienveillant</h3>
-            <p className="text-sm text-text-light-muted leading-relaxed">
-              Pensé pour et par la communauté, privilégiant l'entraide et l'inclusivité.
-            </p>
-          </div>
-        </div>
-
-        {/* Comprehensive Presentation & Categories (Bento-style) */}
-        <div className="mt-32 w-full">
-          
-          <div className="text-center mb-16">
-            <h2 className="font-display text-4xl sm:text-5xl font-bold text-ink-base mb-6 tracking-tight">
-              La plateforme de services LGBTQIA+ entre membres
-            </h2>
-            <p className="text-lg text-text-light-muted max-w-2xl mx-auto leading-relaxed">
-              Pas juste un annuaire. C'est avant tout un espace de mise en relation pour la communauté queer. Que ce soit pour un coup de main, trouver un·e pro ou échanger sur le forum, vous êtes au bon endroit.
-            </p>
-          </div>
-
-          {/* Categories Grid - Bento Style */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-5xl mx-auto mb-24">
-            {[
-              { label: 'Bricolage & Travaux', icon: Wrench, color: 'text-amber-600', bg: 'bg-amber-50', border: 'ring-amber-200' },
-              { label: 'Ménage & Aide', icon: SprayCan, color: 'text-cyan-600', bg: 'bg-cyan-50', border: 'ring-cyan-200' },
-              { label: 'Garde d\'animaux', icon: PawPrint, color: 'text-orange-600', bg: 'bg-orange-50', border: 'ring-orange-200' },
-              { label: 'Jardinage', icon: Leaf, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'ring-emerald-200' },
-              { label: 'Tech & Informatique', icon: Monitor, color: 'text-blue-600', bg: 'bg-blue-50', border: 'ring-blue-200' },
-              { label: 'Transport & Déménagement', icon: Truck, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'ring-indigo-200' },
-              { label: 'Garde d\'enfants', icon: Baby, color: 'text-pink-600', bg: 'bg-pink-50', border: 'ring-pink-200' },
-              { label: 'Beauté & Bien-être', icon: Scissors, color: 'text-rose-600', bg: 'bg-rose-50', border: 'ring-rose-200' },
-            ].map(({ label, icon: Icon, color, bg, border }) => (
-              <button
-                key={label}
-                onClick={() => navigate('/annuaire')}
-                className="group flex flex-col items-center gap-4 rounded-3xl bg-paper-raised p-6 text-center shadow-sm ring-1 ring-gold-hairline transition-all hover:-translate-y-1 hover:shadow-card hover:ring-patina-deep"
-              >
-                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${bg} ring-1 ${border} ${color} transition-transform group-hover:scale-110`}>
-                  <Icon size={24} strokeWidth={1.5} />
+              <div>
+                <div className="flex gap-[2px] mb-0.5">
+                  {[1,2,3,4,5].map(i => (
+                    <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  ))}
                 </div>
-                <span className="text-[13px] font-bold tracking-wide text-ink-base">{label}</span>
-              </button>
+                <p className="text-xs text-neutral-500 font-medium">
+                  <span className="font-bold text-neutral-800">+1 200 membres</span> nous font confiance
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Droite — CTA Card */}
+          <div className="w-full max-w-[360px] mx-auto lg:mx-0">
+            <div style={{
+              background: 'rgba(255,255,255,0.92)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              borderRadius: '28px',
+              border: '1px solid rgba(124,58,237,0.13)',
+              boxShadow: '0 8px 40px -8px rgba(124,58,237,0.2), 0 20px 60px -16px rgba(124,58,237,0.12), 0 2px 8px -2px rgba(0,0,0,0.06)',
+              padding: '10px',
+            }}>
+              {/* Tabs */}
+              <div className="flex rounded-[20px] p-[5px] gap-1 mb-5"
+                   style={{ background: 'rgba(139,92,246,0.07)' }}>
+                {(['signup', 'login'] as const).map((t, i) => (
+                  <button
+                    key={t}
+                    onClick={() => setActiveTab(t)}
+                    className="flex-1 py-2.5 text-[13px] font-bold rounded-2xl transition-all duration-200"
+                    style={activeTab === t ? {
+                      background: '#fff',
+                      color: '#5b21b6',
+                      boxShadow: '0 2px 8px -2px rgba(91,33,182,0.18), 0 0 0 1px rgba(124,58,237,0.1)',
+                    } : { color: '#9ca3af' }}
+                  >
+                    {i === 0 ? 'Nouveau membre' : 'Déjà inscrit·e'}
+                  </button>
+                ))}
+              </div>
+
+              {/* Contenu */}
+              <div className="px-2.5 pb-4">
+                {activeTab === 'signup' ? (
+                  <div className="animate-fade-in text-center">
+                    <p className="text-[13px] text-neutral-400 mb-5 leading-relaxed">
+                      Rejoignez la communauté pour proposer vos services ou contacter des membres de confiance.
+                    </p>
+                    <button
+                      onClick={() => navigate('/inscription')}
+                      className="w-full flex items-center justify-center gap-2.5 font-extrabold text-[15px] text-white py-4 rounded-[18px] transition-all duration-200"
+                      style={{
+                        background: 'linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)',
+                        boxShadow: '0 8px 32px -4px rgba(124,58,237,0.45), 0 2px 8px -2px rgba(124,58,237,0.2)',
+                        letterSpacing: '-0.01em',
+                      }}
+                      onMouseEnter={e => {
+                        (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                        (e.currentTarget as HTMLElement).style.boxShadow = '0 14px 48px -6px rgba(124,58,237,.6), 0 4px 16px -4px rgba(124,58,237,.3)';
+                      }}
+                      onMouseLeave={e => {
+                        (e.currentTarget as HTMLElement).style.transform = '';
+                        (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 32px -4px rgba(124,58,237,0.45), 0 2px 8px -2px rgba(124,58,237,0.2)';
+                      }}
+                    >
+                      <UserPlus size={18} strokeWidth={2.2} />
+                      Créer mon compte
+                    </button>
+                  </div>
+                ) : (
+                  <div className="animate-fade-in text-center">
+                    <p className="text-[13px] text-neutral-400 mb-5 leading-relaxed">
+                      Bon retour parmi nous. Retrouvez vos messages et vos favoris.
+                    </p>
+                    <button
+                      onClick={() => navigate('/connexion')}
+                      className="w-full flex items-center justify-center gap-2.5 font-extrabold text-[15px] py-4 rounded-[18px] transition-all duration-200"
+                      style={{
+                        color: '#5b21b6',
+                        border: '1.5px solid rgba(124,58,237,0.2)',
+                        background: 'transparent',
+                        letterSpacing: '-0.01em',
+                      }}
+                      onMouseEnter={e => {
+                        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.4)';
+                        (e.currentTarget as HTMLElement).style.background = 'rgba(139,92,246,0.05)';
+                      }}
+                      onMouseLeave={e => {
+                        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.2)';
+                        (e.currentTarget as HTMLElement).style.background = 'transparent';
+                      }}
+                    >
+                      Se connecter
+                      <ArrowRight size={18} strokeWidth={2.2} />
+                    </button>
+                  </div>
+                )}
+
+                <div className="mt-4 pt-4 text-center" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                  <button
+                    onClick={() => navigate('/annuaire')}
+                    className="inline-flex items-center gap-2 text-[12px] font-semibold text-neutral-400 hover:text-primary-600 transition-colors"
+                  >
+                    <Search size={13} strokeWidth={2.2} />
+                    Explorer l'annuaire librement
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── TRUST BADGES ── */}
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 pb-20">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              { icon: ShieldCheck, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', title: 'Modération active', desc: 'Une charte stricte et une équipe dédiée pour un espace sécurisant et bienveillant.' },
+              { icon: BadgeCheck,  color: '#059669', bg: 'rgba(5,150,105,0.08)',   title: 'Membres vérifiés', desc: 'Des badges de confiance attribués pour rassurer et guider vos échanges.' },
+              { icon: Heart,       color: '#db2777', bg: 'rgba(219,39,119,0.08)',  title: 'Fait avec amour',  desc: 'Pensé pour et par la communauté queer, avec l\'inclusivité au cœur de chaque décision.' },
+            ].map(({ icon: Icon, color, bg, title, desc }) => (
+              <div key={title}
+                   className="p-6 rounded-2xl bg-white transition-all duration-200 cursor-default"
+                   style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 4px rgba(0,0,0,0.05), 0 4px 16px -4px rgba(124,58,237,0.07)' }}
+                   onMouseEnter={e => {
+                     (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)';
+                     (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 16px -4px rgba(0,0,0,0.08), 0 12px 40px -8px rgba(124,58,237,0.14)';
+                     (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.14)';
+                   }}
+                   onMouseLeave={e => {
+                     (e.currentTarget as HTMLElement).style.transform = '';
+                     (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 4px rgba(0,0,0,0.05), 0 4px 16px -4px rgba(124,58,237,0.07)';
+                     (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,0,0,0.07)';
+                   }}>
+                <div className="h-11 w-11 rounded-2xl flex items-center justify-center mb-4"
+                     style={{ background: bg }}>
+                  <Icon size={22} style={{ color }} strokeWidth={2} />
+                </div>
+                <h3 className="text-[15px] font-extrabold text-neutral-900 mb-2" style={{ letterSpacing: '-0.02em' }}>{title}</h3>
+                <p className="text-[13px] text-neutral-500 leading-relaxed">{desc}</p>
+              </div>
             ))}
           </div>
+        </div>
 
-          {/* Detailed 3-Step Process */}
-          <div className="bg-paper-deep rounded-[3rem] p-8 sm:p-16 ring-1 ring-gold-hairline relative overflow-hidden">
-            <div className="pointer-events-none absolute -right-20 top-0 h-64 w-64 rounded-full bg-kinpaku-gold/10 blur-[80px]" />
-            <div className="pointer-events-none absolute -left-20 bottom-0 h-64 w-64 rounded-full bg-patina-verdigris/10 blur-[80px]" />
-            
-            <h2 className="font-display text-3xl sm:text-4xl font-bold text-ink-base mb-12 text-center relative z-10">
-              Comment trouver un service LGBTQIA+ ?
+        {/* ── CATEGORIES ── */}
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 pb-20">
+          {/* Section header */}
+          <div className="mb-2">
+            <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 mb-5"
+                 style={{ background: 'rgba(139,92,246,0.07)', border: '1px solid rgba(124,58,237,0.12)' }}>
+              <span className="text-[10px] font-bold tracking-[0.1em] uppercase text-primary-600">Services disponibles</span>
+            </div>
+            <h2 className="font-extrabold text-neutral-900 mb-3"
+                style={{ fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', letterSpacing: '-0.03em', lineHeight: 1.05 }}>
+              Bien plus qu'un annuaire
             </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
-              <div className="flex flex-col items-center text-center">
-                <div className="h-16 w-16 rounded-2xl bg-white shadow-sm ring-1 ring-gold-hairline flex items-center justify-center text-xl font-black text-patina-deep mb-6 rotate-3">
-                  1
-                </div>
-                <h3 className="text-xl font-bold text-ink-base mb-3">Créez votre profil</h3>
-                <p className="text-[15px] text-text-light-muted leading-relaxed">
-                  Inscrivez-vous gratuitement en tant que particulier, professionnel·le ou association. Remplissez votre bio et précisez si vous êtes là pour offrir ou chercher des services.
-                </p>
-              </div>
+            <p className="text-[14px] text-neutral-500 leading-relaxed max-w-md">
+              Bricolage, ménage, animaux, tech — des services entre membres qui se font confiance.
+            </p>
+          </div>
 
-              <div className="flex flex-col items-center text-center">
-                <div className="h-16 w-16 rounded-2xl bg-white shadow-sm ring-1 ring-gold-hairline flex items-center justify-center text-xl font-black text-patina-deep mb-6 -rotate-3">
-                  2
-                </div>
-                <h3 className="text-xl font-bold text-ink-base mb-3">Déclarez vos besoins</h3>
-                <p className="text-[15px] text-text-light-muted leading-relaxed">
-                  Ajoutez des "Compétences" (les talents que vous mettez à disposition) ou des "Besoins" (ce que vous recherchez). Le moteur de recherche fera le reste !
-                </p>
-              </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
+            {[
+              { label: 'Bricolage & Travaux',      image: '/categories/bricolage.png', icon: Wrench,   color: '#d97706', bg: '#fffbeb', scale: 1.15 },
+              { label: 'Ménage & Aide',            image: '/categories/menage.png',    icon: SprayCan, color: '#0891b2', bg: '#ecfeff', scale: 1.35 },
+              { label: "Garde d'animaux",          image: '/categories/animaux.png',   icon: PawPrint, color: '#ea580c', bg: '#fff7ed', scale: 1.45 },
+              { label: 'Jardinage',                image: '/categories/jardinage.png', icon: Leaf,     color: '#16a34a', bg: '#f0fdf4', scale: 1.45 },
+              { label: 'Tech & Informatique',      image: '/categories/tech.png',      icon: Monitor,  color: '#2563eb', bg: '#eff6ff', scale: 1.38 },
+              { label: 'Transport & Déménagement', image: '/categories/transport.png', icon: Truck,    color: '#7c3aed', bg: '#f5f3ff', scale: 1.1 },
+              { label: "Garde d'enfants",          image: '/categories/enfants.png',   icon: Baby,     color: '#db2777', bg: '#fdf2f8', scale: 1.5 },
+              { label: 'Beauté & Bien-être',       image: '/categories/beaute.png',    icon: Scissors, color: '#e11d48', bg: '#fff1f2', scale: 1.15 },
+            ].map(({ label, image, icon, color, bg, scale }) => (
+              <CategoryTile
+                key={label}
+                label={label}
+                image={image}
+                icon={icon}
+                color={color}
+                bg={bg}
+                scale={scale}
+                onClick={() => navigate('/annuaire')}
+              />
+            ))}
+          </div>
+        </div>
 
-              <div className="flex flex-col items-center text-center">
-                <div className="h-16 w-16 rounded-2xl bg-white shadow-sm ring-1 ring-gold-hairline flex items-center justify-center text-xl font-black text-patina-deep mb-6 rotate-6">
-                  3
+        {/* ── COMMENT ÇA MARCHE ── */}
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 pb-24">
+          <div className="mb-2">
+            <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 mb-5"
+                 style={{ background: 'rgba(139,92,246,0.07)', border: '1px solid rgba(124,58,237,0.12)' }}>
+              <span className="text-[10px] font-bold tracking-[0.1em] uppercase text-primary-600">En 3 étapes</span>
+            </div>
+            <h2 className="font-extrabold text-neutral-900"
+                style={{ fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', letterSpacing: '-0.03em', lineHeight: 1.05 }}>
+              Comment ça marche ?
+            </h2>
+          </div>
+
+          <div className="mt-8 rounded-3xl relative overflow-hidden p-8 sm:p-14"
+               style={{ background: 'rgba(139,92,246,0.04)', border: '1px solid rgba(124,58,237,0.1)' }}>
+            {/* Glows */}
+            <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full pointer-events-none"
+                 style={{ background: 'radial-gradient(ellipse, rgba(124,58,237,0.08), transparent 70%)' }} />
+            <div className="absolute -bottom-12 -left-8 w-40 h-40 rounded-full pointer-events-none"
+                 style={{ background: 'radial-gradient(ellipse, rgba(219,39,119,0.07), transparent 70%)' }} />
+
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-10">
+              {[
+                { n: '1', title: 'Créez votre profil',     desc: 'Inscrivez-vous gratuitement. Remplissez votre bio et précisez si vous offrez ou cherchez des services.' },
+                { n: '2', title: 'Déclarez vos talents',   desc: 'Ajoutez vos compétences ou vos besoins. Notre moteur connecte les bons profils ensemble.' },
+                { n: '3', title: 'Échangez en sécurité',   desc: 'Utilisez la messagerie intégrée. Après la prestation, laissez un avis pour faire grandir la confiance.' },
+              ].map(({ n, title, desc }) => (
+                <div key={n} className="flex flex-col items-center text-center">
+                  <div className="h-[50px] w-[50px] rounded-2xl bg-white flex items-center justify-center font-extrabold text-[18px] text-primary-600 mb-5"
+                       style={{
+                         border: '1px solid rgba(124,58,237,0.15)',
+                         boxShadow: '0 2px 12px -2px rgba(124,58,237,0.2)',
+                         letterSpacing: '-0.03em',
+                       }}>
+                    {n}
+                  </div>
+                  <h3 className="text-[15px] font-extrabold text-neutral-900 mb-2" style={{ letterSpacing: '-0.02em' }}>{title}</h3>
+                  <p className="text-[13px] text-neutral-500 leading-relaxed">{desc}</p>
                 </div>
-                <h3 className="text-xl font-bold text-ink-base mb-3">Échangez en sécurité</h3>
-                <p className="text-[15px] text-text-light-muted leading-relaxed">
-                  Utilisez la messagerie intégrée pour discuter des modalités. Après la prestation, laissez un avis pour faire grandir la confiance au sein de la communauté.
-                </p>
-              </div>
+              ))}
+            </div>
+
+            <div className="relative z-10 flex justify-center mt-10">
+              <button
+                onClick={() => navigate('/inscription')}
+                className="inline-flex items-center gap-2.5 font-extrabold text-[15px] text-white px-8 py-4 rounded-[18px] transition-all duration-200"
+                style={{
+                  background: 'linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)',
+                  boxShadow: '0 8px 32px -4px rgba(124,58,237,0.45)',
+                  letterSpacing: '-0.01em',
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 14px 48px -6px rgba(124,58,237,.6)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLElement).style.transform = '';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 32px -4px rgba(124,58,237,0.45)';
+                }}
+              >
+                <UserPlus size={18} strokeWidth={2.2} />
+                Rejoindre la communauté
+              </button>
             </div>
           </div>
         </div>
 
       </main>
 
-      {/* Footer / legal links */}
-      <footer className="border-t border-gold-hairline px-6 py-12 pb-32 text-center sm:pb-12 bg-paper-raised mt-20">
-        <p className="text-[11px] uppercase tracking-widest text-text-light-faint">© {new Date().getFullYear()} Queer Service</p>
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-          <button onClick={() => navigate('/ressources')} className="text-[11px] uppercase tracking-widest font-medium text-patina-deep hover:text-patina-verdigris transition-colors">
-            Ressources &amp; numéros d'aide
-          </button>
-          <button onClick={() => navigate('/mentions-legales')} className="text-[11px] uppercase tracking-widest text-text-light-muted hover:text-patina-deep transition-colors">
-            Mentions légales
-          </button>
-          <button onClick={() => navigate('/cgu')} className="text-[11px] uppercase tracking-widest text-text-light-muted hover:text-patina-deep transition-colors">
-            CGU
-          </button>
-          <button onClick={() => navigate('/confidentialite')} className="text-[11px] uppercase tracking-widest text-text-light-muted hover:text-patina-deep transition-colors">
-            Confidentialité
-          </button>
-          <button onClick={() => navigate('/cookies')} className="text-[11px] uppercase tracking-widest text-text-light-muted hover:text-patina-deep transition-colors">
-            Cookies
-          </button>
+      {/* ── FOOTER ── */}
+      <footer className="relative z-10 px-5 sm:px-8 py-8 pb-36 sm:pb-10"
+              style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+        <div className="max-w-6xl mx-auto flex items-center justify-between flex-wrap gap-4">
+          <p className="text-[11px] font-extrabold uppercase tracking-widest text-neutral-400">
+            © {new Date().getFullYear()} Queer Service
+          </p>
+          <div className="flex flex-wrap gap-x-6 gap-y-2">
+            {[
+              { label: 'Ressources', to: '/ressources' },
+              { label: 'Mentions légales', to: '/mentions-legales' },
+              { label: 'CGU', to: '/cgu' },
+              { label: 'Confidentialité', to: '/confidentialite' },
+              { label: 'Cookies', to: '/cookies' },
+            ].map(({ label, to }) => (
+              <button
+                key={to}
+                onClick={() => navigate(to)}
+                className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 hover:text-primary-600 transition-colors"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </footer>
     </div>

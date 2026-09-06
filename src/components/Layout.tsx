@@ -133,16 +133,23 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="mobile-shell">
       <div className="mobile-frame">
-        {/* Status-bar style top accent */}
-        <div className="fixed top-0 inset-x-0 z-50 flex flex-col bg-primary-100/90 backdrop-blur-xl border-b border-neutral-200 text-neutral-900 pt-14 px-4 shadow-sm w-full">
-          {/* Top Pride Bar */}
-          <div className="absolute top-0 inset-x-0 h-1.5" style={{ background: 'linear-gradient(90deg, #FF0018 0%, #FFA52C 20%, #FFFF41 40%, #008018 60%, #0000F9 80%, #86007D 100%)' }} />
+        {/* Premium glass header */}
+        <div className="fixed top-0 inset-x-0 z-50 flex flex-col pt-14 px-4 w-full"
+             style={{
+               background: 'rgba(255,255,255,0.88)',
+               backdropFilter: 'blur(28px) saturate(1.8)',
+               WebkitBackdropFilter: 'blur(28px) saturate(1.8)',
+               borderBottom: '1px solid rgba(139,92,246,0.08)',
+               boxShadow: '0 1px 0 0 rgba(139,92,246,0.06), 0 4px 24px -4px rgba(0,0,0,0.06)',
+             }}>
+          {/* Pride bar — ultra thin, premium */}
+          <div className="absolute top-0 inset-x-0 h-[3px]" style={{ background: 'linear-gradient(90deg, #f43f5e, #f97316, #eab308, #22c55e, #3b82f6, #8b5cf6, #ec4899)', opacity: 0.85 }} />
           <div className="flex items-center justify-between pb-3">
             {user && profile ? (
               <div className="relative">
                 <button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex h-[42px] w-[42px] items-center justify-center rounded-full border border-neutral-200 bg-neutral-100 text-neutral-900 hover:bg-white transition-colors shadow-sm"
+                  className="flex h-10 w-10 items-center justify-center rounded-2xl border border-neutral-200 bg-white text-neutral-900 hover:border-primary-300 hover:bg-primary-50 transition-all duration-200 shadow-sm"
                 >
                   <Menu size={22} className="text-primary-500" />
                 </button>
@@ -150,8 +157,9 @@ export function Layout({ children }: { children: ReactNode }) {
                 {showProfileMenu && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-                    <div className="absolute left-0 mt-2 w-56 rounded-md bg-white shadow-xl border border-neutral-200 z-50 overflow-hidden animate-slide-up origin-top-left">
-                      <div className="px-4 py-3 bg-neutral-100 border-b border-neutral-200 flex items-center gap-3">
+                    <div className="absolute left-0 mt-2 w-60 rounded-2xl bg-white/95 backdrop-blur-xl shadow-modal border border-neutral-100 z-50 overflow-hidden animate-slide-up origin-top-left"
+                      style={{ boxShadow: '0 20px 60px -12px rgba(0,0,0,0.15), 0 0 0 1px rgba(139,92,246,0.08)' }}>
+                      <div className="px-4 py-3 bg-neutral-50 border-b border-neutral-100 flex items-center gap-3">
                         <Avatar name={profile.display_name} src={profile.photo_url} size={36} />
                         <div className="min-w-0">
                           <p className="text-[13px] font-semibold text-neutral-900 truncate">{profile.display_name}</p>
@@ -198,7 +206,7 @@ export function Layout({ children }: { children: ReactNode }) {
               <div className="relative">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="flex h-[42px] w-[42px] items-center justify-center rounded-full border border-neutral-200 bg-neutral-100 text-neutral-900 hover:bg-white transition-colors shadow-sm relative"
+                  className="flex h-10 w-10 items-center justify-center rounded-2xl border border-neutral-200 bg-white text-neutral-900 hover:border-primary-300 hover:bg-primary-50 transition-all duration-200 shadow-sm relative"
                 >
                   <Bell size={22} className="text-primary-500" />
                   {unreadNotifsCount > 0 && (
@@ -208,9 +216,10 @@ export function Layout({ children }: { children: ReactNode }) {
                 {showNotifications && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
-                    <div className="absolute right-0 mt-2 w-80 rounded-md bg-white shadow-xl border border-neutral-200 z-50 overflow-hidden animate-slide-up origin-top-right">
-                      <div className="px-4 py-3 bg-neutral-100 border-b border-neutral-200 flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-neutral-900 tracking-widest uppercase">Notifications</h3>
+                    <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-white/95 backdrop-blur-xl z-50 overflow-hidden animate-slide-up origin-top-right"
+                      style={{ boxShadow: '0 20px 60px -12px rgba(0,0,0,0.15), 0 0 0 1px rgba(139,92,246,0.08)' }}>
+                      <div className="px-4 py-3 bg-neutral-50 border-b border-neutral-100 flex items-center justify-between">
+                        <h3 className="text-xs font-bold text-neutral-900 tracking-widest uppercase">Notifications</h3>
                         {unreadNotifsCount > 0 && (
                           <span className="text-[11px] font-medium text-text-muted">{unreadNotifsCount} non lue{unreadNotifsCount > 1 ? 's' : ''}</span>
                         )}
@@ -285,18 +294,26 @@ export function Layout({ children }: { children: ReactNode }) {
                     active ? 'mobile-tab-active' : 'mobile-tab-inactive',
                   )}
                 >
-                  <span className="relative inline-flex">
-                    <Icon size={22} strokeWidth={active ? 2.4 : 1.5} />
+                  <span className={cn(
+                    'relative inline-flex items-center justify-center transition-all duration-200',
+                    active
+                      ? 'bg-primary-100 rounded-xl px-3.5 py-1.5 -mt-0.5'
+                      : 'px-3.5 py-1.5 -mt-0.5'
+                  )}>
+                    <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
                     {t.badge > 0 && (
                       <span
                         aria-hidden
-                        className="absolute -right-2 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-primary-500 text-neutral-900 px-1 text-[9px] font-bold"
+                        className="absolute -right-1 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-primary-500 text-white px-1 text-[9px] font-bold leading-none"
                       >
                         {t.badge > 9 ? '9+' : t.badge}
                       </span>
                     )}
                   </span>
-                  <span className="uppercase tracking-widest text-[9px] mt-1">
+                  <span className={cn(
+                    'text-[9px] font-bold mt-0.5 tracking-wider uppercase transition-all',
+                    active ? 'text-primary-600 opacity-100' : 'opacity-70'
+                  )}>
                     {t.label}
                     {t.badge > 0 && <span className="sr-only"> ({t.badge} non lus)</span>}
                   </span>

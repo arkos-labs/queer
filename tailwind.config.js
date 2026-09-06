@@ -123,10 +123,12 @@ export default {
         full: '9999px',
       },
       boxShadow: {
-        card: '0 1px 3px 0 rgba(0,0,0,0.08), 0 1px 2px -1px rgba(0,0,0,0.06)',
-        lift: '0 4px 16px -4px rgba(0,0,0,0.12), 0 2px 6px -2px rgba(0,0,0,0.08)',
-        modal: '0 20px 60px -12px rgba(0,0,0,0.18)',
-        'primary-glow': '0 4px 20px -4px rgba(124,58,237,0.35)',
+        card: '0 1px 4px 0 rgba(0,0,0,0.06), 0 4px 16px -4px rgba(139,92,246,0.08)',
+        lift: '0 8px 32px -8px rgba(0,0,0,0.12), 0 4px 12px -4px rgba(139,92,246,0.1)',
+        modal: '0 24px 80px -16px rgba(0,0,0,0.2), 0 8px 24px -8px rgba(139,92,246,0.12)',
+        'primary-glow': '0 8px 32px -4px rgba(139,92,246,0.45), 0 2px 8px -2px rgba(139,92,246,0.25)',
+        'violet-sm': '0 2px 12px -2px rgba(139,92,246,0.3)',
+        glass: '0 0 0 1px rgba(139,92,246,0.12), 0 4px 24px -4px rgba(0,0,0,0.08)',
       },
       keyframes: {
         'fade-in': { from: { opacity: '0', transform: 'translateY(6px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
