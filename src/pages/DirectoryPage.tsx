@@ -8,6 +8,7 @@ import { FALLBACK_CATEGORIES, FALLBACK_SUBCATEGORIES } from '@/lib/taxonomy';
 import { AddPlaceModal } from '@/components/AddPlaceModal';
 import { AnnouncementsBanner } from '@/components/AnnouncementsBanner';
 import {
+  Compass,
   Search,
   Star,
   MapPin,
