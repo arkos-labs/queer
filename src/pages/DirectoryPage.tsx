@@ -249,8 +249,26 @@ export function DirectoryPage() {
 
   return (
     <div className="min-h-full bg-paper-base animate-fade-in">
-      <div className="pt-4">
+      {/* Spacer for the floating logo */}
+      <div className="pt-[110px]" />
+      
+      <div className="px-4">
         <AnnouncementsBanner />
+      </div>
+
+      <div className="px-4 mt-4">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+            <Compass size={20} className="text-primary-500" />
+          </div>
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Montage cuisine, ménage, pet-sitting..."
+            className="block w-full pl-12 pr-4 py-3 bg-white text-neutral-900 rounded-2xl border border-neutral-200 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 shadow-sm text-base md:text-sm outline-none placeholder-text-muted"
+          />
+        </div>
       </div>
 
       {/* Categories (Main) */}

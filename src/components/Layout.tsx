@@ -127,7 +127,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { label: 'Réglages', to: '/parametres', icon: Settings, show: !!user, badge: 0 },
   ].filter((t) => t.show);
 
-  const isLanding = path === '/' || path === '/connexion' || path === '/inscription';
+  const isLanding = path === '/' || path === '/connexion' || path === '/inscription' || path.startsWith('/annuaire');
 
   const getPageTitle = (p: string) => {
     if (p.startsWith('/annuaire')) return 'Annuaire';
@@ -144,7 +144,7 @@ export function Layout({ children }: { children: ReactNode }) {
     <div className="mobile-shell">
       <div className="mobile-frame">
         {/* Landing Page floating logo: seamless dissolve, no header line, no box, logo always crisp and visible */}
-        {path === '/' && (
+        {(path === '/' || path.startsWith('/annuaire')) && (
           <div
             className={cn(
               "fixed top-0 inset-x-0 z-50 flex items-center justify-center transition-all duration-300 pointer-events-none",
@@ -313,21 +313,6 @@ export function Layout({ children }: { children: ReactNode }) {
               <div className="w-[42px]" />
             )}
           </div>
-
-          {/* Search bar is rendered in Layout ONLY on the directory page to be sticky at the very top */}
-          {path === '/annuaire' && (
-            <div className="relative pb-2">
-              <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none pb-2">
-                <Compass size={20} className="text-primary-500" />
-              </div>
-              <input
-                type="search"
-                onChange={(e) => window.dispatchEvent(new CustomEvent('directory-search', { detail: e.target.value }))}
-                placeholder="Montage cuisine, ménage, pet-sitting..."
-                className="block w-full pl-12 pr-4 py-3 bg-neutral-100 text-neutral-900 rounded-md border border-neutral-200 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 shadow-lg text-base md:text-sm outline-none placeholder-text-muted"
-              />
-            </div>
-          )}
         </div>
         )}
 
