@@ -127,7 +127,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { label: 'Réglages', to: '/parametres', icon: Settings, show: !!user, badge: 0 },
   ].filter((t) => t.show);
 
-  const isLanding = path === '/' || path === '/connexion' || path === '/inscription';
+  const isLanding = path === '/' || path === '/connexion' || path === '/inscription' || path.startsWith('/annuaire');
   const isAnnuaire = path.startsWith('/annuaire');
 
   const getPageTitle = (p: string) => {

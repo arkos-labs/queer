@@ -390,6 +390,24 @@ export function SettingsPage() {
           </div>
         </div>
 
+        {/* Install App */}
+        <div className="card p-6 md:p-8">
+          <div className="flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
+              <Download size={20} />
+            </div>
+            <div className="flex-1">
+              <h2 className="font-display text-lg font-semibold text-neutral-900">Installer l'application</h2>
+              <p className="mt-1 text-sm text-neutral-500">
+                Installez Queer Service sur votre écran d'accueil pour y accéder plus rapidement.
+              </p>
+              <button onClick={() => navigate('/installer')} className="btn-outline mt-4">
+                <Download size={16} /> Voir les instructions
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Sign out */}
         <div className="card p-6 md:p-8">
           <div className="flex items-start gap-4">
