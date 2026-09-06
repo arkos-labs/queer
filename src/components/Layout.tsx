@@ -143,17 +143,57 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="mobile-shell">
       <div className="mobile-frame">
-        {/* Premium glass header */}
-        <div className={cn(
+        {/* Landing Page floating logo: seamless dissolve, no header line, no box, logo always crisp and visible */}
+        {path === '/' && (
+          <div
+            className={cn(
+              "fixed top-0 inset-x-0 z-50 flex items-center justify-center transition-all duration-300 pointer-events-none",
+              scrolled
+                ? "pt-5 sm:pt-6 pb-8 sm:pb-10"
+                : "pt-6 sm:pt-8 pb-6"
+            )}
+          >
+            {/* Seamless dissolved frosted background only when scrolled — separate from logo so logo is never masked */}
+            <div
+              className={cn(
+                "absolute inset-0 pointer-events-none transition-opacity duration-300",
+                scrolled ? "opacity-100" : "opacity-0"
+              )}
+              style={{
+                background: 'linear-gradient(to bottom, rgba(237, 233, 254, 0.98) 0%, rgba(237, 233, 254, 0.92) 65%, transparent 100%)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                maskImage: 'linear-gradient(to bottom, black 65%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, black 65%, transparent 100%)',
+              }}
+            />
+
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              aria-label="Retour en haut"
+              className="relative z-10 pointer-events-auto flex items-center justify-center group focus:outline-none transition-transform active:scale-95"
+            >
+              <img
+                src="/logo.png"
+                alt="Queer Service"
+                className="h-20 sm:h-24 md:h-28 object-contain transition-transform duration-200 group-hover:scale-105 filter drop-shadow-md"
+              />
+            </button>
+          </div>
+        )}
+
+        {/* Premium glass header (for app pages) */}
+        {!isLanding && (
+          <div className={cn(
                "fixed top-0 inset-x-0 z-50 flex flex-col px-4 w-full transition-all duration-300",
                scrolled ? "pt-7 sm:pt-9 pb-2" : "pt-10 sm:pt-12 pb-3"
              )}
              style={{
                background: scrolled
                  ? 'rgba(237, 233, 254, 0.82)'
-                 : (isLanding ? 'transparent' : 'rgba(255, 255, 255, 0.88)'),
-               backdropFilter: scrolled ? 'blur(24px) saturate(1.8)' : (isLanding ? 'none' : 'blur(24px) saturate(1.8)'),
-               WebkitBackdropFilter: scrolled ? 'blur(24px) saturate(1.8)' : (isLanding ? 'none' : 'blur(24px) saturate(1.8)'),
+                 : 'rgba(255, 255, 255, 0.88)',
+               backdropFilter: 'blur(24px) saturate(1.8)',
+               WebkitBackdropFilter: 'blur(24px) saturate(1.8)',
                borderBottom: scrolled ? '1px solid rgba(139, 92, 246, 0.14)' : '1px solid transparent',
                boxShadow: scrolled ? '0 8px 32px -4px rgba(124, 58, 237, 0.12)' : 'none',
              }}>
@@ -211,15 +251,7 @@ export function Layout({ children }: { children: ReactNode }) {
               <img 
                 src="/logo.png" 
                 alt="Queer Service" 
-                className={cn(
-                  "object-contain transition-all duration-300",
-                  isLanding 
-                    ? (scrolled 
-                        ? "h-9 w-9 drop-shadow-sm scale-100" 
-                        : "h-20 w-20 sm:h-24 sm:w-24 drop-shadow-md scale-100"
-                      )
-                    : "h-9 w-9 drop-shadow-sm"
-                )} 
+                className="h-9 w-9 object-contain drop-shadow-sm transition-all duration-300"
               />
             </div>
 
@@ -296,9 +328,10 @@ export function Layout({ children }: { children: ReactNode }) {
             </div>
           )}
         </div>
+        )}
 
         {/* Scrollable app content */}
-        <main className="mobile-content pt-[110px]">{children}</main>
+        <main className={cn("mobile-content", isLanding ? "pt-0" : "pt-[110px]")}>{children}</main>
 
         {/* Bottom tab bar */}
         {user && profile && tabs.length > 0 && (
