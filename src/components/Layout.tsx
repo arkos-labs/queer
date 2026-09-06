@@ -23,7 +23,6 @@ export function Layout({ children }: { children: ReactNode }) {
   const { path, navigate } = useRouter();
   const { user, profile, signOut } = useAuth();
   const [unread, setUnread] = useState(0);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -127,7 +126,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { label: 'Réglages', to: '/parametres', icon: Settings, show: !!user, badge: 0 },
   ].filter((t) => t.show);
 
-  const isLanding = path === '/' || path === '/connexion' || path === '/inscription' || path.startsWith('/annuaire');
+  const isLanding = path === '/' || path === '/connexion' || path === '/inscription';
   const isAnnuaire = path.startsWith('/annuaire');
 
   const getPageTitle = (p: string) => {
@@ -207,47 +206,7 @@ export function Layout({ children }: { children: ReactNode }) {
           )}
           <div className="flex items-center justify-between pb-1">
             {user && profile ? (
-              <div className="relative pointer-events-auto">
-                <button
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex h-10 w-10 items-center justify-center rounded-2xl border border-neutral-200 bg-white text-neutral-900 hover:border-primary-300 hover:bg-primary-50 transition-all duration-200 shadow-sm"
-                >
-                  <Menu size={22} className="text-primary-500" />
-                </button>
-                
-                {showProfileMenu && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-                    <div className="absolute left-0 mt-2 w-60 rounded-2xl bg-white/95 backdrop-blur-xl shadow-modal border border-neutral-100 z-50 overflow-hidden animate-slide-up origin-top-left"
-                      style={{ boxShadow: '0 20px 60px -12px rgba(0,0,0,0.15), 0 0 0 1px rgba(139,92,246,0.08)' }}>
-                      <div className="px-4 py-3 bg-neutral-50 border-b border-neutral-100 flex items-center gap-3">
-                        <Avatar name={profile.display_name} src={profile.photo_url} size={36} />
-                        <div className="min-w-0">
-                          <p className="text-[13px] font-semibold text-neutral-900 truncate">{profile.display_name}</p>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => { setShowProfileMenu(false); go('/profil'); }} 
-                        className="w-full text-left px-4 py-3 text-sm font-medium text-text-neutral-800 hover:bg-neutral-100 border-b border-neutral-200 flex items-center gap-2 transition-colors"
-                      >
-                        <UserIcon size={16} className="text-primary-500" /> Mon profil
-                      </button>
-                      <button 
-                        onClick={() => { setShowProfileMenu(false); go('/installer'); }} 
-                        className="w-full text-left px-4 py-3 text-sm font-medium text-text-neutral-800 hover:bg-neutral-100 border-b border-neutral-200 flex items-center gap-2 transition-colors"
-                      >
-                        <LifeBuoy size={16} className="text-primary-500" /> Installer l'app
-                      </button>
-                      <button 
-                        onClick={async () => { setShowProfileMenu(false); await signOut(); go('/'); }} 
-                        className="w-full text-left px-4 py-3 text-sm font-medium text-primary-100 hover:bg-neutral-100 flex items-center gap-2 transition-colors"
-                      >
-                        <LogOut size={16} className="text-primary-500" /> Déconnexion
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
+              <div className="w-[42px]" />
             ) : (
               <div className="w-[42px]" />
             )}
