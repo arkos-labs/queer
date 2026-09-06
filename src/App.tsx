@@ -1,5 +1,6 @@
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { RouterProvider, useRouter, parseRoute } from '@/lib/router';
+import { useSEO } from '@/lib/useSEO';
 import { Layout } from '@/components/Layout';
 import { LandingPage } from '@/pages/LandingPage';
 import { AuthPage } from '@/pages/AuthPage';
@@ -25,6 +26,8 @@ function Routes() {
   const { path, navigate } = useRouter();
   const { user, profile, loading } = useAuth();
   const { name, params } = parseRoute(path);
+
+  useSEO(name);
 
   if (loading) {
     return (

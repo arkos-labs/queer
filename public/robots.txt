@@ -13,4 +13,4 @@ Disallow: /onboarding
 Disallow: /parametres
 Disallow: /installer
 
-Sitemap: https://www.queerservice.fr/sitemap.xml
+Sitemap: https://www.queerservices.fr/sitemap.xml

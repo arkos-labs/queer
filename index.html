@@ -6,32 +6,39 @@
     <title>Queer Service — Annuaire d'entraide de la communauté LGBTQI+</title>
     <meta
       name="description"
-      content="Annuaire d'entraide LGBTQI+ : trouvez et proposez des services de confiance entre membres de la communauté. Fait pour nous, par nous."
+      content="Annuaire d'entraide LGBTQI+ : trouvez et proposez des services de confiance entre membres de la communauté queer. Bricolage, ménage, garde d'animaux, tech, beauté — fait pour nous, par nous."
     />
     <meta name="robots" content="index, follow" />
     <meta name="author" content="Queer Service" />
     <meta name="theme-color" content="#ffffff" />
+    <meta name="keywords" content="annuaire LGBTQI+, services queer, entraide communauté LGBT, prestataire queer, artisan LGBT, coiffeur trans, babysitter LGBT, bricolage queer, ménage LGBT, réseau entraide queer France" />
 
-    <!-- Canonical + Open Graph + Twitter (remplacer le domaine par le domaine de production) -->
-    <link rel="canonical" href="https://www.queerservice.fr/" />
+    <!-- Canonical -->
+    <link rel="canonical" href="https://www.queerservices.fr/" />
+
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Queer Service" />
     <meta property="og:title" content="Queer Service — Annuaire d'entraide de la communauté LGBTQI+" />
     <meta
       property="og:description"
-      content="Trouvez et proposez des services en toute confiance, entre membres de la communauté LGBTQI+."
+      content="Trouvez et proposez des services en toute confiance, entre membres de la communauté LGBTQI+. Bricolage, ménage, garde d'animaux, tech, beauté et plus."
     />
-    <meta property="og:url" content="https://www.queerservice.fr/" />
+    <meta property="og:url" content="https://www.queerservices.fr/" />
     <meta property="og:locale" content="fr_FR" />
-    <meta property="og:image" content="https://www.queerservice.fr/logo.png" />
-    <meta property="og:image:alt" content="Logo Queer Service" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content="https://www.queerservices.fr/og-image.png" />
+    <meta property="og:image:alt" content="Queer Service — Annuaire d'entraide LGBTQI+" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Queer Service — Annuaire d'entraide de la communauté LGBTQI+" />
     <meta
       name="twitter:description"
-      content="Annuaire LGBTQI+ : trouvez et proposez des services de confiance entre membres de la communauté. Fait pour nous, par nous."
+      content="Annuaire LGBTQI+ : trouvez et proposez des services de confiance entre membres de la communauté queer. Fait pour nous, par nous."
     />
-    <meta name="twitter:image" content="https://www.queerservice.fr/logo.png" />
+    <meta name="twitter:image" content="https://www.queerservices.fr/og-image.png" />
 
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
@@ -49,15 +56,34 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-    <!-- Structured data -->
+    <!-- Structured data : Organization -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "Organization",
         "name": "Queer Service",
-        "url": "https://www.queerservice.fr/",
-        "logo": "https://www.queerservice.fr/logo.png",
-        "description": "Annuaire d'entraide de la communauté LGBTQI+. Fait pour nous, par nous."
+        "url": "https://www.queerservices.fr/",
+        "logo": "https://www.queerservices.fr/logo.png",
+        "description": "Annuaire d'entraide de la communauté LGBTQI+. Fait pour nous, par nous.",
+        "sameAs": []
+      }
+    </script>
+
+    <!-- Structured data : WebSite + SearchAction (Sitelinks Search Box) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Queer Service",
+        "url": "https://www.queerservices.fr/",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://www.queerservices.fr/annuaire?q={search_term_string}"
+          },
+          "query-input": "required name=search_term_string"
+        }
       }
     </script>
   </head>
