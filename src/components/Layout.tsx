@@ -127,7 +127,6 @@ export function Layout({ children }: { children: ReactNode }) {
   ].filter((t) => t.show);
 
   const isLanding = path === '/' || path === '/connexion' || path === '/inscription';
-  const isAnnuaire = path.startsWith('/annuaire');
 
   const getPageTitle = (p: string) => {
     if (p.startsWith('/annuaire')) return 'Annuaire';
@@ -143,8 +142,8 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="mobile-shell">
       <div className="mobile-frame">
-        {/* Landing Page floating logo: seamless dissolve, no header line, no box, logo always crisp and visible */}
-        {(path === '/' || path.startsWith('/annuaire')) && (
+        {/* Big floating logo: seamless dissolve, no header line, no box, logo always crisp and visible */}
+        {(path === '/' || !isLanding) && (
           <div
             className={cn(
               "fixed top-0 inset-x-0 z-50 flex items-center justify-center transition-all duration-300 pointer-events-none",
@@ -183,45 +182,14 @@ export function Layout({ children }: { children: ReactNode }) {
           </div>
         )}
 
-        {/* Premium glass header (for app pages) */}
+        {/* Floating Bell (for app pages) */}
         {!isLanding && (
           <div className={cn(
-               "fixed top-0 inset-x-0 z-[60] flex flex-col px-4 w-full transition-all duration-300",
-               scrolled ? "pt-7 sm:pt-9 pb-2" : "pt-10 sm:pt-12 pb-3",
-               isAnnuaire ? "pointer-events-none" : ""
-             )}
-             style={isAnnuaire ? {} : {
-               background: scrolled
-                 ? 'rgba(237, 233, 254, 0.82)'
-                 : 'rgba(255, 255, 255, 0.88)',
-               backdropFilter: 'blur(24px) saturate(1.8)',
-               WebkitBackdropFilter: 'blur(24px) saturate(1.8)',
-               borderBottom: scrolled ? '1px solid rgba(139, 92, 246, 0.14)' : '1px solid transparent',
-               boxShadow: scrolled ? '0 8px 32px -4px rgba(124, 58, 237, 0.12)' : 'none',
-             }}>
-          {/* Pride bar — ultra thin, premium */}
-          {!isAnnuaire && (
-            <div className={cn("absolute top-0 inset-x-0 transition-opacity duration-300", scrolled ? "h-[3px] opacity-100" : "h-[2px] opacity-60")}
-                 style={{ background: 'linear-gradient(90deg, #f43f5e, #f97316, #eab308, #22c55e, #3b82f6, #8b5cf6, #ec4899)' }} />
-          )}
-          <div className="flex items-center justify-between pb-1">
-            {user && profile ? (
-              <div className="w-[42px]" />
-            ) : (
-              <div className="w-[42px]" />
-            )}
-
-            <div className="flex-1 flex flex-col items-center justify-center relative min-h-[36px]">
-              {!isAnnuaire && (
-                <img 
-                  src="/logo.png" 
-                  alt="Queer Service" 
-                  className="h-9 w-9 object-contain drop-shadow-sm transition-all duration-300"
-                />
-              )}
-            </div>
-
-            {user && profile ? (
+               "fixed top-0 inset-x-0 z-[60] flex flex-col px-4 w-full transition-all duration-300 pointer-events-none",
+               scrolled ? "pt-7 sm:pt-9 pb-2" : "pt-10 sm:pt-12 pb-3"
+             )}>
+          <div className="flex items-center justify-end pb-1">
+            {user && profile && (
               <div className="relative pointer-events-auto">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
@@ -282,7 +250,7 @@ export function Layout({ children }: { children: ReactNode }) {
         )}
 
         {/* Scrollable app content */}
-        <main className={cn("mobile-content", (isLanding || isAnnuaire) ? "pt-0" : "pt-[110px]")}>{children}</main>
+        <main className={cn("mobile-content", isLanding ? "pt-0" : "pt-[110px]")}>{children}</main>
 
         {/* Bottom tab bar */}
         {user && profile && tabs.length > 0 && (

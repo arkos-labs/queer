@@ -250,9 +250,6 @@ export function DirectoryPage() {
 
   return (
     <div className="min-h-full bg-paper-base animate-fade-in">
-      {/* Spacer for the floating logo */}
-      <div className="pt-[110px]" />
-      
       <div className="px-4">
         <AnnouncementsBanner />
       </div>

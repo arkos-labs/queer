@@ -408,21 +408,7 @@ export function SettingsPage() {
           </div>
         </div>
 
-        {/* Sign out */}
-        <div className="card p-6 md:p-8">
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500">
-              <LogOut size={20} />
-            </div>
-            <div className="flex-1">
-              <h2 className="font-display text-lg font-semibold text-neutral-900">Se déconnecter</h2>
-              <p className="mt-1 text-sm text-neutral-500">Terminez votre session sur cet appareil.</p>
-              <button onClick={handleSignOut} disabled={signingOut} className="btn-outline mt-4">
-                <LogOut size={16} /> {signingOut ? 'Déconnexion…' : 'Se déconnecter'}
-              </button>
-            </div>
-          </div>
-        </div>
+
 
         {/* Delete */}
         <div className="card border-error-200 p-6 md:p-8">
@@ -472,6 +458,22 @@ export function SettingsPage() {
               </button>
             ))}
           </nav>
+        </div>
+
+        {/* Sign out */}
+        <div className="card p-6 md:p-8">
+          <div className="flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500">
+              <LogOut size={20} />
+            </div>
+            <div className="flex-1">
+              <h2 className="font-display text-lg font-semibold text-neutral-900">Se déconnecter</h2>
+              <p className="mt-1 text-sm text-neutral-500">Terminez votre session sur cet appareil.</p>
+              <button onClick={handleSignOut} disabled={signingOut} className="btn-outline mt-4 text-error-600 hover:text-error-700 hover:bg-error-50 border-error-200">
+                <LogOut size={16} /> {signingOut ? 'Déconnexion…' : 'Se déconnecter'}
+              </button>
+            </div>
+          </div>
         </div>
 
         {error && <div className="rounded-xl bg-error-50 p-3 text-sm text-error-700">{error}</div>}
