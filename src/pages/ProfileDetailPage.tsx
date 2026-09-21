@@ -24,7 +24,6 @@ import {
   CreditCard,
 } from 'lucide-react';
 
-const PAYMENTS_ENABLED = !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
 interface ReviewWithAuthor extends Review {
   author?: { id: string; display_name: string; photo_url: string | null };
@@ -270,8 +269,7 @@ export function ProfileDetailPage({ id }: { id: string }) {
                 )}
               </div>
 
-              {!isSelf && PAYMENTS_ENABLED && (
-                target.stripe_charges_enabled ? (
+              {!isSelf && (
                   <div className="mt-4">
                     {target.indicative_rates && (
                       <p className="mb-2 text-center text-xs text-ink-muted">
@@ -282,15 +280,9 @@ export function ProfileDetailPage({ id }: { id: string }) {
                       onClick={() => setPaymentOpen(true)}
                       className="flex w-full items-center justify-center gap-2 rounded-xl bg-patina-deep px-4 py-3 text-[15px] font-semibold text-white shadow-sm hover:brightness-110 transition-colors"
                     >
-                      <CreditCard size={18} /> Demander un devis
+                      <MessageSquare size={18} /> Demander un devis
                     </button>
                   </div>
-                ) : (
-                  <div className="mt-4 flex items-center gap-2 rounded-xl border border-gold-hairline bg-white/50 px-4 py-3 text-left text-xs text-ink-muted">
-                    <CreditCard size={16} className="shrink-0 text-patina-deep" />
-                    <span>{target.display_name} n'a pas encore activé les paiements en ligne. Contactez-le·la par message pour convenir d'un prix.</span>
-                  </div>
-                )
               )}
 
               {target.skills.length > 0 && (

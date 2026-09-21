@@ -61,57 +61,244 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
       {
         heading: '1. Objet',
         body: [
-          `${c.siteName} est une plateforme communautaire d'entraide permettant aux membres de la communauté LGBTQI+ de proposer et de rechercher des services entre particulier·e·s et associations/structures.`,
+          `Les présentes Conditions Générales d'Utilisation (« CGU ») ont pour objet de définir les conditions d'accès et d'utilisation de Queer Services, plateforme numérique communautaire de mise en relation et d'entraide.`,
+          `Queer Services permet à toute personne de rechercher, proposer, échanger ou réserver des services auprès d'autres utilisateurs particuliers ou de professionnels.`,
+          `La plateforme a été conçue avec une attention particulière aux besoins et aux réalités des personnes LGBTQIA+, tout en étant ouverte à toute personne souhaitant utiliser le service dans le respect des présentes CGU.`,
+          `Queer Services a notamment pour ambition de favoriser l'entraide, la circulation des compétences, l'autonomie et la création de liens au sein de la communauté.`,
         ],
       },
       {
-        heading: '2. Inscription et compte',
+        heading: '2. Présentation de Queer Services',
         body: [
-          `L'inscription est réservée aux personnes majeures ou légalement autorisées à contracter. Chaque membre est responsable de l'exactitude des informations fournies et de la confidentialité de ses identifiants.`,
-          `L'acceptation de la charte de respect de la communauté est une condition d'accès à la messagerie et aux mises en relation.`,
+          `Queer Services permet notamment à un utilisateur :`,
+          `• de créer un profil ;`,
+          `• d'indiquer les compétences ou services qu'il souhaite proposer ;`,
+          `• de rechercher un service ou une compétence ;`,
+          `• de recevoir des suggestions de profils correspondant à son besoin ;`,
+          `• d'entrer en contact avec d'autres utilisateurs ;`,
+          `• de proposer ou demander un échange de services ;`,
+          `• de réserver certaines prestations ;`,
+          `• de payer certaines prestations directement depuis la plateforme ;`,
+          `• de prendre rendez-vous avec certains professionnels ;`,
+          `• de laisser ou consulter des évaluations lorsque cette fonctionnalité est disponible.`,
+          `Les services peuvent notamment concerner le pet sitting, le bricolage, l'informatique, la coiffure, la cuisine, les cours, la photographie, l'aide administrative, l'accompagnement du quotidien ou tout autre service autorisé sur la plateforme.`,
+          `Des professionnels, notamment des professionnels de santé, peuvent également être référencés sur Queer Services.`,
+          `La liste des services disponibles est susceptible d'évoluer.`,
         ],
       },
       {
-        heading: '3. Charte de respect',
+        heading: '3. Accès à la plateforme',
         body: [
-          `Chaque membre s'engage à respecter chaque personne quelle que soit son identité ou son expression de genre, à ne pas utiliser de langage discriminant, haineux ou stigmatisant, à respecter les pronoms et civilités choisis, et à ne pas harceler ni démarcher de façon abusive.`,
-          `Tout manquement à la charte peut entraîner un avertissement, une suspension ou une suppression du compte, à la discrétion de l'équipe de modération.`,
+          `L'inscription à Queer Services est ouverte à toute personne remplissant les conditions d'utilisation de la plateforme.`,
+          `L'appartenance réelle ou supposée à la communauté LGBTQIA+ n'est pas une condition d'inscription. Queer Services a vocation à être un espace particulièrement attentif aux besoins des personnes LGBTQIA+ et à lutter contre les comportements LGBTQIAphobes, discriminatoires ou harcelants, sans pour autant réserver l'accès de la plateforme aux seules personnes LGBTQIA+.`,
+          `L'utilisateur doit être âgé d'au moins 18 ans, sauf si une fonctionnalité spécifique prévoit légalement des conditions différentes.`,
+          `L'utilisateur garantit que les informations fournies lors de son inscription sont exactes, sincères et à jour.`,
         ],
       },
       {
-        heading: '4. Comptes associatifs',
+        heading: '4. Création du compte',
         body: [
-          `Les membres s'inscrivant en tant que structure/association certifient l'exactitude des informations fournies (zone d'intervention, tarifs indicatifs). Ces informations restent sous leur seule responsabilité.`,
-          `Les avis, notes et badges affichés sont des indications communautaires et ne remplacent pas les vérifications réglementaires propres à chaque activité.`,
+          `Certaines fonctionnalités nécessitent la création d'un compte personnel. L'utilisateur est responsable de la confidentialité de ses identifiants. Il s'engage notamment à :`,
+          `• ne pas communiquer ses identifiants à un tiers ;`,
+          `• ne pas utiliser le compte d'une autre personne ;`,
+          `• signaler immédiatement toute utilisation non autorisée de son compte ;`,
+          `• maintenir ses informations à jour.`,
+          `Queer Services peut mettre en œuvre des mécanismes de vérification destinés à renforcer la sécurité de la plateforme. Lorsque cela est nécessaire, certains profils peuvent faire l'objet d'une vérification d'identité, de statut professionnel ou d'autres justificatifs.`,
+          `La présence d'un badge ou d'une mention « vérifié » ne constitue toutefois pas une garantie absolue de la qualité ou de la sécurité d'une prestation.`,
         ],
       },
       {
-        heading: '5. Contenus publiés',
+        heading: '5. Fonctionnement de la mise en relation',
         body: [
-          `Chaque membre est seul responsable des contenus qu'il publie (profil, bio, avis, messages). Sont interdits : les contenus illicites, diffamatoires, haineux, discriminants, ou portant atteinte aux droits de tiers.`,
-          `${c.siteName} se réserve le droit de retirer tout contenu signalé et jugé contraire aux présentes CGU ou à la loi, sans préavis.`,
+          `L'utilisateur peut :`,
+          `PROPOSER — Indiquer les compétences, services ou prestations qu'il souhaite proposer.`,
+          `RECHERCHER — Décrire le service ou la compétence dont il a besoin.`,
+          `MATCHER — Recevoir des suggestions de profils susceptibles de correspondre à sa recherche.`,
+          `ÉCHANGER — Contacter un autre utilisateur ou un professionnel par l'intermédiaire des fonctionnalités disponibles.`,
+          `PARTAGER — Réaliser un échange gratuit, réciproque ou rémunéré selon les modalités proposées.`,
+          `Les suggestions de profils peuvent être générées automatiquement à partir de critères renseignés par les utilisateurs. Les mécanismes de recommandation ne constituent pas une garantie que le profil proposé correspondra parfaitement au besoin exprimé.`,
         ],
       },
       {
-        heading: '6. Signalement et modération',
+        heading: '6. Les différents modes d\'échange',
         body: [
-          `Tout membre peut signaler un profil, un avis ou un message qu'il estime contraire aux CGU ou à la charte. Chaque signalement est examiné par l'équipe de modération, qui peut prendre les mesures appropriées (avertissement, suspension, bannissement).`,
+          `Queer Services peut permettre trois formes principales d'échange.`,
+          `6.1. Échange gratuit : Un utilisateur peut proposer un service gratuitement à un autre utilisateur.`,
+          `6.2. Échange réciproque : Deux utilisateurs peuvent convenir d'un échange de services. Par exemple : une personne propose deux heures de bricolage ; une autre propose en contrepartie deux heures de cours de langue. Les utilisateurs déterminent librement les modalités de leur échange.`,
+          `6.3. Échange rémunéré : Un utilisateur ou un professionnel peut proposer une prestation contre rémunération. Lorsque le paiement est effectué par l'intermédiaire de Queer Services, les modalités tarifaires sont présentées avant la validation de la transaction. Le prestataire demeure responsable de la prestation proposée et du respect des obligations légales applicables à son activité.`,
         ],
       },
       {
-        heading: '7. Résiliation',
+        heading: '7. Paiement et commission de Queer Services',
         body: [
-          `Chaque membre peut supprimer son compte à tout moment depuis la page « Paramètres & confidentialité ». La suppression entraîne l'effacement définitif des données associées, sous réserve des obligations légales de conservation.`,
-          `${c.siteName} peut suspendre ou résilier un compte en cas de manquement grave ou répété aux présentes CGU.`,
+          `Lorsque le paiement d'une prestation est effectué directement sur Queer Services, celui-ci peut être réalisé par l'intermédiaire d'un prestataire de paiement partenaire.`,
+          `Queer Services prélève une commission de 5 % sur le montant de la transaction, sauf indication contraire affichée avant la validation du paiement.`,
+          `Le montant total facturé à l'utilisateur ainsi que, lorsque cela est pertinent, le montant revenant au prestataire sont présentés avant la confirmation de la transaction.`,
+          `Les frais éventuellement applicables sont indiqués de manière transparente avant le paiement.`,
+          `Les coordonnées bancaires peuvent être traitées directement par le prestataire de paiement. Queer Services ne demande jamais à un utilisateur de communiquer son numéro complet de carte bancaire dans la messagerie.`,
         ],
       },
       {
-        heading: '8. Évolution des CGU',
-        body: [`Les présentes CGU peuvent être mises à jour. Les membres seront informés de toute modification substantielle. Dernière mise à jour : ${c.lastUpdated}.`],
+        heading: '8. Réservation et prise de rendez-vous',
+        body: [
+          `Certaines prestations peuvent être réservées directement depuis l'Application. L'utilisateur peut notamment sélectionner : un professionnel ; un service ; une date ; un créneau horaire ; et, lorsque cela est applicable, un lieu.`,
+          `La réservation devient effective selon les modalités indiquées lors de la confirmation.`,
+          `Les conditions d'annulation, de modification et de remboursement sont présentées avant la validation de la réservation lorsqu'elles sont applicables.`,
+          `Lorsqu'une prestation est fournie par un professionnel, celui-ci demeure responsable de son exécution.`,
+        ],
       },
       {
-        heading: '9. Droit applicable',
-        body: [`Les présentes CGU sont soumises au droit français. À défaut de résolution amiable, les tribunaux français compétents seront seuls saisis.`],
+        heading: '9. Professionnels',
+        body: [
+          `Les professionnels proposant leurs services sur Queer Services sont responsables :`,
+          `• de l'exactitude des informations figurant sur leur profil ;`,
+          `• de leurs qualifications ;`,
+          `• de leurs autorisations professionnelles ;`,
+          `• de leur assurance lorsqu'elle est obligatoire ;`,
+          `• de leurs obligations fiscales et sociales ;`,
+          `• du respect de la réglementation applicable à leur profession ;`,
+          `• de la qualité et de la conformité des prestations fournies.`,
+          `Queer Services peut mettre en place des procédures de vérification des professionnels. Lorsqu'un professionnel est identifié comme « vérifié », cette vérification porte uniquement sur les éléments expressément indiqués par Queer Services. Elle ne signifie pas que Queer Services garantit la qualité de ses prestations.`,
+        ],
+      },
+      {
+        heading: '10. Professionnels de santé',
+        body: [
+          `Queer Services peut permettre à certains professionnels de santé de présenter leur activité, de proposer des créneaux de rendez-vous et, lorsque la fonctionnalité est disponible, de recevoir le paiement d'une consultation ou d'une prestation.`,
+          `Les professionnels de santé demeurent entièrement responsables de l'exercice de leur profession. Queer Services : ne réalise aucun acte médical ; ne pose aucun diagnostic ; ne délivre aucun conseil médical ; ne prescrit aucun traitement ; ne se substitue pas au professionnel de santé. La prise de rendez-vous via Queer Services ne constitue pas une consultation médicale.`,
+          `Urgence médicale : Queer Services n'est pas un service d'urgence. En cas d'urgence médicale, l'utilisateur doit contacter immédiatement les services d'urgence compétents.`,
+          `Données médicales : L'utilisateur ne doit pas utiliser la messagerie générale de Queer Services pour transmettre des informations médicales qui ne sont pas nécessaires à la prise de rendez-vous.`,
+          `Lorsque des données de santé sont traitées dans le cadre d'une fonctionnalité médicale, elles font l'objet de mesures de protection spécifiques et sont traitées conformément à la réglementation applicable. Les données de santé bénéficient d'une protection renforcée au titre du RGPD. Lorsque l'architecture technique implique l'hébergement par un tiers de données de santé recueillies dans le cadre d'activités de prévention, de diagnostic, de soins ou de suivi médico-social, les règles applicables à l'hébergement des données de santé doivent notamment être prises en compte.`,
+        ],
+      },
+      {
+        heading: '11. Messagerie',
+        body: [
+          `Queer Services met à disposition une messagerie destinée à faciliter les échanges entre utilisateurs et, lorsque cela est prévu, entre utilisateurs et professionnels. La messagerie doit être utilisée dans le respect des autres utilisateurs.`,
+          `Sont notamment interdits : les menaces ; le harcèlement ; les insultes ; les propos haineux ; les comportements LGBTQIAphobes ; les propos racistes ou discriminatoires ; les contenus sexuels non sollicités ; les tentatives d'escroquerie ; l'usurpation d'identité ; la diffusion non autorisée de données personnelles ; les sollicitations frauduleuses ; les tentatives de contournement du système de paiement ; tout contenu ou comportement contraire à la loi.`,
+          `Queer Services peut mettre en place des dispositifs de détection, de signalement et de modération afin de préserver la sécurité de ses utilisateurs. Les données de messagerie peuvent être conservées pendant une durée proportionnée aux finalités de sécurité, de prévention des abus, de gestion des litiges et de respect des obligations légales. Les modalités précises sont définies dans la Politique de confidentialité.`,
+        ],
+      },
+      {
+        heading: '12. Règles de la communauté',
+        body: [
+          `Queer Services souhaite favoriser un environnement fondé sur la solidarité, la confiance et le respect. Tout utilisateur doit adopter un comportement respectueux.`,
+          `Sont notamment interdits les comportements visant à : intimider une personne ; l'exclure ou l'humilier en raison de son identité ou de son expression de genre ; la harceler en raison de son orientation sexuelle ; tenir des propos transphobes, homophobes, lesbophobes, biphobes ou plus généralement LGBTQIAphobes ; publier des informations permettant d'identifier ou de localiser une personne sans son accord ; exercer une pression ou une menace sur un autre utilisateur.`,
+          `Ces règles s'appliquent à tous les utilisateurs, qu'ils soient LGBTQIA+ ou non.`,
+        ],
+      },
+      {
+        heading: '13. Avis et évaluations',
+        body: [
+          `Lorsque la fonctionnalité est disponible, les utilisateurs peuvent publier une évaluation à la suite d'une prestation ou d'un échange. Les avis doivent être sincères et correspondre à une expérience réelle.`,
+          `Il est notamment interdit : de publier un faux avis ; de publier un avis contre rémunération lorsque cela n'est pas clairement autorisé ; de publier plusieurs avis artificiels ; de menacer une personne pour obtenir ou supprimer un avis ; de publier des données personnelles d'un tiers ; de publier des propos discriminatoires ou injurieux.`,
+          `Queer Services peut retirer un avis qui ne respecte pas les présentes CGU ou la réglementation applicable.`,
+        ],
+      },
+      {
+        heading: '14. Localisation',
+        body: [
+          `Queer Services peut utiliser la localisation de l'utilisateur afin de faciliter la recherche de services à proximité.`,
+          `La localisation peut être présentée sous une forme approximative afin d'éviter de révéler inutilement l'adresse exacte d'un utilisateur. Sauf nécessité particulière et consentement approprié, l'adresse personnelle exacte d'un utilisateur ne doit pas être publiquement affichée sur son profil.`,
+          `Les modalités de collecte et d'utilisation des données de localisation sont détaillées dans la Politique de confidentialité.`,
+        ],
+      },
+      {
+        heading: '15. Contenus publiés',
+        body: [
+          `Les utilisateurs peuvent publier des photographies, descriptions, annonces, informations relatives à leurs compétences, évaluations et autres contenus autorisés.`,
+          `L'utilisateur garantit disposer des droits nécessaires pour publier ces contenus. Il reste responsable des contenus qu'il publie.`,
+          `L'utilisateur autorise Queer Services à héberger, reproduire et représenter ces contenus uniquement dans la mesure nécessaire au fonctionnement de la plateforme.`,
+        ],
+      },
+      {
+        heading: '16. Signalement et modération',
+        body: [
+          `Un mécanisme de signalement permet aux utilisateurs de signaler un profil, un contenu, une conversation ou un comportement problématique.`,
+          `Les signalements peuvent notamment concerner : une fraude ; une menace ; un comportement dangereux ; une discrimination ; du harcèlement ; un contenu illégal ; une usurpation d'identité ; une violation des présentes CGU.`,
+          `Queer Services peut prendre les mesures nécessaires, notamment : supprimer un contenu ; limiter certaines fonctionnalités ; avertir un utilisateur ; suspendre temporairement un compte ; résilier définitivement un compte ; empêcher la création d'un nouveau compte ; transmettre certaines informations aux autorités compétentes lorsque la loi l'impose ou l'autorise.`,
+        ],
+      },
+      {
+        heading: '17. Responsabilité des utilisateurs',
+        body: [
+          `Chaque utilisateur est responsable des services qu'il propose et des engagements qu'il prend auprès d'un autre utilisateur.`,
+          `Queer Services n'est pas responsable : de la qualité d'une prestation fournie par un utilisateur ; de la disponibilité d'un prestataire ; du comportement d'un utilisateur ; de l'exactitude des informations publiées par un utilisateur ; des dommages résultant directement d'une prestation réalisée par un utilisateur ; d'un échange privé conclu en dehors des fonctionnalités de la plateforme.`,
+          `Cette limitation s'applique sous réserve des dispositions légales impératives.`,
+        ],
+      },
+      {
+        heading: '18. Responsabilité de Queer Services',
+        body: [
+          `Queer Services met en œuvre des moyens raisonnables afin d'assurer le fonctionnement et la sécurité de la plateforme. Cependant, aucune garantie de disponibilité permanente ne peut être donnée.`,
+          `L'accès à la plateforme peut notamment être interrompu en raison : d'opérations de maintenance ; de mises à jour ; de difficultés techniques ; d'incidents de sécurité ; d'événements indépendants de la volonté de Queer Services.`,
+          `Queer Services ne garantit pas qu'un utilisateur trouvera un prestataire ou obtiendra une réponse à sa demande.`,
+        ],
+      },
+      {
+        heading: '19. Propriété intellectuelle',
+        body: [
+          `L'ensemble des éléments composant Queer Services, notamment son nom, sa marque, son logo, son interface, son architecture, ses logiciels, ses bases de données, ses textes et ses éléments graphiques, sont protégés par les dispositions applicables en matière de propriété intellectuelle. Toute reproduction ou exploitation non autorisée est interdite.`,
+        ],
+      },
+      {
+        heading: '20. Données personnelles',
+        body: [
+          `Queer Services traite des données personnelles nécessaires à la création des comptes, au fonctionnement de la mise en relation, à la réservation, au paiement, à la messagerie, à la sécurité et à l'amélioration du service.`,
+          `Certaines données susceptibles d'être renseignées volontairement par les utilisateurs peuvent constituer des données sensibles, notamment lorsqu'elles révèlent l'orientation sexuelle ou concernent la santé. La collecte de telles données doit être strictement encadrée et limitée à ce qui est nécessaire aux finalités poursuivies.`,
+          `Les modalités précises des traitements sont détaillées dans la Politique de confidentialité de Queer Services.`,
+        ],
+      },
+      {
+        heading: '21. Sécurité des données',
+        body: [
+          `Queer Services met en œuvre des mesures techniques et organisationnelles appropriées afin de protéger les données personnelles contre les accès non autorisés, la perte, l'altération ou la divulgation. Les mesures de sécurité sont adaptées à la nature et à la sensibilité des données traitées.`,
+          `Une attention particulière est accordée aux données susceptibles de révéler l'orientation sexuelle ainsi qu'aux données de santé. Lorsque des traitements présentent un risque élevé pour les droits et libertés des personnes, une analyse d'impact relative à la protection des données peut être nécessaire.`,
+        ],
+      },
+      {
+        heading: '22. Droit de rétractation et annulation',
+        body: [
+          `Lorsque l'utilisateur contracte avec un professionnel à distance, les dispositions du Code de la consommation relatives au droit de rétractation peuvent être applicables, sous réserve des exceptions prévues par la loi. Les conditions peuvent notamment différer selon la nature du service et la date à laquelle celui-ci doit être exécuté.`,
+          `Lorsque le droit de rétractation est applicable, l'utilisateur reçoit les informations nécessaires avant la conclusion du contrat. Le droit de rétractation peut notamment être soumis à des exceptions prévues par le Code de la consommation pour certaines prestations.`,
+          `Les conditions particulières d'annulation et de remboursement sont présentées avant la validation d'une réservation lorsqu'elles sont applicables.`,
+        ],
+      },
+      {
+        heading: '23. Suppression et suspension du compte',
+        body: [
+          `L'utilisateur peut demander la suppression de son compte selon les fonctionnalités disponibles.`,
+          `Queer Services peut suspendre ou résilier un compte notamment en cas : de violation des présentes CGU ; de fraude ; de comportement dangereux ; de harcèlement ; de discrimination ; de contournement des paiements ; d'utilisation illicite de la plateforme ; d'atteinte à la sécurité du service.`,
+          `Lorsque les circonstances le permettent, l'utilisateur est informé des motifs de la mesure prise.`,
+        ],
+      },
+      {
+        heading: '24. Modification des CGU',
+        body: [
+          `Queer Services peut modifier les présentes CGU afin de tenir compte de l'évolution : de la réglementation ; des fonctionnalités ; des modalités de paiement ; des mécanismes de sécurité ; des services proposés.`,
+          `Les utilisateurs sont informés des modifications dans des conditions adaptées à leur importance. Lorsque cela est requis, une nouvelle acceptation des CGU pourra être demandée.`,
+        ],
+      },
+      {
+        heading: '25. Réclamations',
+        body: [
+          `Toute réclamation peut être adressée à : ${c.contactEmail}`,
+          `L'utilisateur est invité à fournir toutes les informations nécessaires au traitement de sa demande.`,
+          `Lorsqu'un litige relève de la médiation de la consommation, l'utilisateur consommateur pourra recourir au dispositif de médiation applicable au professionnel concerné, dans les conditions prévues par la réglementation.`,
+        ],
+      },
+      {
+        heading: '26. Droit applicable',
+        body: [
+          `Les présentes CGU sont soumises au droit français. Lorsqu'un utilisateur bénéficie de dispositions impératives protectrices en qualité de consommateur, celles-ci demeurent applicables. Les règles de compétence juridictionnelle applicables détermineront la juridiction compétente en cas de litige.`,
+        ],
+      },
+      {
+        heading: '27. Acceptation',
+        body: [
+          `La création d'un compte ou l'utilisation de Queer Services implique l'acceptation des présentes CGU. Lorsque cela est requis, l'utilisateur doit confirmer expressément son acceptation en cochant la case prévue à cet effet.`,
+          `L'utilisateur reconnaît avoir eu la possibilité de consulter les présentes CGU avant d'utiliser la plateforme.`,
+        ],
       },
     ],
   },

@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { supabase, edgeFunctionErrorMessage, invokeEdgeFunction } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
 import { PriceInput } from '@/components/PriceInput';
 import { X, Send, AlertTriangle, Sparkles } from 'lucide-react';
 
-const PAYMENTS_ENABLED = !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
 interface MissionForModal {
   id: string;
@@ -114,22 +113,7 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
       return;
     }
 
-    const rateValue = Number(rateAmount.trim().replace(',', '.'));
-    if (PAYMENTS_ENABLED && rateAmount.trim() && Number.isFinite(rateValue) && rateValue >= 1) {
-      const { error: fnErr } = await invokeEdgeFunction('stripe-request-payment', {
-        connection_id: connId,
-        amount: Math.round(rateValue * 100),
-        description: `Tarif proposé pour « ${mission.title} » : ${rateAmount.trim()}€ ${rateUnit}`,
-        role: 'payee',
-      });
-      setLoading(false);
-      if (fnErr) {
-        setError(await edgeFunctionErrorMessage(fnErr, "Votre candidature a été envoyée, mais le tarif n'a pas pu être proposé."));
-        return;
-      }
-    } else {
-      setLoading(false);
-    }
+    setLoading(false);
 
     onClose();
     navigate(`/messages/${connId}`);
@@ -163,7 +147,6 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
               autoFocus
             />
           </div>
-          {PAYMENTS_ENABLED && (
             <div>
               <label className="label">Proposer un tarif (optionnel)</label>
               <div className="grid grid-cols-2 gap-2 mt-1">
@@ -180,11 +163,9 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
                 </select>
               </div>
               <p className="mt-1.5 text-xs text-neutral-400">
-                Comme sur une demande de devis : l'auteur·e de la mission pourra accepter ce prix, vous faire une
-                contre-offre, ou refuser — directement depuis la conversation.
+                L'auteur·e de la mission pourra lire votre proposition dans la conversation pour en discuter.
               </p>
             </div>
-          )}
         </div>
         {error && (
           <div className="mt-4 flex items-start gap-2 rounded-xl bg-warning-50 p-3 text-sm text-warning-800">

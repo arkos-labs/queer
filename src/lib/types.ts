@@ -29,9 +29,6 @@ export interface Profile {
   identity_document_path: string | null;
   profile_status: ProfileStatus;
   is_admin: boolean;
-  stripe_account_id: string | null;
-  stripe_charges_enabled: boolean;
-  stripe_payouts_enabled: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -154,24 +151,6 @@ export interface PlaceReview {
   place?: Pick<Place, 'id' | 'name'>;
 }
 
-export type PaymentStatus = 'pending' | 'authorized' | 'captured' | 'canceled' | 'failed' | 'refunded';
-
-export interface Payment {
-  id: string;
-  connection_id: string;
-  payer_id: string;
-  payee_id: string;
-  description: string | null;
-  amount: number;
-  currency: string;
-  platform_fee_amount: number;
-  stripe_payment_intent_id: string | null;
-  status: PaymentStatus;
-  proposed_by: string;
-  scheduled_at: string | null;
-  created_at: string;
-  updated_at: string;
-}
 
 export interface Report {
   id: string;

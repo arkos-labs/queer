@@ -1,15 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
-import { supabase, edgeFunctionErrorMessage, invokeEdgeFunction, PUBLIC_PROFILE_COLUMNS } from '@/lib/supabase';
+import { supabase, PUBLIC_PROFILE_COLUMNS } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import type { Connection, Message, Profile, Payment } from '@/lib/types';
+import type { Connection, Message, Profile } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
-import { PayNowModal } from '@/components/PayNowModal';
-import { PaymentOfferCard } from '@/components/PaymentOfferCard';
 import { ReviewOfferCard } from '@/components/ReviewOfferCard';
 import { ReviewModal } from '@/components/ReviewModal';
 import { formatDate, timeAgo } from '@/lib/utils';
-import { ArrowLeft, Send, CheckCircle2, XCircle, Clock, Flag, CreditCard, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Send, CheckCircle2, XCircle, Clock, Flag, AlertTriangle } from 'lucide-react';
 
 const STATUS_META: Record<Connection['status'], { label: string; cls: string; icon: typeof Clock }> = {
   pending: { label: 'En attente', cls: 'bg-warning-100 text-warning-700', icon: Clock },
@@ -18,16 +16,6 @@ const STATUS_META: Record<Connection['status'], { label: string; cls: string; ic
   cancelled: { label: 'Annulée', cls: 'bg-neutral-100 text-neutral-500', icon: XCircle },
 };
 
-const PAYMENT_STATUS_META: Record<Payment['status'], { label: string; cls: string }> = {
-  pending: { label: 'En attente de paiement', cls: 'bg-warning-100 text-warning-700' },
-  authorized: { label: 'Carte autorisée', cls: 'bg-primary-100 text-primary-600' },
-  captured: { label: 'Payé', cls: 'bg-success-100 text-success-700' },
-  canceled: { label: 'Paiement annulé', cls: 'bg-neutral-100 text-neutral-500' },
-  failed: { label: 'Paiement échoué', cls: 'bg-error-100 text-error-700' },
-  refunded: { label: 'Remboursé', cls: 'bg-neutral-100 text-neutral-500' },
-};
-
-const formatEuros = (cents: number) => (cents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
 
 export function MessageThreadPage({ id }: { id: string }) {
   const { user, profile } = useAuth();
@@ -35,19 +23,14 @@ export function MessageThreadPage({ id }: { id: string }) {
   const [connection, setConnection] = useState<Connection | null>(null);
   const [other, setOther] = useState<Profile | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [payment, setPayment] = useState<Payment | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
   const [body, setBody] = useState('');
   const [sending, setSending] = useState(false);
-  const [payNowLoading, setPayNowLoading] = useState(false);
-  const [payNowSecret, setPayNowSecret] = useState<string | null>(null);
-  const [cancelPaymentLoading, setCancelPaymentLoading] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
-  const [paymentJustAuthorized, setPaymentJustAuthorized] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const footerRef = useRef<HTMLDivElement>(null);
@@ -76,16 +59,9 @@ export function MessageThreadPage({ id }: { id: string }) {
         setConnection(conn);
 
         const otherId = conn.user_a === user.id ? conn.user_b : conn.user_a;
-        const [otherRes, msgsRes, payRes, reviewRes] = await Promise.all([
+        const [otherRes, msgsRes, reviewRes] = await Promise.all([
           supabase.from('profiles').select(PUBLIC_PROFILE_COLUMNS).eq('id', otherId).maybeSingle(),
           supabase.from('messages').select('*').eq('connection_id', id).order('created_at', { ascending: true }),
-          supabase
-            .from('payments')
-            .select('*')
-            .eq('connection_id', id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle(),
           supabase
             .from('reviews')
             .select('id')
@@ -97,7 +73,6 @@ export function MessageThreadPage({ id }: { id: string }) {
         setOther((otherRes.data ?? null) as Profile | null);
         const msgs = (msgsRes.data ?? []) as Message[];
         setMessages(msgs);
-        setPayment((payRes.data ?? null) as Payment | null);
         setAlreadyReviewed(!!reviewRes.data);
         setLoading(false);
 
@@ -144,18 +119,7 @@ export function MessageThreadPage({ id }: { id: string }) {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length, payment?.status]);
-
-  // The card form closes as soon as Stripe confirms the authorization, but
-  // nothing else on screen changed yet at that exact instant (the sticky
-  // banner update and this effect fire in the same tick) — without an
-  // explicit acknowledgement it looked like the payment vanished. Show it
-  // briefly, then let the permanent "Carte autorisée" banner speak for itself.
-  useEffect(() => {
-    if (!paymentJustAuthorized) return;
-    const t = setTimeout(() => setPaymentJustAuthorized(false), 5000);
-    return () => clearTimeout(t);
-  }, [paymentJustAuthorized]);
+  }, [messages.length]);
 
   // The header (name row + optional payment banner + optional action row)
   // and footer (composer) are fixed-position, so the scrollable message list
@@ -176,7 +140,7 @@ export function MessageThreadPage({ id }: { id: string }) {
     ro.observe(header);
     ro.observe(footer);
     return () => ro.disconnect();
-  }, [connection?.status, payment, profile?.charte_accepted, alreadyReviewed]);
+  }, [connection?.status, profile?.charte_accepted, alreadyReviewed]);
 
   const sendMessage = async (e: FormEvent) => {
     e.preventDefault();
@@ -202,108 +166,17 @@ export function MessageThreadPage({ id }: { id: string }) {
     setBody('');
   };
 
-  const payNow = async () => {
-    if (!connection || !user) return;
-    setError(null);
-    setPayNowLoading(true);
-    const { data, error: fnErr } = await invokeEdgeFunction<{ client_secret?: string }>('stripe-create-payment', {
-      connection_id: connection.id,
-    });
-    setPayNowLoading(false);
-    if (fnErr) {
-      setError(await edgeFunctionErrorMessage(fnErr, 'Impossible de préparer le paiement.'));
-      return;
-    }
-    if (!data?.client_secret) {
-      setError('Impossible de préparer le paiement.');
-      return;
-    }
-    setPayNowSecret(data.client_secret);
-  };
-
-  const counterPayment = async (amountCents: number): Promise<string | null> => {
-    if (!connection || !user) return 'Erreur.';
-    const { data, error: fnErr } = await invokeEdgeFunction<{ payment?: Payment }>('stripe-counter-payment', {
-      connection_id: connection.id,
-      amount: amountCents,
-    });
-    if (fnErr) return await edgeFunctionErrorMessage(fnErr, "Impossible d'envoyer la contre-offre.");
-    if (data?.payment) setPayment(data.payment as Payment);
-    return null;
-  };
-
-  const cancelPayment = async () => {
-    if (!connection || !user || !payment) return;
-    setError(null);
-    setCancelPaymentLoading(true);
-    const { error: fnErr } = await invokeEdgeFunction('stripe-manage-payment', {
-      connection_id: connection.id,
-      action: 'cancel',
-    });
-    setCancelPaymentLoading(false);
-    if (fnErr) {
-      setError(await edgeFunctionErrorMessage(fnErr, "Le paiement n'a pas pu être annulé."));
-      return;
-    }
-    setPayment({ ...payment, status: 'canceled' });
-  };
-
   const updateStatus = async (status: Connection['status']) => {
     if (!connection || !user) return;
     setError(null);
-
-    // Money only moves when the client (payer) confirms completion — the
-    // provider can never capture their own payment.
-    if (status === 'completed' && payment && (payment.status === 'pending' || payment.status === 'authorized')) {
-      if (payment.payer_id !== user.id) {
-        setError('Seul·e le·la client·e qui a payé peut confirmer la fin de la prestation.');
-        return;
-      }
-      if (payment.status === 'pending') {
-        setError("Le paiement n'est pas encore confirmé — patientez avant de clôturer.");
-        return;
-      }
-      setStatusLoading(true);
-      const { error: fnErr } = await invokeEdgeFunction('stripe-manage-payment', {
-        connection_id: connection.id,
-        action: 'capture',
-      });
-      setStatusLoading(false);
-      if (fnErr) {
-        setError(await edgeFunctionErrorMessage(fnErr, "Le paiement n'a pas pu être capturé."));
-        return;
-      }
-      setPayment({ ...payment, status: 'captured' });
-      // The provider never sees the payer confirm+pay happen on their own
-      // screen in real time — post it as an actual message so it shows up
-      // as a follow-up notification in their Messages list (bumps
-      // connection.updated_at and counts as unread), not just a silent
-      // status change only visible if they happen to reopen the thread.
-      await supabase.from('messages').insert({
-        connection_id: connection.id,
-        sender_id: user.id,
-        body: `J'ai confirmé que la prestation a bien été réalisée et le paiement de ${formatEuros(payment.amount)} a été effectué. Merci !`,
-      });
-    }
-
-    if (status === 'cancelled' && payment && (payment.status === 'pending' || payment.status === 'authorized')) {
-      setStatusLoading(true);
-      const { error: fnErr } = await invokeEdgeFunction('stripe-manage-payment', {
-        connection_id: connection.id,
-        action: 'cancel',
-      });
-      setStatusLoading(false);
-      if (fnErr) {
-        setError(await edgeFunctionErrorMessage(fnErr, "Le paiement n'a pas pu être annulé."));
-        return;
-      }
-      setPayment({ ...payment, status: 'canceled' });
-    }
+    setStatusLoading(true);
 
     const { error: upErr } = await supabase
       .from('connections')
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', connection.id);
+      
+    setStatusLoading(false);
     if (!upErr) setConnection({ ...connection, status });
   };
 
@@ -327,31 +200,13 @@ export function MessageThreadPage({ id }: { id: string }) {
   const isPayer = payment ? payment.payer_id === user.id : isInitiator;
   const statusMeta = STATUS_META[connection.status];
 
-  type TimelineItem =
-    | { kind: 'message'; data: Message; created_at: string }
-    | { kind: 'payment'; data: Payment; created_at: string };
-  const timeline: TimelineItem[] = [
-    ...messages.map((m) => ({ kind: 'message' as const, data: m, created_at: m.created_at })),
-    ...(payment ? [{ kind: 'payment' as const, data: payment, created_at: payment.created_at }] : []),
-  ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  type TimelineItem = { kind: 'message'; data: Message; created_at: string };
+  const timeline: TimelineItem[] = messages
+    .map((m) => ({ kind: 'message' as const, data: m, created_at: m.created_at }))
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
   return (
     <div className="flex flex-col animate-fade-in min-h-screen bg-paper-base">
-      {payNowSecret && (
-        <PayNowModal
-          clientSecret={payNowSecret}
-          connectionId={connection.id}
-          amount={payment?.amount}
-          feeAmount={payment?.platform_fee_amount}
-          onClose={() => setPayNowSecret(null)}
-          onDone={() => {
-            setPayNowSecret(null);
-            if (payment) setPayment({ ...payment, status: 'authorized' });
-            setError(null);
-            setPaymentJustAuthorized(true);
-          }}
-        />
-      )}
       {reviewOpen && other && (
         <ReviewModal
           targetId={other.id}
@@ -383,32 +238,9 @@ export function MessageThreadPage({ id }: { id: string }) {
           </button>
         </div>
 
-        {payment && (
-          <div className="flex items-center gap-2 border-t border-gold-hairline bg-paper-base px-4 py-2 text-xs">
-            <CreditCard size={13} className="shrink-0 text-patina-deep" />
-            <span className="font-semibold text-ink-base">{formatEuros(payment.amount)}</span>
-            <span className={`inline-flex items-center rounded-full px-2 py-0.5 font-medium ${PAYMENT_STATUS_META[payment.status].cls}`}>
-              {PAYMENT_STATUS_META[payment.status].label}
-            </span>
-            {payment.status === 'pending' && !payment.stripe_payment_intent_id && (
-              <span className="text-patina-deep/80">
-                {connection.status === 'accepted'
-                  ? `en attente que ${isPayer ? 'vous payiez' : 'le client paye'}`
-                  : `en attente que ${isPayer ? 'le·la prestataire accepte' : 'vous acceptiez'} la mission`}
-              </span>
-            )}
-            {payment.status === 'pending' && payment.stripe_payment_intent_id && (
-              <span className="text-patina-deep/80">paiement en cours de confirmation…</span>
-            )}
-            {payment.status === 'authorized' && (
-              <span className="text-patina-deep/80">débité quand {isPayer ? 'vous confirmerez' : 'le client confirmera'} la fin de la prestation</span>
-            )}
-          </div>
-        )}
-
         {connection.status !== 'cancelled' && connection.status !== 'completed' && (
           <div className="flex flex-wrap items-center gap-2 border-t border-gold-hairline px-4 py-2 bg-white/40">
-            {connection.status === 'pending' && !isInitiator && !payment && (
+            {connection.status === 'pending' && !isInitiator && (
               <button
                 onClick={() => updateStatus('accepted')}
                 disabled={statusLoading}
@@ -417,32 +249,10 @@ export function MessageThreadPage({ id }: { id: string }) {
                 <CheckCircle2 size={14} /> {statusLoading ? 'Traitement…' : 'Accepter'}
               </button>
             )}
-            {connection.status === 'accepted' && payment && payment.status === 'pending' && !payment.stripe_payment_intent_id && (
-              isPayer ? (
-                <button onClick={payNow} disabled={payNowLoading} className="flex items-center gap-1.5 rounded-lg bg-ink-base px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:brightness-110">
-                  <CreditCard size={14} /> {payNowLoading ? 'Préparation…' : 'Payer maintenant'}
-                </button>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-gold-hairline px-3 py-1.5 text-xs font-medium text-ink-muted">
-                  <Clock size={13} /> En attente que le client règle le paiement
-                </span>
-              )
-            )}
-            {connection.status === 'accepted' && payment && payment.status === 'pending' && payment.stripe_payment_intent_id && (
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-gold-hairline px-3 py-1.5 text-xs font-medium text-ink-muted">
-                <Clock size={13} /> Paiement en cours de confirmation…
-              </span>
-            )}
-            {connection.status === 'accepted' && (!payment || payment.status === 'authorized') && (
-              payment && !isPayer ? (
-                <span className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-gold-hairline px-3 py-1.5 text-xs font-medium text-ink-muted">
-                  <Clock size={13} /> En attente que le client confirme la fin de la prestation
-                </span>
-              ) : (
+            {connection.status === 'accepted' && (
                 <button onClick={() => updateStatus('completed')} disabled={statusLoading} className="btn-outline btn-sm">
-                  <CheckCircle2 size={14} /> {statusLoading ? 'Traitement…' : payment ? 'Confirmer la fin & payer' : 'Marquer terminée'}
+                  <CheckCircle2 size={14} /> {statusLoading ? 'Traitement…' : 'Marquer terminée'}
                 </button>
-              )
             )}
             <button onClick={() => updateStatus('cancelled')} disabled={statusLoading} className="btn-ghost btn-sm text-error-600 hover:bg-error-50">
               <XCircle size={14} /> Annuler
@@ -466,47 +276,28 @@ export function MessageThreadPage({ id }: { id: string }) {
             const prev = timeline[i - 1];
             const showDate = !prev || new Date(prev.created_at).toDateString() !== new Date(item.created_at).toDateString();
             return (
-              <div key={item.kind === 'message' ? item.data.id : `payment-${item.data.id}`}>
+              <div key={item.data.id}>
                 {showDate && (
                   <p className="my-3 text-center text-xs font-medium text-patina-deep">{formatDate(item.created_at)}</p>
                 )}
-                {item.kind === 'payment' ? (
-                  <PaymentOfferCard
-                    payment={item.data}
-                    connectionStatus={connection.status}
-                    currentUserId={user.id}
-                    otherName={other?.display_name?.split(' ')[0] ?? 'l\'autre membre'}
-                    isPayer={isPayer}
-                    statusLoading={statusLoading}
-                    payNowLoading={payNowLoading}
-                    onAccept={() => updateStatus('accepted')}
-                    onRefuse={() => updateStatus('cancelled')}
-                    onPayNow={payNow}
-                    onCompleteAndPay={() => updateStatus('completed')}
-                    onCounter={counterPayment}
-                    onCancelPayment={cancelPayment}
-                    cancelLoading={cancelPaymentLoading}
-                  />
-                ) : (
-                  (() => {
-                    const m = item.data;
-                    const mine = m.sender_id === user.id;
-                    return (
-                      <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                        <div
-                          className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm shadow-sm border border-gold-hairline ${
-                            mine
-                              ? 'rounded-br-sm bg-patina-deep text-white'
-                              : 'rounded-bl-sm bg-white text-ink-base'
-                          }`}
-                        >
-                          <p className="whitespace-pre-wrap break-words">{m.body}</p>
-                          <p className={`mt-1 text-[10px] ${mine ? 'text-white/80' : 'text-patina-deep'}`}>{timeAgo(m.created_at)}</p>
-                        </div>
+                {(() => {
+                  const m = item.data;
+                  const mine = m.sender_id === user.id;
+                  return (
+                    <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+                      <div
+                        className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm shadow-sm border border-gold-hairline ${
+                          mine
+                            ? 'rounded-br-sm bg-patina-deep text-white'
+                            : 'rounded-bl-sm bg-white text-ink-base'
+                        }`}
+                      >
+                        <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                        <p className={`mt-1 text-[10px] ${mine ? 'text-white/80' : 'text-patina-deep'}`}>{timeAgo(m.created_at)}</p>
                       </div>
-                    );
-                  })()
-                )}
+                    </div>
+                  );
+                })()}
               </div>
             );
           })
@@ -522,15 +313,7 @@ export function MessageThreadPage({ id }: { id: string }) {
         <div ref={bottomRef} />
       </div>
 
-      {paymentJustAuthorized && payment && (
-        <div className="mx-4 mb-2 flex items-start gap-2 rounded-xl bg-success-50 p-3 text-sm text-success-700">
-          <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
-          <span>
-            Carte autorisée pour {formatEuros(payment.amount + payment.platform_fee_amount)} (dont {formatEuros(payment.platform_fee_amount)} de
-            frais de service). Le débit aura lieu une fois la prestation confirmée terminée.
-          </span>
-        </div>
-      )}
+
 
       {error && (
         <div className="mx-4 mb-2 flex items-start gap-2 rounded-xl bg-error-50 p-3 text-sm text-error-700">

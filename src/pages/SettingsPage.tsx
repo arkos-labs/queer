@@ -12,9 +12,6 @@ export function SettingsPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [stripeLoading, setStripeLoading] = useState(false);
-  const [stripeError, setStripeError] = useState<string | null>(null);
-  const [syncingStripe, setSyncingStripe] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [uploadingId, setUploadingId] = useState(false);
   const [idError, setIdError] = useState<string | null>(null);
@@ -76,13 +73,8 @@ export function SettingsPage() {
   };
 
   useEffect(() => {
-    // Coming back from the Stripe onboarding flow — pull the account's
-    // current charges_enabled/payouts_enabled directly from Stripe (more
-    // reliable than waiting on a webhook) then refresh the local profile.
-    if (window.location.hash.includes('stripe=return')) {
-      supabase.functions.invoke('stripe-sync-account').finally(() => refreshProfile());
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Empty useEffect or remove it, wait, it has nothing left.
+    // I'll just leave it empty.
   }, []);
 
   if (!user) {
@@ -90,34 +82,7 @@ export function SettingsPage() {
     return null;
   }
 
-  const startStripeOnboarding = async () => {
-    setStripeLoading(true);
-    setStripeError(null);
-    const base = window.location.origin + window.location.pathname;
-    const { data, error: fnErr } = await supabase.functions.invoke('stripe-connect-onboarding', {
-      body: {
-        return_url: `${base}#/parametres?stripe=return`,
-        refresh_url: `${base}#/parametres?stripe=refresh`,
-      },
-    });
-    setStripeLoading(false);
-    if (fnErr) {
-      setStripeError(await edgeFunctionErrorMessage(fnErr, "Impossible de démarrer la configuration des paiements. Réessayez plus tard."));
-      return;
-    }
-    if (!data?.url) {
-      setStripeError("Impossible de démarrer la configuration des paiements. Réessayez plus tard.");
-      return;
-    }
-    window.location.href = data.url;
-  };
 
-  const syncStripeStatus = async () => {
-    setSyncingStripe(true);
-    await supabase.functions.invoke('stripe-sync-account');
-    await refreshProfile();
-    setSyncingStripe(false);
-  };
 
   const uploadIdentityDocument = async (file: File) => {
     if (!user) return;
@@ -322,51 +287,7 @@ export function SettingsPage() {
           </div>
         </div>
 
-        {/* Payments */}
-        <div className="card p-6 md:p-8">
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
-              <CreditCard size={20} />
-            </div>
-            <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="font-display text-lg font-semibold text-neutral-900">Recevoir des paiements</h2>
-                {profile?.stripe_charges_enabled ? (
-                  <span className="badge-chip bg-success-100 text-success-700">
-                    <CheckCircle2 size={12} /> Activé
-                  </span>
-                ) : profile?.stripe_account_id ? (
-                  <span className="badge-chip bg-warning-100 text-warning-700">
-                    <Clock size={12} /> Configuration en cours
-                  </span>
-                ) : null}
-              </div>
-              <p className="mt-1 text-sm text-neutral-500">
-                Activez les paiements pour pouvoir être payé·e directement dans l'app quand un membre vous demande un
-                service payant (ex. montage de meuble). Vos coordonnées bancaires et votre pièce d'identité sont
-                gérées par notre prestataire de paiement sécurisé et ne transitent jamais par Queer Service.
-              </p>
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <button onClick={startStripeOnboarding} disabled={stripeLoading} className="btn-outline">
-                  <CreditCard size={16} />
-                  {stripeLoading
-                    ? 'Redirection…'
-                    : profile?.stripe_charges_enabled
-                      ? 'Gérer mon compte de paiement'
-                      : profile?.stripe_account_id
-                        ? 'Continuer la configuration'
-                        : 'Activer les paiements'}
-                </button>
-                {profile?.stripe_account_id && !profile?.stripe_charges_enabled && (
-                  <button onClick={syncStripeStatus} disabled={syncingStripe} className="btn-ghost text-sm">
-                    {syncingStripe ? 'Vérification…' : 'Rafraîchir le statut'}
-                  </button>
-                )}
-              </div>
-              {stripeError && <p className="mt-3 text-sm text-error-600">{stripeError}</p>}
-            </div>
-          </div>
-        </div>
+
 
         {/* Export */}
         <div className="card p-6 md:p-8">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase, edgeFunctionErrorMessage, invokeEdgeFunction } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
 import type { Profile } from '@/lib/types';
@@ -188,26 +188,7 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
       return;
     }
 
-    const { data, error: fnErr } = await invokeEdgeFunction<{ payment_id?: string }>('stripe-request-payment', {
-      connection_id: connId,
-      amount: Math.round(priceValue * 100),
-      description: description.trim(),
-      scheduled_at: scheduledAtIso,
-      service_date: serviceDate || null,
-      service_time: serviceSlot === 'exact' ? serviceTime : serviceSlot || null,
-      service_location: serviceLocation.trim() || null,
-    });
-
     setLoading(false);
-
-    if (fnErr) {
-      setError(await edgeFunctionErrorMessage(fnErr, "Impossible d'envoyer la demande."));
-      return;
-    }
-    if (!data?.payment_id) {
-      setError("Impossible d'envoyer la demande.");
-      return;
-    }
 
     onClose();
     navigate(`/messages/${connId}`);
@@ -221,7 +202,7 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
       <div className="card relative z-10 w-full max-w-md animate-scale-in p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <h3 id="payment-request-title" className="font-display text-lg font-semibold text-neutral-900 flex items-center gap-2">
-            <CreditCard size={18} className="text-primary-600" /> Demander un service payant
+            <MessageSquare size={18} className="text-primary-600" /> Demander un devis
           </h3>
           <button onClick={onClose} aria-label="Fermer" className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-100">
             <X size={18} />
@@ -268,8 +249,7 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
             {!showDuplicateNotice && (
               <>
                 <p className="mt-2 text-sm text-neutral-500">
-                  Décrivez le service et proposez un prix. {target.display_name} recevra votre demande et devra
-                  d'abord l'accepter — vous ne serez invité·e à entrer votre carte qu'une fois la mission acceptée.
+                  Décrivez le service et proposez un prix. {target.display_name} recevra votre demande dans la messagerie.
                 </p>
 
                 <div className="mt-4 space-y-4">
