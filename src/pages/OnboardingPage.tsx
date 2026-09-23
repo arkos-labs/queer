@@ -3,7 +3,7 @@ import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
 import { supabase } from '@/lib/supabase';
 import type { AccountType, Civilite, Profile } from '@/lib/types';
-import { Heart, ShieldCheck, ArrowRight, ArrowLeft, CheckCircle2, Sparkles, Search, HandHeart, Plus, X, LogOut } from 'lucide-react';
+import { Heart, ShieldCheck, ArrowRight, ArrowLeft, CheckCircle2, Sparkles, Search, HandHeart, Plus, X, LogOut, Compass } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PriceInput } from '@/components/PriceInput';
 
@@ -49,6 +49,7 @@ export function OnboardingPage() {
   const [civilite, setCivilite] = useState<Civilite | null>(null);
   const [accountType, setAccountType] = useState<AccountType>('particulier');
   const [selectedIntents, setSelectedIntents] = useState<Set<Intent>>(new Set());
+  const [noneSelected, setNoneSelected] = useState(false);
   const [skills, setSkills] = useState<string[]>([]);
   const [needs, setNeeds] = useState<string[]>([]);
   const [rateAmount, setRateAmount] = useState('');
@@ -275,11 +276,14 @@ export function OnboardingPage() {
                   <button
                     key={t.value}
                     type="button"
-                    onClick={() => setSelectedIntents((prev) => {
-                      const next = new Set(prev);
-                      if (next.has(t.value)) next.delete(t.value); else next.add(t.value);
-                      return next;
-                    })}
+                    onClick={() => {
+                      setNoneSelected(false);
+                      setSelectedIntents((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(t.value)) next.delete(t.value); else next.add(t.value);
+                        return next;
+                      });
+                    }}
                     className={cn(
                       'flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition-all shadow-sm',
                       selectedIntents.has(t.value)
@@ -297,6 +301,29 @@ export function OnboardingPage() {
                     </div>
                   </button>
                 ))}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedIntents(new Set());
+                    setNoneSelected(true);
+                  }}
+                  className={cn(
+                    'flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition-all shadow-sm',
+                    noneSelected
+                      ? 'border-patina-deep bg-paper-base ring-2 ring-patina-deep/20'
+                      : 'border-gold-hairline bg-white/80 hover:bg-paper-base',
+                  )}
+                >
+                  <Compass size={20} className="mt-0.5 shrink-0 text-patina-deep" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-ink-base">Aucun des deux</span>
+                      {noneSelected && <CheckCircle2 size={16} className="text-patina-deep" />}
+                    </div>
+                    <p className="mt-0.5 text-sm text-ink-muted">Je préfère explorer avant de me décider.</p>
+                  </div>
+                </button>
               </div>
 
               {selectedIntents.has('offering') && (
