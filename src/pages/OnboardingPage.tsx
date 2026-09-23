@@ -7,12 +7,11 @@ import { Heart, ShieldCheck, ArrowRight, ArrowLeft, CheckCircle2, Sparkles, Sear
 import { cn } from '@/lib/utils';
 import { PriceInput } from '@/components/PriceInput';
 
-type Intent = 'seeking' | 'offering' | 'both';
+type Intent = 'seeking' | 'offering';
 
 const intents: { value: Intent; label: string; desc: string; icon: typeof Search }[] = [
   { value: 'seeking', label: 'Je cherche un service', desc: 'J\'ai besoin d\'aide pour quelque chose.', icon: Search },
   { value: 'offering', label: 'Je propose un service', desc: 'J\'ai des compétences à offrir à la communauté.', icon: HandHeart },
-  { value: 'both', label: 'Les deux', desc: 'Je cherche et je propose selon les moments.', icon: Heart },
 ];
 
 const civilites: { value: Civilite; label: string }[] = [
@@ -48,9 +47,8 @@ export function OnboardingPage() {
   const [displayName, setDisplayName] = useState('');
   const [city, setCity] = useState('');
   const [civilite, setCivilite] = useState<Civilite | null>(null);
-  const [pronouns, setPronouns] = useState('');
   const [accountType, setAccountType] = useState<AccountType>('particulier');
-  const [intent, setIntent] = useState<Intent | null>(null);
+  const [selectedIntents, setSelectedIntents] = useState<Set<Intent>>(new Set());
   const [skills, setSkills] = useState<string[]>([]);
   const [needs, setNeeds] = useState<string[]>([]);
   const [rateAmount, setRateAmount] = useState('');
@@ -110,7 +108,7 @@ export function OnboardingPage() {
         email: user.email,
         civilite,
         city: city.trim() || null,
-        pronouns: pronouns || null,
+        pronouns: null,
         account_type: accountType,
         skills,
         needs,
@@ -134,7 +132,7 @@ export function OnboardingPage() {
   const next = () => setStep((s) => s + 1);
   const back = () => setStep((s) => Math.max(0, s - 1));
 
-  const canProceed = step === 0 ? displayName.trim().length > 0 : step === 2 ? !!intent : step === 3 ? charteAccepted : true;
+  const canProceed = step === 0 ? displayName.trim().length > 0 : step === 3 ? charteAccepted : true;
 
   return (
     <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-paper-base px-4 py-12">
@@ -221,16 +219,6 @@ export function OnboardingPage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="label">Pronoms (optionnel)</label>
-                  <input
-                    value={pronouns}
-                    onChange={(e) => setPronouns(e.target.value)}
-                    className="input"
-                    placeholder="Ex. iel / elle / il / ils / elles"
-                  />
-                  <p className="mt-1.5 text-xs text-patina-deep/70">Personnalisable au-delà de M./Mme/Iel.</p>
-                </div>
               </div>
             </div>
           )}
@@ -279,7 +267,7 @@ export function OnboardingPage() {
                   <Search size={22} />
                 </div>
                 <h2 className="font-display text-2xl font-semibold text-ink-base">Que viens-tu faire ici ?</h2>
-                <p className="mt-2 text-sm text-ink-muted">Ça nous aide à personnaliser ton profil. Modifiable à tout moment.</p>
+                <p className="mt-2 text-sm text-ink-muted">Ça nous aide à personnaliser ton profil. Modifiable à tout moment. Plusieurs choix possibles.</p>
               </div>
 
               <div className="space-y-3">
@@ -287,10 +275,14 @@ export function OnboardingPage() {
                   <button
                     key={t.value}
                     type="button"
-                    onClick={() => setIntent(t.value)}
+                    onClick={() => setSelectedIntents((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(t.value)) next.delete(t.value); else next.add(t.value);
+                      return next;
+                    })}
                     className={cn(
                       'flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition-all shadow-sm',
-                      intent === t.value
+                      selectedIntents.has(t.value)
                         ? 'border-patina-deep bg-paper-base ring-2 ring-patina-deep/20'
                         : 'border-gold-hairline bg-white/80 hover:bg-paper-base',
                     )}
@@ -299,7 +291,7 @@ export function OnboardingPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-ink-base">{t.label}</span>
-                        {intent === t.value && <CheckCircle2 size={16} className="text-patina-deep" />}
+                        {selectedIntents.has(t.value) && <CheckCircle2 size={16} className="text-patina-deep" />}
                       </div>
                       <p className="mt-0.5 text-sm text-ink-muted">{t.desc}</p>
                     </div>
@@ -307,7 +299,7 @@ export function OnboardingPage() {
                 ))}
               </div>
 
-              {(intent === 'offering' || intent === 'both') && (
+              {selectedIntents.has('offering') && (
                 <div className="mt-5 animate-slide-up">
                   <label className="label">Ce que tu proposes</label>
                   <div className="flex gap-2">
@@ -361,7 +353,7 @@ export function OnboardingPage() {
                 </div>
               )}
 
-              {(intent === 'seeking' || intent === 'both') && (
+              {selectedIntents.has('seeking') && (
                 <div className="mt-5 animate-slide-up">
                   <label className="label">Ce que tu recherches</label>
                   <div className="flex gap-2">
