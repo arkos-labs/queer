@@ -54,42 +54,42 @@ function CategoryTile({
         e.preventDefault();
         onNavigate(to);
       }}
-      className="group flex flex-col items-center justify-between gap-3 py-6 px-3 rounded-2xl bg-white text-center transition-all duration-200 overflow-hidden"
-      style={{
-        border: '1px solid rgba(0,0,0,0.07)',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
-        minHeight: '220px',
-      }}
+      className="group flex flex-col items-center gap-3 py-4 px-2 text-center transition-all duration-200"
       onMouseEnter={e => {
-        (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)';
-        (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 32px -8px rgba(0,0,0,0.1), 0 16px 48px -12px rgba(124,58,237,0.14)';
-        (e.currentTarget as HTMLElement).style.borderColor = `${color}40`;
+        (e.currentTarget.querySelector('[data-circle]') as HTMLElement).style.transform = 'translateY(-4px) scale(1.03)';
+        (e.currentTarget.querySelector('[data-circle]') as HTMLElement).style.boxShadow = `0 8px 32px -8px rgba(0,0,0,0.14), 0 16px 48px -12px ${color}40`;
       }}
       onMouseLeave={e => {
-        (e.currentTarget as HTMLElement).style.transform = '';
-        (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 4px rgba(0,0,0,0.05)';
-        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,0,0,0.07)';
+        (e.currentTarget.querySelector('[data-circle]') as HTMLElement).style.transform = '';
+        (e.currentTarget.querySelector('[data-circle]') as HTMLElement).style.boxShadow = '0 1px 4px rgba(0,0,0,0.08)';
       }}
     >
-      {currentSrc && !hasFailed ? (
-        <div className="w-full h-32 sm:h-40 flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
+      <div
+        data-circle
+        className="w-full aspect-square rounded-full bg-white flex items-center justify-center overflow-hidden transition-all duration-200"
+        style={{
+          border: '1px solid rgba(0,0,0,0.07)',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+        }}
+      >
+        {currentSrc && !hasFailed ? (
           <img
             src={currentSrc}
             alt={label}
-            className="w-full h-full object-contain filter drop-shadow-md transition-transform duration-200"
-            style={{ transform: `scale(${scale})` }}
+            className="w-full h-full object-contain"
+            style={{ transform: `scale(${scale * 0.72})` }}
             onError={handleError}
           />
-        </div>
-      ) : (
-        <div
-          className="h-16 w-16 rounded-2xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110 my-auto"
-          style={{ background: bg }}
-        >
-          <Icon size={28} style={{ color }} strokeWidth={1.75} />
-        </div>
-      )}
-      <span className="text-[12px] sm:text-[13px] font-extrabold text-neutral-800 leading-snug line-clamp-2 mt-auto">
+        ) : (
+          <div
+            className="h-1/2 w-1/2 rounded-full flex items-center justify-center"
+            style={{ background: bg }}
+          >
+            <Icon size={28} style={{ color }} strokeWidth={1.75} />
+          </div>
+        )}
+      </div>
+      <span className="text-[12px] sm:text-[13px] font-extrabold text-neutral-800 leading-snug line-clamp-2">
         {label}
       </span>
     </a>
@@ -330,14 +330,14 @@ export function LandingPage() {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
             {[
-              { label: 'Bricolage & Travaux',      image: '/categories/bricolage.png', icon: Wrench,   color: '#d97706', bg: '#fffbeb', scale: 1.15, category: 'maison-depannage' },
-              { label: 'Ménage & Aide',            image: '/categories/menage.png',    icon: SprayCan, color: '#0891b2', bg: '#ecfeff', scale: 1.35, category: 'maison-depannage' },
+              { label: 'Bricolage & Travaux',      image: '/categories/bricolage.png', icon: Wrench,   color: '#d97706', bg: '#fffbeb', scale: 1.45, category: 'maison-depannage' },
+              { label: 'Ménage & Aide',            image: '/categories/menage.png',    icon: SprayCan, color: '#0891b2', bg: '#ecfeff', scale: 1.45, category: 'maison-depannage' },
               { label: "Garde d'animaux",          image: '/categories/animaux.png',   icon: PawPrint, color: '#ea580c', bg: '#fff7ed', scale: 1.45, category: 'services-entre-particuliers' },
               { label: 'Jardinage',                image: '/categories/jardinage.png', icon: Leaf,     color: '#16a34a', bg: '#f0fdf4', scale: 1.45, category: 'maison-depannage' },
-              { label: 'Tech & Informatique',      image: '/categories/tech.png',      icon: Monitor,  color: '#2563eb', bg: '#eff6ff', scale: 1.38, category: 'maison-depannage' },
-              { label: 'Transport & Déménagement', image: '/categories/transport.png', icon: Truck,    color: '#7c3aed', bg: '#f5f3ff', scale: 1.1,  category: 'maison-depannage' },
-              { label: "Garde d'enfants",          image: '/categories/enfants.png',   icon: Baby,     color: '#db2777', bg: '#fdf2f8', scale: 1.5,  category: 'services-entre-particuliers' },
-              { label: 'Beauté & Bien-être',       image: '/categories/beaute.png',    icon: Scissors, color: '#e11d48', bg: '#fff1f2', scale: 1.15, category: 'sante-bien-etre' },
+              { label: 'Tech & Informatique',      image: '/categories/tech.png',      icon: Monitor,  color: '#2563eb', bg: '#eff6ff', scale: 1.45, category: 'maison-depannage' },
+              { label: 'Transport & Déménagement', image: '/categories/transport.png', icon: Truck,    color: '#7c3aed', bg: '#f5f3ff', scale: 1.45, category: 'maison-depannage' },
+              { label: "Garde d'enfants",          image: '/categories/enfants.png',   icon: Baby,     color: '#db2777', bg: '#fdf2f8', scale: 1.45, category: 'services-entre-particuliers' },
+              { label: 'Beauté & Bien-être',       image: '/categories/beaute.png',    icon: Scissors, color: '#e11d48', bg: '#fff1f2', scale: 1.45, category: 'sante-bien-etre' },
             ].map(({ label, image, icon, color, bg, scale, category }) => (
               <CategoryTile
                 key={label}
