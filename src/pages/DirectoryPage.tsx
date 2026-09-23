@@ -2,47 +2,33 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import { supabase, PUBLIC_PROFILE_COLUMNS } from '@/lib/supabase';
-import type { Category, Subcategory, Profile, Place } from '@/lib/types';
+import type { Category, Subcategory, PublicProfile, Place } from '@/lib/types';
 import { avg } from '@/lib/utils';
 import { FALLBACK_CATEGORIES, FALLBACK_SUBCATEGORIES } from '@/lib/taxonomy';
 import { AddPlaceModal } from '@/components/AddPlaceModal';
 import { AnnouncementsBanner } from '@/components/AnnouncementsBanner';
+import { Breadcrumbs, type BreadcrumbItem } from '@/components/Breadcrumbs';
+import { useDirectoryCategorySEO } from '@/lib/useSEO';
+import { CATEGORY_ICONS, CATEGORY_ICON_FALLBACK } from '@/lib/categoryIcons';
+import { TARGET_CITIES, cityMatches } from '@/lib/cities';
 import {
   Compass,
   Search,
   Star,
   MapPin,
-  Home,
-  HeartPulse,
-  ShoppingBag,
-  Handshake,
   Users,
-  Sparkles,
-  LayoutGrid,
   ShieldCheck,
-  Briefcase,
   LifeBuoy,
   Plus,
-  HelpCircle,
-  Megaphone,
 } from 'lucide-react';
 
-const CATEGORY_ICONS: Record<string, typeof Home> = {
-  Home,
-  HeartPulse,
-  Briefcase,
-  ShoppingBag,
-  Handshake,
-  Users,
-};
-
-interface ProfileWithStats extends Profile {
+interface ProfileWithStats extends PublicProfile {
   subIds: Set<string>;
   avgRating: number;
   reviewCount: number;
 }
 
-export function DirectoryPage() {
+export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: string; citySlug?: string }) {
   const { navigate } = useRouter();
   const { user, profile: myProfile } = useAuth();
   const [search, setSearch] = useState('');
@@ -81,17 +67,14 @@ export function DirectoryPage() {
         if (catRes.error || subRes.error || !catRes.data?.length) {
           setCategories(FALLBACK_CATEGORIES);
           setSubcategories(FALLBACK_SUBCATEGORIES);
-          if (!activeCategory) setActiveCategory(FALLBACK_CATEGORIES[0].id);
         } else {
           setCategories(catRes.data as Category[]);
           setSubcategories((subRes.data ?? []) as Subcategory[]);
-          if (!activeCategory && catRes.data?.length) setActiveCategory(catRes.data[0].id);
         }
       } catch {
         if (cancelled) return;
         setCategories(FALLBACK_CATEGORIES);
         setSubcategories(FALLBACK_SUBCATEGORIES);
-        if (!activeCategory) setActiveCategory(FALLBACK_CATEGORIES[0].id);
       }
 
       // Real member data can't be faked — surface a real error if this fails.
@@ -110,7 +93,7 @@ export function DirectoryPage() {
           return;
         }
 
-        const allProfiles = (profRes.data ?? []) as Profile[];
+        const allProfiles = (profRes.data ?? []) as PublicProfile[];
         const ids = allProfiles.map((p) => p.id);
 
         const [pscRes, revRes] = await Promise.all([
@@ -160,7 +143,18 @@ export function DirectoryPage() {
     };
   }, [user, navigate]);
 
+  // The URL is the source of truth for which category is active (so
+  // /annuaire/bricolage is bookmarkable/crawlable) — resolve it against the
+  // loaded categories whenever either changes, including browser back/forward.
+  useEffect(() => {
+    if (categories.length === 0) return;
+    const match = categorySlug ? categories.find((c) => c.slug === categorySlug) : undefined;
+    setActiveCategory(match?.id ?? null);
+    setActiveSub(null);
+  }, [categorySlug, categories]);
+
   const activeCatDef = categories.find((c) => c.id === activeCategory);
+  const activeCity = citySlug ? TARGET_CITIES.find((c) => c.slug === citySlug) ?? null : null;
   const subsForActiveCat = subcategories.filter((s) => s.category_id === activeCategory);
   const subcategoryById = useMemo(() => new Map(subcategories.map((s) => [s.id, s])), [subcategories]);
 
@@ -188,6 +182,7 @@ export function DirectoryPage() {
     }
     
     if (activeSub) list = list.filter((p) => p.subcategory_id === activeSub);
+    if (activeCity) list = list.filter((p) => cityMatches(p.city, activeCity));
     if (search.trim()) {
       const q = search.toLowerCase().trim();
       list = list.filter(
@@ -198,7 +193,7 @@ export function DirectoryPage() {
       );
     }
     return list;
-  }, [places, activeCategory, subcategories, activeSub, search]);
+  }, [places, activeCategory, subcategories, activeSub, activeCity, search]);
 
   const filtered = useMemo(() => {
     let list = profiles.filter((p) => p.id !== myProfile?.id);
@@ -222,6 +217,8 @@ export function DirectoryPage() {
       );
     }
 
+    if (activeCity) list = list.filter((p) => cityMatches(p.city, activeCity));
+
     if (search.trim()) {
       const q = search.toLowerCase().trim();
       list = list.filter(
@@ -235,7 +232,9 @@ export function DirectoryPage() {
     }
 
     return list;
-  }, [profiles, activeCategory, activeSub, search, subcategories, subcategoryById, myProfile]);
+  }, [profiles, activeCategory, activeSub, activeCity, search, subcategories, subcategoryById, myProfile]);
+
+  useDirectoryCategorySEO(activeCatDef, filtered.length, activeCity);
 
   useEffect(() => {
     const handleSearch = (e: Event) => {
@@ -248,8 +247,21 @@ export function DirectoryPage() {
 
   if (!user) return null;
 
+  const breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Accueil', to: '/' },
+    { label: 'Annuaire', to: activeCatDef ? '/annuaire' : undefined },
+  ];
+  if (activeCatDef) {
+    breadcrumbItems.push({ label: activeCatDef.label, to: activeCity ? `/annuaire/${activeCatDef.slug}` : undefined });
+  }
+  if (activeCity && activeCatDef) {
+    breadcrumbItems.push({ label: activeCity.label });
+  }
+
   return (
     <div className="min-h-full bg-paper-base animate-fade-in">
+      {activeCatDef && <Breadcrumbs items={breadcrumbItems} navigate={navigate} />}
+
       <div className="px-4">
         <AnnouncementsBanner />
       </div>
@@ -272,10 +284,7 @@ export function DirectoryPage() {
       {/* Categories (Main) */}
       <section className="no-scrollbar flex items-center gap-6 overflow-x-auto px-6 pb-2 mt-4">
         <button
-          onClick={() => {
-            setActiveCategory(null);
-            setActiveSub(null);
-          }}
+          onClick={() => navigate('/annuaire')}
           className="flex min-w-fit cursor-pointer flex-col items-center gap-2"
         >
           <div className={`flex h-[60px] w-[60px] items-center justify-center rounded-full transition-all ${
@@ -289,20 +298,12 @@ export function DirectoryPage() {
         </button>
 
         {categories.map((c) => {
-          const Icon = CATEGORY_ICONS[c.icon ?? ''] ?? LayoutGrid;
+          const Icon = CATEGORY_ICONS[c.icon ?? ''] ?? CATEGORY_ICON_FALLBACK;
           const isActive = activeCategory === c.id;
           return (
             <button
               key={c.id}
-              onClick={() => {
-                if (isActive) {
-                  setActiveCategory(null);
-                  setActiveSub(null);
-                } else {
-                  setActiveCategory(c.id);
-                  setActiveSub(null);
-                }
-              }}
+              onClick={() => navigate(isActive ? '/annuaire' : `/annuaire/${c.slug}`)}
               className="flex min-w-fit cursor-pointer flex-col items-center gap-2"
             >
               <div className={`flex h-[60px] w-[60px] items-center justify-center rounded-full transition-all ${
@@ -340,11 +341,34 @@ export function DirectoryPage() {
         </div>
       )}
 
+      {/* City chips — only within a category (see cities.ts) */}
+      {activeCatDef && (
+        <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 py-2 mt-1 mb-2">
+          {TARGET_CITIES.map((city) => {
+            const isCityActive = activeCity?.slug === city.slug;
+            return (
+              <button
+                key={city.slug}
+                onClick={() => navigate(isCityActive ? `/annuaire/${activeCatDef.slug}` : `/annuaire/${activeCatDef.slug}/${city.slug}`)}
+                className={`shrink-0 rounded-xl px-3.5 py-1.5 text-[12px] font-semibold transition-all ${
+                  isCityActive
+                    ? 'bg-patina-deep text-white shadow-soft'
+                    : 'border border-gold-hairline bg-white/50 backdrop-blur-md text-ink-muted hover:bg-white/80'
+                }`}
+              >
+                {city.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Results count */}
       <div className="container-app flex items-center justify-between py-2 mt-4">
         <p className="text-[13px] font-medium text-ink-muted">
           <span className="font-bold text-ink-base">{filtered.length}</span>{' '}
           membre{filtered.length > 1 ? 's' : ''} {activeSub && subcategoryById.get(activeSub) && <span>en <span className="font-bold text-ink-base">{subcategoryById.get(activeSub)!.label}</span></span>}
+          {activeCity && <span> à <span className="font-bold text-ink-base">{activeCity.label}</span></span>}
         </p>
         <button onClick={() => setAddPlaceOpen(true)} className="flex items-center gap-1.5 rounded-xl border border-gold-hairline bg-white/50 px-3 py-2 text-[11px] font-semibold text-ink-base hover:bg-white/80 transition-all shadow-sm">
           <Plus size={12} /> Proposer un lieu

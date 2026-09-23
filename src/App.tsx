@@ -6,6 +6,7 @@ import { LandingPage } from '@/pages/LandingPage';
 import { AuthPage } from '@/pages/AuthPage';
 import { OnboardingPage } from '@/pages/OnboardingPage';
 import { DirectoryPage } from '@/pages/DirectoryPage';
+import { PublicDirectoryPreview } from '@/pages/PublicDirectoryPreview';
 import { MissionsPage } from '@/pages/MissionsPage';
 import { ProfileDetailPage } from '@/pages/ProfileDetailPage';
 import { ProfileEditPage } from '@/pages/ProfileEditPage';
@@ -27,7 +28,7 @@ function Routes() {
   const { user, profile, loading } = useAuth();
   const { name, params } = parseRoute(path);
 
-  useSEO(name);
+  useSEO(name, { skip: name === 'directory' && !!params.category });
 
   if (loading) {
     return (
@@ -41,8 +42,10 @@ function Routes() {
     );
   }
 
-  // Protect authenticated routes
-  const protectedRoutes = ['events', 'directory', 'missions', 'profile', 'my-profile', 'profile-edit', 'settings', 'admin', 'messages', 'message-thread', 'place-detail'];
+  // Protect authenticated routes — 'directory' is deliberately not here: it
+  // renders an anonymized public preview when logged out (see the
+  // 'directory' case below) so search engines can actually crawl it.
+  const protectedRoutes = ['events', 'missions', 'profile', 'my-profile', 'profile-edit', 'settings', 'admin', 'messages', 'message-thread', 'place-detail'];
   if (protectedRoutes.includes(name) && !user) {
     navigate('/connexion');
     return null;
@@ -70,7 +73,9 @@ function Routes() {
     case 'onboarding':
       return <OnboardingPage />;
     case 'directory':
-      return <DirectoryPage />;
+      return user
+        ? <DirectoryPage categorySlug={params.category} citySlug={params.city} />
+        : <PublicDirectoryPreview categorySlug={params.category} citySlug={params.city} />;
     case 'missions':
       return <MissionsPage />;
     case 'profile':

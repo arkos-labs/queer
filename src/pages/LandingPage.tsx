@@ -16,7 +16,6 @@ import {
   Baby,
   Scissors,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 function CategoryTile({
   label,
@@ -25,7 +24,8 @@ function CategoryTile({
   color,
   bg,
   scale = 1,
-  onClick,
+  to,
+  onNavigate,
 }: {
   label: string;
   image?: string;
@@ -33,7 +33,8 @@ function CategoryTile({
   color: string;
   bg: string;
   scale?: number;
-  onClick: () => void;
+  to: string;
+  onNavigate: (to: string) => void;
 }) {
   const [currentSrc, setCurrentSrc] = useState(image);
   const [hasFailed, setHasFailed] = useState(false);
@@ -47,8 +48,12 @@ function CategoryTile({
   };
 
   return (
-    <button
-      onClick={onClick}
+    <a
+      href={to}
+      onClick={(e) => {
+        e.preventDefault();
+        onNavigate(to);
+      }}
       className="group flex flex-col items-center justify-between gap-3 py-6 px-3 rounded-2xl bg-white text-center transition-all duration-200 overflow-hidden"
       style={{
         border: '1px solid rgba(0,0,0,0.07)',
@@ -87,7 +92,7 @@ function CategoryTile({
       <span className="text-[12px] sm:text-[13px] font-extrabold text-neutral-800 leading-snug line-clamp-2 mt-auto">
         {label}
       </span>
-    </button>
+    </a>
   );
 }
 
@@ -325,15 +330,15 @@ export function LandingPage() {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
             {[
-              { label: 'Bricolage & Travaux',      image: '/categories/bricolage.png', icon: Wrench,   color: '#d97706', bg: '#fffbeb', scale: 1.15 },
-              { label: 'Ménage & Aide',            image: '/categories/menage.png',    icon: SprayCan, color: '#0891b2', bg: '#ecfeff', scale: 1.35 },
-              { label: "Garde d'animaux",          image: '/categories/animaux.png',   icon: PawPrint, color: '#ea580c', bg: '#fff7ed', scale: 1.45 },
-              { label: 'Jardinage',                image: '/categories/jardinage.png', icon: Leaf,     color: '#16a34a', bg: '#f0fdf4', scale: 1.45 },
-              { label: 'Tech & Informatique',      image: '/categories/tech.png',      icon: Monitor,  color: '#2563eb', bg: '#eff6ff', scale: 1.38 },
-              { label: 'Transport & Déménagement', image: '/categories/transport.png', icon: Truck,    color: '#7c3aed', bg: '#f5f3ff', scale: 1.1 },
-              { label: "Garde d'enfants",          image: '/categories/enfants.png',   icon: Baby,     color: '#db2777', bg: '#fdf2f8', scale: 1.5 },
-              { label: 'Beauté & Bien-être',       image: '/categories/beaute.png',    icon: Scissors, color: '#e11d48', bg: '#fff1f2', scale: 1.15 },
-            ].map(({ label, image, icon, color, bg, scale }) => (
+              { label: 'Bricolage & Travaux',      image: '/categories/bricolage.png', icon: Wrench,   color: '#d97706', bg: '#fffbeb', scale: 1.15, category: 'maison-depannage' },
+              { label: 'Ménage & Aide',            image: '/categories/menage.png',    icon: SprayCan, color: '#0891b2', bg: '#ecfeff', scale: 1.35, category: 'maison-depannage' },
+              { label: "Garde d'animaux",          image: '/categories/animaux.png',   icon: PawPrint, color: '#ea580c', bg: '#fff7ed', scale: 1.45, category: 'services-entre-particuliers' },
+              { label: 'Jardinage',                image: '/categories/jardinage.png', icon: Leaf,     color: '#16a34a', bg: '#f0fdf4', scale: 1.45, category: 'maison-depannage' },
+              { label: 'Tech & Informatique',      image: '/categories/tech.png',      icon: Monitor,  color: '#2563eb', bg: '#eff6ff', scale: 1.38, category: 'maison-depannage' },
+              { label: 'Transport & Déménagement', image: '/categories/transport.png', icon: Truck,    color: '#7c3aed', bg: '#f5f3ff', scale: 1.1,  category: 'maison-depannage' },
+              { label: "Garde d'enfants",          image: '/categories/enfants.png',   icon: Baby,     color: '#db2777', bg: '#fdf2f8', scale: 1.5,  category: 'services-entre-particuliers' },
+              { label: 'Beauté & Bien-être',       image: '/categories/beaute.png',    icon: Scissors, color: '#e11d48', bg: '#fff1f2', scale: 1.15, category: 'sante-bien-etre' },
+            ].map(({ label, image, icon, color, bg, scale, category }) => (
               <CategoryTile
                 key={label}
                 label={label}
@@ -342,7 +347,8 @@ export function LandingPage() {
                 color={color}
                 bg={bg}
                 scale={scale}
-                onClick={() => navigate('/annuaire')}
+                to={`/annuaire/${category}`}
+                onNavigate={navigate}
               />
             ))}
           </div>

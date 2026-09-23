@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
-import type { Profile } from '@/lib/types';
+import type { PublicProfile } from '@/lib/types';
 import { PriceInput } from '@/components/PriceInput';
-import { X, CreditCard, AlertTriangle, MessageSquare, Loader2, Calendar } from 'lucide-react';
+import { X, AlertTriangle, MessageSquare, Loader2, Calendar } from 'lucide-react';
 
 const SLOTS: { value: 'morning' | 'afternoon' | 'evening' | 'exact'; label: string; time: string }[] = [
   { value: 'morning', label: 'Matin (8h-12h)', time: '09:00' },
@@ -16,7 +16,7 @@ const SLOTS: { value: 'morning' | 'afternoon' | 'evening' | 'exact'; label: stri
 // This modal only sends a price request — it never asks for a card. The
 // provider has to accept the mission first; card entry then happens from
 // the conversation itself (see PayNowModal / MessageThreadPage).
-export function PaymentRequestModal({ target, onClose }: { target: Profile; onClose: () => void }) {
+export function PaymentRequestModal({ target, onClose }: { target: PublicProfile; onClose: () => void }) {
   const { user, profile } = useAuth();
   const { navigate } = useRouter();
   const [description, setDescription] = useState('');
@@ -75,14 +75,6 @@ export function PaymentRequestModal({ target, onClose }: { target: Profile; onCl
 
   const priceValue = Number(priceEuros.replace(',', '.'));
   const canSubmit = description.trim().length > 0 && priceValue >= 1 && !loading;
-
-  const scheduledAtIso = (() => {
-    if (!serviceDate || !serviceSlot) return null;
-    const time = serviceSlot === 'exact' ? serviceTime : SLOTS.find((s) => s.value === serviceSlot)?.time;
-    if (!time) return null;
-    const d = new Date(`${serviceDate}T${time}:00`);
-    return Number.isNaN(d.getTime()) ? null : d.toISOString();
-  })();
 
   // The PaymentOfferCard shows the price/date separately below the
   // message, but the first message itself was only ever the raw

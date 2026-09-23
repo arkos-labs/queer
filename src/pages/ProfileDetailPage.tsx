@@ -2,18 +2,18 @@ import { useEffect, useState } from 'react';
 import { supabase, PUBLIC_PROFILE_COLUMNS } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import type { Profile, Badge, Review } from '@/lib/types';
+import type { PublicProfile, Badge, Review } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
 import { BadgeList } from '@/components/BadgeChip';
 import { TrustPanel } from '@/components/TrustPanel';
 import { StarRating } from '@/components/StarRating';
 import { PaymentRequestModal } from '@/components/PaymentRequestModal';
+import { usePaymentsEnabled } from '@/lib/featureFlags';
 import { avg, timeAgo } from '@/lib/utils';
 import {
   MapPin,
   Building2,
   Users,
-  Phone,
   ArrowLeft,
   Flag,
   Send,
@@ -21,7 +21,6 @@ import {
   ShieldCheck,
   MessageSquare,
   Settings,
-  CreditCard,
 } from 'lucide-react';
 
 
@@ -32,7 +31,8 @@ interface ReviewWithAuthor extends Review {
 export function ProfileDetailPage({ id }: { id: string }) {
   const { navigate } = useRouter();
   const { user, profile } = useAuth();
-  const [target, setTarget] = useState<Profile | null>(null);
+  const paymentsEnabled = usePaymentsEnabled();
+  const [target, setTarget] = useState<PublicProfile | null>(null);
   const [badges, setBadges] = useState<Badge[]>([]);
   const [reviews, setReviews] = useState<ReviewWithAuthor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +62,7 @@ export function ProfileDetailPage({ id }: { id: string }) {
           .order('created_at', { ascending: false }),
       ]);
       if (cancelled) return;
-      setTarget(profRes.data as Profile | null);
+      setTarget(profRes.data as PublicProfile | null);
       setBadges(((pbRes.data ?? []) as unknown as { badge: Badge }[]).map((x) => x.badge).filter(Boolean));
       setReviews((revRes.data ?? []) as ReviewWithAuthor[]);
       setLoading(false);
@@ -269,7 +269,7 @@ export function ProfileDetailPage({ id }: { id: string }) {
                 )}
               </div>
 
-              {!isSelf && (
+              {!isSelf && paymentsEnabled && (
                   <div className="mt-4">
                     {target.indicative_rates && (
                       <p className="mb-2 text-center text-xs text-ink-muted">

@@ -29,9 +29,16 @@ export interface Profile {
   identity_document_path: string | null;
   profile_status: ProfileStatus;
   is_admin: boolean;
+  stripe_account_id: string | null;
+  stripe_charges_enabled: boolean;
+  stripe_payouts_enabled: boolean;
   created_at: string;
   updated_at: string;
 }
+
+// What PUBLIC_PROFILE_COLUMNS actually returns: every Profile field except
+// the ones that query deliberately omits (see its comment in lib/supabase.ts).
+export type PublicProfile = Omit<Profile, 'identity_document_path' | 'is_admin' | 'stripe_account_id'>;
 
 export interface Category {
   id: string;
@@ -47,6 +54,21 @@ export interface Subcategory {
   label: string;
   slug: string;
   sort_order: number;
+}
+
+// What the anon-readable public_directory_listings view returns — a
+// deliberately narrow, anonymized shape (see its migration). Never has a
+// full display_name, email, phone, photo or bio.
+export interface PublicDirectoryListing {
+  id: string;
+  display_initial: string;
+  city: string | null;
+  account_type: AccountType;
+  skills: string[];
+  verification_status: VerificationStatus;
+  avg_rating: number;
+  review_count: number;
+  subcategory_ids: string[];
 }
 
 export interface Badge {
@@ -176,4 +198,22 @@ export interface Notification {
   reference_id: string | null;
   read_at: string | null;
   created_at: string;
+}
+
+export type EventStatus = 'draft' | 'published' | 'archived';
+
+export interface Event {
+  id: string;
+  name: string;
+  description: string | null;
+  theme: string | null;
+  city: string;
+  address: string | null;
+  event_date: string;
+  event_end_date: string | null;
+  photo_url: string | null;
+  website_url: string | null;
+  status: EventStatus;
+  created_at: string;
+  updated_at: string;
 }

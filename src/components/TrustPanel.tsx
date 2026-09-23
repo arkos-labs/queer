@@ -1,10 +1,10 @@
-import type { Profile, Badge as BadgeType } from '@/lib/types';
+import type { PublicProfile, Badge as BadgeType } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
 import { ShieldCheck, Info, CheckCircle2, Handshake, Star, Clock, Heart } from 'lucide-react';
 import { ReactNode } from 'react';
 
 interface TrustPanelProps {
-  profile: Profile;
+  profile: PublicProfile;
   badges: BadgeType[];
   reviewCount: number;
   avgRating: number;

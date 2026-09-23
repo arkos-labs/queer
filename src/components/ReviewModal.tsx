@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { StarRating } from '@/components/StarRating';
-import { X, AlertTriangle, Camera, Upload, Trash2, Loader2 } from 'lucide-react';
+import { X, AlertTriangle, Camera } from 'lucide-react';
 
 // Left once a mission is marked 'completed' — either participant can
 // review the other. Ties back to the connection so it only ever shows
@@ -52,7 +52,7 @@ export function ReviewModal({
     setLoading(true);
     setError(null);
     
-    let uploadedUrls: string[] = [];
+    const uploadedUrls: string[] = [];
     
     try {
       if (images.length > 0) {
@@ -95,8 +95,8 @@ export function ReviewModal({
         body: `${authorName} vous a laissé un avis (${rating} étoile${rating > 1 ? 's' : ''})${comment.trim() ? ` : « ${comment.trim()} »` : '.'}`,
       });
       onDone();
-    } catch (err: any) {
-      setError(err.message || 'Une erreur est survenue lors de la publication de l\'avis.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue lors de la publication de l\'avis.');
     } finally {
       setLoading(false);
     }

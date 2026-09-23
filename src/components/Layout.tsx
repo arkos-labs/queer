@@ -2,26 +2,13 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
-import { Heart, Compass, User as UserIcon, Settings, Shield, MessageCircle, LifeBuoy, LogOut, Calendar, Bell, X, Menu } from 'lucide-react';
-import { Avatar } from '@/components/Avatar';
+import { Compass, User as UserIcon, Settings, Shield, MessageCircle, Calendar, Bell } from 'lucide-react';
 import type { Notification } from '@/lib/types';
 import { cn, timeAgo } from '@/lib/utils';
 
-function Logo({ onClick }: { onClick: () => void }) {
-  return (
-    <button onClick={onClick} aria-label="Accueil Queer Service" className="flex items-center group mt-1">
-      <img
-        src="/logo.png"
-        alt="Queer Service"
-        className="h-[65px] object-contain transition-transform group-active:scale-95"
-      />
-    </button>
-  );
-}
-
 export function Layout({ children }: { children: ReactNode }) {
   const { path, navigate } = useRouter();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile } = useAuth();
   const [unread, setUnread] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -103,7 +90,6 @@ export function Layout({ children }: { children: ReactNode }) {
       supabase.removeChannel(channel);
     };
     // Re-check whenever the route changes (e.g. after reading a thread).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, path]);
 
   const markNotifRead = async (n: Notification) => {
@@ -127,17 +113,6 @@ export function Layout({ children }: { children: ReactNode }) {
   ].filter((t) => t.show);
 
   const isLanding = path === '/' || path === '/connexion' || path === '/inscription';
-
-  const getPageTitle = (p: string) => {
-    if (p.startsWith('/annuaire')) return 'Annuaire';
-    if (p.startsWith('/messages')) return 'Messages';
-    if (p.startsWith('/profil')) return 'Profil';
-    if (p.startsWith('/evenements')) return 'Événements';
-    if (p.startsWith('/admin')) return 'Admin';
-    if (p.startsWith('/parametres')) return 'Réglages';
-    if (p === '/') return 'Accueil';
-    return 'Queer Service';
-  };
 
   return (
     <div className="mobile-shell">

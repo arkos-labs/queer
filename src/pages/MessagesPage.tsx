@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react';
 import { supabase, PUBLIC_PROFILE_COLUMNS } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import type { Connection, Message, Profile } from '@/lib/types';
+import type { Connection, Message, PublicProfile } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
 import { timeAgo } from '@/lib/utils';
 import { MessageCircle, ArrowRight } from 'lucide-react';
 
 interface ConversationRow {
   connection: Connection;
-  other: Profile | undefined;
+  other: PublicProfile | undefined;
   lastMessage: Message | null;
   unreadCount: number;
 }
@@ -57,8 +57,8 @@ export function MessagesPage() {
         ]);
         if (cancelled) return;
 
-        const otherMap = new Map<string, Profile>();
-        for (const o of (othersRes.data ?? []) as Profile[]) otherMap.set(o.id, o);
+        const otherMap = new Map<string, PublicProfile>();
+        for (const o of (othersRes.data ?? []) as PublicProfile[]) otherMap.set(o.id, o);
 
         const msgsByConn = new Map<string, Message[]>();
         for (const m of (msgsRes.data ?? []) as Message[]) {
@@ -97,7 +97,7 @@ export function MessagesPage() {
           schema: 'public',
           table: 'messages',
         },
-        (payload) => {
+        () => {
           // A bit heavy to reload entirely, but ensures we always get the new
           // connections/profiles that we might not have yet in state if someone
           // we never talked to messages us.

@@ -46,7 +46,9 @@ export function parseRoute(path: string): { name: string; params: Record<string,
   const clean = path.split('?')[0];
   const parts = clean.split('/').filter(Boolean);
   if (parts.length === 0) return { name: 'home', params: {} };
-  const [first, second] = parts;
+  const [first, second, third] = parts;
+  if (first === 'annuaire' && second && third) return { name: 'directory', params: { category: second, city: third } };
+  if (first === 'annuaire' && second) return { name: 'directory', params: { category: second } };
   if (first === 'annuaire') return { name: 'directory', params: {} };
   if (first === 'missions') return { name: 'missions', params: {} };
   if (first === 'lieux' && second) return { name: 'place-detail', params: { id: second } };

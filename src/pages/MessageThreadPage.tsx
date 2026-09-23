@@ -197,7 +197,6 @@ export function MessageThreadPage({ id }: { id: string }) {
   }
 
   const isInitiator = connection.user_a === user.id;
-  const isPayer = payment ? payment.payer_id === user.id : isInitiator;
   const statusMeta = STATUS_META[connection.status];
 
   type TimelineItem = { kind: 'message'; data: Message; created_at: string };

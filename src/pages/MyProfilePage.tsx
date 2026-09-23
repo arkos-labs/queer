@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase, PUBLIC_PROFILE_COLUMNS } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import type { Profile, Badge, Review, Connection } from '@/lib/types';
+import type { PublicProfile, Badge, Review, Connection } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
 import { BadgeList } from '@/components/BadgeChip';
 import { TrustPanel } from '@/components/TrustPanel';
@@ -18,14 +18,13 @@ import {
   XCircle,
   ArrowRight,
   ArrowLeft,
-  Settings,
   ShieldCheck,
   X,
   LogOut,
 } from 'lucide-react';
 
 interface ConnectionWithOther extends Connection {
-  other?: Profile;
+  other?: PublicProfile;
 }
 
 interface ReviewWithAuthor extends Review {
@@ -68,10 +67,10 @@ export function MyProfilePage() {
       setReviews((revRes.data ?? []) as ReviewWithAuthor[]);
       const conns = (connRes.data ?? []) as Connection[];
       const otherIds = Array.from(new Set(conns.map((c) => (c.user_a === user.id ? c.user_b : c.user_a))));
-      const otherMap = new Map<string, Profile>();
+      const otherMap = new Map<string, PublicProfile>();
       if (otherIds.length > 0) {
         const { data: others } = await supabase.from('profiles').select(PUBLIC_PROFILE_COLUMNS).in('id', otherIds);
-        for (const o of (others ?? []) as Profile[]) otherMap.set(o.id, o);
+        for (const o of (others ?? []) as PublicProfile[]) otherMap.set(o.id, o);
       }
       setConnections(conns.map((c) => ({ ...c, other: otherMap.get(c.user_a === user.id ? c.user_b : c.user_a) })));
       setLoading(false);

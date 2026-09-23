@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { supabase, edgeFunctionErrorMessage } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import { Download, Trash2, AlertTriangle, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight, LifeBuoy, CreditCard, CheckCircle2, Clock, LogOut, UserCheck, Upload, XCircle, MessageCircle } from 'lucide-react';
+import { Download, Trash2, AlertTriangle, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight, LifeBuoy, CheckCircle2, Clock, LogOut, UserCheck, Upload, XCircle, MessageCircle } from 'lucide-react';
 
 export function SettingsPage() {
   const { user, profile, signOut, refreshProfile } = useAuth();
