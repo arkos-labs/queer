@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">QueerServices</string>
+    <string name="title_activity_main">QueerServices</string>
+    <string name="package_name">com.queerservices.app</string>
+    <string name="custom_url_scheme">com.queerservices.app</string>
+</resources>

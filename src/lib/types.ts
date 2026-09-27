@@ -1,4 +1,4 @@
-export type AccountType = 'particulier' | 'asso';
+export type AccountType = 'particulier' | 'pro';
 export type Civilite = 'Il' | 'Elle' | 'Iel' | 'Ielle' | 'Ne se prononce pas';
 export type VerificationStatus = 'none' | 'pending' | 'verified' | 'rejected';
 export type ProfileStatus = 'active' | 'suspended' | 'banned' | 'pending';
@@ -105,6 +105,7 @@ export interface Connection {
   service_label: string | null;
   status: ConnectionStatus;
   mission_request_id: string | null;
+  is_paid: boolean;
   created_at: string;
   updated_at: string;
 }

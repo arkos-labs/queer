@@ -24,7 +24,7 @@ const civilites: { value: Civilite; label: string }[] = [
 
 const accountTypes: { value: AccountType; label: string; desc: string; icon: string }[] = [
   { value: 'particulier', label: 'Particulier·e', desc: 'Je propose et/ou je cherche des services entre membres.', icon: '🤝' },
-  { value: 'asso', label: 'Association / structure', desc: 'Structure partenaire, association LGBTQI+ ou centre de santé.', icon: '🏳️‍🌈' },
+  { value: 'pro', label: 'Professionnel·le', desc: 'Structure partenaire, professionnel·le ou centre de santé.', icon: '💼' },
 ];
 
 const chartePoints = [

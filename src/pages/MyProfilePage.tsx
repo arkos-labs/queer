@@ -88,7 +88,7 @@ export function MyProfilePage() {
   const avgRating = avg(reviews.map((r) => r.rating));
   const typeMeta = {
     particulier: { icon: Users, label: 'Particulier·e' },
-    asso: { icon: Building2, label: 'Association / structure' },
+    pro: { icon: Building2, label: 'Professionnel·le / structure' },
   }[profile.account_type];
 
   return (

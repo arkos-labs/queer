@@ -6,10 +6,11 @@ import { Compass, User as UserIcon, Settings, Shield, MessageCircle, Calendar, B
 import type { Notification } from '@/lib/types';
 import { cn, timeAgo } from '@/lib/utils';
 import { MissionsWidget } from '@/components/MissionsWidget';
+import { CommunityConfirmationModal } from '@/components/CommunityConfirmationModal';
 
 export function Layout({ children }: { children: ReactNode }) {
   const { path, navigate } = useRouter();
-  const { user, profile } = useAuth();
+  const { user, profile, setProfile } = useAuth();
   const [unread, setUnread] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -227,7 +228,15 @@ export function Layout({ children }: { children: ReactNode }) {
         )}
 
         {/* Scrollable app content */}
-        <main className={cn("mobile-content", isLanding ? "pt-0" : "pt-[110px]")}>{children}</main>
+        <main className={cn("mobile-content", isLanding ? "pt-0" : "pt-[110px]")}>
+          {user && profile && profile.is_community_member === null && path !== '/onboarding' && !isLanding && (
+            <CommunityConfirmationModal 
+              profile={profile} 
+              onComplete={(isMember) => setProfile({ ...profile, is_community_member: isMember })} 
+            />
+          )}
+          {children}
+        </main>
 
         {/* Bottom tab bar */}
         {user && profile && tabs.length > 0 && (

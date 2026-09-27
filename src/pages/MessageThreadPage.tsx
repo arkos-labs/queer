@@ -7,7 +7,7 @@ import { Avatar } from '@/components/Avatar';
 import { ReviewOfferCard } from '@/components/ReviewOfferCard';
 import { ReviewModal } from '@/components/ReviewModal';
 import { formatDate, timeAgo } from '@/lib/utils';
-import { ArrowLeft, Send, CheckCircle2, XCircle, Clock, Flag, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Send, CheckCircle2, XCircle, Clock, Flag, AlertTriangle, Phone } from 'lucide-react';
 
 const STATUS_META: Record<Connection['status'], { label: string; cls: string; icon: typeof Clock }> = {
   pending: { label: 'En attente', cls: 'bg-warning-100 text-warning-700', icon: Clock },
@@ -16,12 +16,12 @@ const STATUS_META: Record<Connection['status'], { label: string; cls: string; ic
   cancelled: { label: 'Annulée', cls: 'bg-neutral-100 text-neutral-500', icon: XCircle },
 };
 
-
 export function MessageThreadPage({ id }: { id: string }) {
   const { user, profile } = useAuth();
   const { navigate } = useRouter();
   const [connection, setConnection] = useState<Connection | null>(null);
   const [other, setOther] = useState<Profile | null>(null);
+  const [contactPhone, setContactPhone] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -51,7 +51,7 @@ export function MessageThreadPage({ id }: { id: string }) {
         const connRes = await supabase.from('connections').select('*').eq('id', id).maybeSingle();
         if (cancelled) return;
         const conn = connRes.data as Connection | null;
-        if (connRes.error || !conn || (conn.user_a !== user.id && conn.user_b !== user.id)) {
+        if (connRes.error || !conn || (conn.user_a !== user.id && conn.user_b !== user.id && !profile?.is_admin)) {
           setNotFound(true);
           setLoading(false);
           return;
@@ -75,6 +75,11 @@ export function MessageThreadPage({ id }: { id: string }) {
         setMessages(msgs);
         setAlreadyReviewed(!!reviewRes.data);
         setLoading(false);
+
+        if (conn.is_paid) {
+          const { data } = await supabase.rpc('get_contact_phone', { target_profile_id: otherId });
+          if (data) setContactPhone(data as string);
+        }
 
         const unreadIds = msgs.filter((m) => m.sender_id !== user.id && !m.read_at).map((m) => m.id);
         if (unreadIds.length) {
@@ -180,6 +185,22 @@ export function MessageThreadPage({ id }: { id: string }) {
     if (!upErr) setConnection({ ...connection, status });
   };
 
+  const handlePayment = async () => {
+    if (!connection || !user) return;
+    setStatusLoading(true);
+    const { error: upErr } = await supabase
+      .from('connections')
+      .update({ is_paid: true, updated_at: new Date().toISOString() })
+      .eq('id', connection.id);
+      
+    setStatusLoading(false);
+    if (!upErr) {
+      setConnection({ ...connection, is_paid: true });
+      const { data } = await supabase.rpc('get_contact_phone', { target_profile_id: other?.id });
+      if (data) setContactPhone(data as string);
+    }
+  };
+
   if (!user) return null;
 
   if (notFound) {
@@ -238,24 +259,40 @@ export function MessageThreadPage({ id }: { id: string }) {
         </div>
 
         {connection.status !== 'cancelled' && connection.status !== 'completed' && (
-          <div className="flex flex-wrap items-center gap-2 border-t border-gold-hairline px-4 py-2 bg-white/40">
-            {connection.status === 'pending' && !isInitiator && (
-              <button
-                onClick={() => updateStatus('accepted')}
-                disabled={statusLoading}
-                className="btn-outline btn-sm"
-              >
-                <CheckCircle2 size={14} /> {statusLoading ? 'Traitement…' : 'Accepter'}
-              </button>
-            )}
-            {connection.status === 'accepted' && (
-                <button onClick={() => updateStatus('completed')} disabled={statusLoading} className="btn-outline btn-sm">
-                  <CheckCircle2 size={14} /> {statusLoading ? 'Traitement…' : 'Marquer terminée'}
+          <div className="flex flex-col border-t border-gold-hairline bg-white/40">
+            <div className="flex flex-wrap items-center gap-2 px-4 py-2">
+              {connection.status === 'pending' && !isInitiator && (
+                <button
+                  onClick={() => updateStatus('accepted')}
+                  disabled={statusLoading}
+                  className="btn-outline btn-sm"
+                >
+                  <CheckCircle2 size={14} /> {statusLoading ? 'Traitement…' : 'Accepter'}
                 </button>
+              )}
+              {connection.status === 'accepted' && (
+                  <button onClick={() => updateStatus('completed')} disabled={statusLoading} className="btn-outline btn-sm">
+                    <CheckCircle2 size={14} /> {statusLoading ? 'Traitement…' : 'Marquer terminée'}
+                  </button>
+              )}
+              <button onClick={() => updateStatus('cancelled')} disabled={statusLoading} className="btn-ghost btn-sm text-error-600 hover:bg-error-50">
+                <XCircle size={14} /> Annuler
+              </button>
+            </div>
+            
+            {connection.status === 'accepted' && (
+              <div className="flex items-center px-4 py-2 bg-primary-50 border-t border-gold-hairline">
+                {contactPhone ? (
+                  <p className="text-sm font-medium text-primary-700 flex items-center gap-1.5">
+                    <Phone size={14} /> Téléphone : <a href={`tel:${contactPhone.replace(/\s/g, '')}`} className="underline">{contactPhone}</a>
+                  </p>
+                ) : (
+                  <button onClick={handlePayment} disabled={statusLoading} className="btn-primary btn-sm flex items-center gap-1.5">
+                    <Phone size={14} /> Payer en ligne pour voir le téléphone
+                  </button>
+                )}
+              </div>
             )}
-            <button onClick={() => updateStatus('cancelled')} disabled={statusLoading} className="btn-ghost btn-sm text-error-600 hover:bg-error-50">
-              <XCircle size={14} /> Annuler
-            </button>
           </div>
         )}
 

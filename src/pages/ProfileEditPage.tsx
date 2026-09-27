@@ -308,7 +308,7 @@ export function ProfileEditPage() {
           <section className="mt-8">
             <h2 className="font-display text-lg font-semibold text-neutral-900">Type de compte</h2>
             <div className="mt-4 grid grid-cols-2 gap-2">
-              {([['particulier', 'Particulier·e'], ['asso', 'Association']] as [AccountType, string][]).map(([v, l]) => (
+              {([['particulier', 'Particulier·e'], ['pro', 'Professionnel·le']] as [AccountType, string][]).map(([v, l]) => (
                 <button
                   key={v}
                   type="button"
@@ -325,7 +325,7 @@ export function ProfileEditPage() {
           </section>
 
           {/* Structure fields */}
-          {form.account_type === 'asso' && (
+          {form.account_type === 'pro' && (
             <section className="mt-8 animate-slide-up">
               <h2 className="font-display text-lg font-semibold text-neutral-900">Informations de la structure</h2>
               <div className="mt-4">

@@ -176,7 +176,7 @@ export function ProfileDetailPage({ id }: { id: string }) {
 
   const typeMeta = {
     particulier: { icon: Users, label: 'Particulier·e' },
-    asso: { icon: Building2, label: 'Association / structure' },
+    pro: { icon: Building2, label: 'Professionnel·le / structure' },
   }[target.account_type];
 
   return (

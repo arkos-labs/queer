@@ -21,9 +21,10 @@ import {
   AlertTriangle,
   Eye,
   Ban,
+  MessageCircle,
 } from 'lucide-react';
 
-type Tab = 'profiles' | 'reports' | 'categories' | 'places';
+type Tab = 'profiles' | 'reports' | 'categories' | 'places' | 'messages';
 
 export function AdminPage() {
   const { user, profile } = useAuth();
@@ -67,6 +68,7 @@ export function AdminPage() {
               { id: 'places' as Tab, label: 'Lieux', icon: MapPin },
               { id: 'reports' as Tab, label: 'Signalements', icon: Flag },
               { id: 'categories' as Tab, label: 'Catégories', icon: LayoutGrid },
+              { id: 'messages' as Tab, label: 'Messages', icon: MessageCircle },
             ]).map((t) => (
               <button
                 key={t.id}
@@ -90,6 +92,7 @@ export function AdminPage() {
         {tab === 'places' && <PlacesTab />}
         {tab === 'reports' && <ReportsTab />}
         {tab === 'categories' && <CategoriesTab />}
+        {tab === 'messages' && <MessagesTab />}
       </div>
     </div>
   );
@@ -653,6 +656,65 @@ function CategoriesTab() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function MessagesTab() {
+  const { navigate } = useRouter();
+  const [connections, setConnections] = useState<(Connection & { user_a_profile: Profile; user_b_profile: Profile })[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from('connections')
+        .select('*, user_a_profile:profiles!connections_user_a_fkey(*), user_b_profile:profiles!connections_user_b_fkey(*)')
+        .order('updated_at', { ascending: false });
+      if (!cancelled) {
+        setConnections((data ?? []) as (Connection & { user_a_profile: Profile; user_b_profile: Profile })[]);
+        setLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  if (loading) return <div className="card h-64 animate-pulse bg-neutral-100" />;
+
+  return (
+    <div className="space-y-3">
+      {connections.length === 0 ? (
+        <div className="card p-10 text-center text-sm text-neutral-500">Aucune conversation.</div>
+      ) : (
+        connections.map((c) => (
+          <div key={c.id} className="card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift cursor-pointer" onClick={() => navigate(`/messages/${c.id}`)}>
+            <div className="flex items-center gap-4">
+              <div className="flex -space-x-4">
+                <Avatar name={c.user_a_profile?.display_name ?? '?'} src={c.user_a_profile?.photo_url} size={40} className="border-2 border-white" />
+                <Avatar name={c.user_b_profile?.display_name ?? '?'} src={c.user_b_profile?.photo_url} size={40} className="border-2 border-white" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium text-neutral-900">
+                  {c.user_a_profile?.display_name ?? 'Inconnu'} & {c.user_b_profile?.display_name ?? 'Inconnu'}
+                </p>
+                <p className="truncate text-xs text-neutral-500">Service : {c.service_label ?? '—'} · Mis à jour {timeAgo(c.updated_at)}</p>
+              </div>
+              <span className={cn(
+                'rounded-full px-2.5 py-1 text-xs font-medium',
+                c.status === 'accepted' && 'bg-primary-100 text-primary-700',
+                c.status === 'pending' && 'bg-warning-100 text-warning-700',
+                c.status === 'completed' && 'bg-success-100 text-success-700',
+                c.status === 'cancelled' && 'bg-neutral-100 text-neutral-500',
+              )}>
+                {c.status}
+              </span>
+            </div>
+          </div>
+        ))
+      )}
     </div>
   );
 }
