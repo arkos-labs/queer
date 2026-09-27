@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import type { Event } from '@/lib/types';
 import { Calendar, MapPin, ExternalLink, Search } from 'lucide-react';
 
-const CITIES = ['Toutes', 'Paris', 'Marseille', 'Lyon', 'Bordeaux'];
+const CITIES = ['Toutes', 'Paris', 'Marseille', 'Lyon', 'Bordeaux', 'Toulouse', 'Nice', 'Nantes', 'Montpellier'];
 
 function formatDate(dateStr: string, endDateStr?: string | null): string {
   const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };

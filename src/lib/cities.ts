@@ -13,6 +13,10 @@ export const TARGET_CITIES: TargetCity[] = [
   { slug: 'marseille', label: 'Marseille' },
   { slug: 'lyon', label: 'Lyon' },
   { slug: 'bordeaux', label: 'Bordeaux' },
+  { slug: 'toulouse', label: 'Toulouse' },
+  { slug: 'nice', label: 'Nice' },
+  { slug: 'nantes', label: 'Nantes' },
+  { slug: 'montpellier', label: 'Montpellier' },
 ];
 
 function normalize(text: string): string {

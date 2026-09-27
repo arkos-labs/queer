@@ -105,7 +105,7 @@ export function Layout({ children }: { children: ReactNode }) {
   };
 
   const tabs = [
-    { label: 'Annuaire', to: '/annuaire', icon: Compass, show: !!user, badge: 0 },
+    { label: 'Accueil', to: '/annuaire', icon: Compass, show: !!user, badge: 0 },
     { label: 'Événements', to: '/evenements', icon: Calendar, show: !!user, badge: 0 },
     { label: 'Messages', to: '/messages', icon: MessageCircle, show: !!user, badge: unread },
     { label: 'Profil', to: '/profil', icon: UserIcon, show: !!user, badge: 0 },

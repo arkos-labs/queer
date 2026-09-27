@@ -15,6 +15,7 @@ import {
   Truck,
   Baby,
   Scissors,
+  Tent,
 } from 'lucide-react';
 
 function CategoryTile({
@@ -337,6 +338,7 @@ export function LandingPage() {
               { label: 'Transport & Déménagement', image: '/categories/transport.png', icon: Truck,    color: '#7c3aed', bg: '#f5f3ff', scale: 1.45, category: 'maison-depannage' },
               { label: "Garde d'enfants",          image: '/categories/enfants.png',   icon: Baby,     color: '#db2777', bg: '#fdf2f8', scale: 1.45, category: 'services-entre-particuliers' },
               { label: 'Santé & Bien-être',       image: '/categories/sante.png',    icon: Heart, color: '#e11d48', bg: '#fff1f2', scale: 2.1, category: 'sante-bien-etre' },
+              { label: 'Voyages & Hébergements',    image: '/categories/voyages.png',   icon: Tent, color: '#0ea5e9', bg: '#f0f9ff', scale: 1.45, category: 'voyages-hebergements' },
             ].map(({ label, image, icon, color, bg, scale, category }) => (
               <CategoryTile
                 key={label}
