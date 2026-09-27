@@ -11,7 +11,7 @@
     scroll-behavior: smooth;
   }
   body {
-    @apply bg-white text-neutral-900 font-sans antialiased;
+    @apply bg-paper-base text-neutral-900 font-sans antialiased;
     font-size: 15px;
     line-height: 1.65;
   }

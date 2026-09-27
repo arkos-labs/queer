@@ -264,11 +264,11 @@ export function ProfileEditPage() {
                 <label className="label">Civilité</label>
                 <select value={form.civilite} onChange={(e) => setForm({ ...form, civilite: e.target.value as Civilite | '' })} className="input">
                   <option value="">Non précisée</option>
-                  <option value="Monsieur">Monsieur</option>
-                  <option value="Madame">Madame</option>
-                  <option value="Mx">Mx</option>
+                  <option value="Il">Il</option>
+                  <option value="Elle">Elle</option>
                   <option value="Iel">Iel</option>
-                  <option value="Autre">Autre / je préfère ne pas préciser</option>
+                  <option value="Ielle">Ielle</option>
+                  <option value="Ne se prononce pas">Ne se prononce pas</option>
                 </select>
               </div>
               <div>

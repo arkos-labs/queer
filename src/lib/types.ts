@@ -1,5 +1,5 @@
 export type AccountType = 'particulier' | 'asso';
-export type Civilite = 'Monsieur' | 'Madame' | 'Mx' | 'Iel' | 'Autre';
+export type Civilite = 'Il' | 'Elle' | 'Iel' | 'Ielle' | 'Ne se prononce pas';
 export type VerificationStatus = 'none' | 'pending' | 'verified' | 'rejected';
 export type ProfileStatus = 'active' | 'suspended' | 'banned' | 'pending';
 export type ConnectionStatus = 'pending' | 'accepted' | 'completed' | 'cancelled';
@@ -29,16 +29,15 @@ export interface Profile {
   identity_document_path: string | null;
   profile_status: ProfileStatus;
   is_admin: boolean;
-  stripe_account_id: string | null;
-  stripe_charges_enabled: boolean;
-  stripe_payouts_enabled: boolean;
+  is_community_member: boolean | null;
+  is_ally: boolean;
   created_at: string;
   updated_at: string;
 }
 
 // What PUBLIC_PROFILE_COLUMNS actually returns: every Profile field except
 // the ones that query deliberately omits (see its comment in lib/supabase.ts).
-export type PublicProfile = Omit<Profile, 'identity_document_path' | 'is_admin' | 'stripe_account_id'>;
+export type PublicProfile = Omit<Profile, 'identity_document_path' | 'is_admin'>;
 
 export interface Category {
   id: string;

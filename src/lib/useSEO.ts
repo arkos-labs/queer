@@ -15,7 +15,7 @@ const ROUTE_SEO: Record<string, SEOConfig> = {
   home: {
     title: "Queer Service — Annuaire d'entraide de la communauté LGBTQI+",
     description:
-      "Annuaire d'entraide LGBTQI+ : trouvez et proposez des services de confiance entre membres de la communauté queer. Bricolage, ménage, garde d'animaux, tech, beauté — fait pour nous, par nous.",
+      "Annuaire d'entraide LGBTQI+ fondé sur une charte de respect stricte : zéro discrimination, zéro harcèlement, modération active. Trouvez ou proposez des services en confiance, entre personnes queer.",
     canonical: `${BASE_URL}/`,
   },
   directory: {

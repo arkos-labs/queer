@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { Compass, User as UserIcon, Settings, Shield, MessageCircle, Calendar, Bell } from 'lucide-react';
 import type { Notification } from '@/lib/types';
 import { cn, timeAgo } from '@/lib/utils';
+import { MissionsWidget } from '@/components/MissionsWidget';
 
 export function Layout({ children }: { children: ReactNode }) {
   const { path, navigate } = useRouter();
@@ -163,7 +164,8 @@ export function Layout({ children }: { children: ReactNode }) {
                "fixed top-0 inset-x-0 z-[60] flex flex-col px-4 w-full transition-all duration-300 pointer-events-none",
                scrolled ? "pt-7 sm:pt-9 pb-2" : "pt-10 sm:pt-12 pb-3"
              )}>
-          <div className="flex items-center justify-end pb-1">
+          <div className={cn("flex items-center pb-1", user && profile ? "justify-between" : "justify-end")}>
+            {user && profile && <MissionsWidget />}
             {user && profile ? (
               <div className="relative pointer-events-auto">
                 <button

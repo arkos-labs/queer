@@ -18,7 +18,8 @@ export const FALLBACK_CATEGORIES: Category[] = [
   { id: 'cat-professionnels-administratif', label: 'Professionnels & Administratif', slug: 'professionnels-administratif', icon: 'Briefcase', sort_order: 3 },
   { id: 'cat-shopping-bonnes-adresses', label: 'Shopping & Bonnes adresses', slug: 'shopping-bonnes-adresses', icon: 'ShoppingBag', sort_order: 4 },
   { id: 'cat-services-entre-particuliers', label: 'Services entre particuliers', slug: 'services-entre-particuliers', icon: 'Handshake', sort_order: 5 },
-  { id: 'cat-communaute-vie-lgbtq', label: 'Communauté & Vie LGBTQ+', slug: 'communaute-vie-lgbtq', icon: 'Users', sort_order: 6 },
+  { id: 'cat-voyages-hebergements', label: 'Voyages & Hébergements', slug: 'voyages-hebergements', icon: 'Plane', sort_order: 6 },
+  { id: 'cat-communaute-vie-lgbtq', label: 'Communauté & Vie LGBTQ+', slug: 'communaute-vie-lgbtq', icon: 'Users', sort_order: 7 },
 ];
 
 function subs(categoryId: string, entries: [string, string, number][]): Subcategory[] {
@@ -101,6 +102,13 @@ export const FALLBACK_SUBCATEGORIES: Subcategory[] = [
     ['Garde de maison', 'garde-de-maison', 9],
     ['Cuisine', 'cuisine', 10],
     ['Aide aux personnes âgées', 'aide-personnes-agees', 11],
+  ]),
+  ...subs('cat-voyages-hebergements', [
+    ['Hébergement temporaire', 'hebergement-temporaire', 1],
+    ['Colocation', 'colocation', 2],
+    ['Échange de maison', 'echange-maison', 3],
+    ['Covoiturage', 'covoiturage', 4],
+    ['Guides locaux', 'guides-locaux', 5],
   ]),
   ...subs('cat-communaute-vie-lgbtq', [
     ['Associations', 'associations', 1],

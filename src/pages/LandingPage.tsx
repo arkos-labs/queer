@@ -66,10 +66,9 @@ function CategoryTile({
     >
       <div
         data-circle
-        className="w-full aspect-square rounded-full bg-white flex items-center justify-center overflow-hidden transition-all duration-200"
+        className="w-full aspect-square rounded-full flex items-center justify-center overflow-hidden transition-all duration-200"
         style={{
-          border: '1px solid rgba(0,0,0,0.07)',
-          boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+          background: bg,
         }}
       >
         {currentSrc && !hasFailed ? (
@@ -77,7 +76,7 @@ function CategoryTile({
             src={currentSrc}
             alt={label}
             className="w-full h-full object-contain"
-            style={{ transform: `scale(${scale * 0.72})` }}
+            style={{ transform: `scale(${scale * 0.72})`, mixBlendMode: 'multiply' }}
             onError={handleError}
           />
         ) : (
@@ -337,7 +336,7 @@ export function LandingPage() {
               { label: 'Tech & Informatique',      image: '/categories/tech.png',      icon: Monitor,  color: '#2563eb', bg: '#eff6ff', scale: 1.45, category: 'maison-depannage' },
               { label: 'Transport & Déménagement', image: '/categories/transport.png', icon: Truck,    color: '#7c3aed', bg: '#f5f3ff', scale: 1.45, category: 'maison-depannage' },
               { label: "Garde d'enfants",          image: '/categories/enfants.png',   icon: Baby,     color: '#db2777', bg: '#fdf2f8', scale: 1.45, category: 'services-entre-particuliers' },
-              { label: 'Beauté & Bien-être',       image: '/categories/beaute.png',    icon: Scissors, color: '#e11d48', bg: '#fff1f2', scale: 1.45, category: 'sante-bien-etre' },
+              { label: 'Santé & Bien-être',       image: '/categories/sante.png',    icon: Heart, color: '#e11d48', bg: '#fff1f2', scale: 2.1, category: 'sante-bien-etre' },
             ].map(({ label, image, icon, color, bg, scale, category }) => (
               <CategoryTile
                 key={label}

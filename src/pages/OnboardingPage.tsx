@@ -15,11 +15,11 @@ const intents: { value: Intent; label: string; desc: string; icon: typeof Search
 ];
 
 const civilites: { value: Civilite; label: string }[] = [
-  { value: 'Monsieur', label: 'Monsieur' },
-  { value: 'Madame', label: 'Madame' },
-  { value: 'Mx', label: 'Mx' },
+  { value: 'Il', label: 'Il' },
+  { value: 'Elle', label: 'Elle' },
   { value: 'Iel', label: 'Iel' },
-  { value: 'Autre', label: 'Autre / je préfère ne pas préciser' },
+  { value: 'Ielle', label: 'Ielle' },
+  { value: 'Ne se prononce pas', label: 'Ne se prononce pas' },
 ];
 
 const accountTypes: { value: AccountType; label: string; desc: string; icon: string }[] = [
@@ -46,6 +46,9 @@ export function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [displayName, setDisplayName] = useState('');
   const [city, setCity] = useState('');
+  const [isCommunityMember, setIsCommunityMember] = useState<boolean | null>(null);
+  const [isAlly, setIsAlly] = useState(false);
+  const [showAllyModal, setShowAllyModal] = useState(false);
   const [civilite, setCivilite] = useState<Civilite | null>(null);
   const [accountType, setAccountType] = useState<AccountType>('particulier');
   const [selectedIntents, setSelectedIntents] = useState<Set<Intent>>(new Set());
@@ -115,6 +118,8 @@ export function OnboardingPage() {
         needs,
         indicative_rates: finalRates,
         budget_indicatif: finalBudget,
+        is_community_member: isCommunityMember,
+        is_ally: isAlly,
         charte_accepted: true,
         charte_accepted_at: new Date().toISOString(),
         profile_status: 'active',
@@ -133,7 +138,10 @@ export function OnboardingPage() {
   const next = () => setStep((s) => s + 1);
   const back = () => setStep((s) => Math.max(0, s - 1));
 
-  const canProceed = step === 0 ? displayName.trim().length > 0 : step === 3 ? charteAccepted : true;
+  const canProceed = 
+    step === 0 ? (isCommunityMember === true || isAlly) : 
+    step === 1 ? displayName.trim().length > 0 : 
+    step === 4 ? charteAccepted : true;
 
   return (
     <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-paper-base px-4 py-12">
@@ -152,7 +160,7 @@ export function OnboardingPage() {
       <div className="mx-auto max-w-xl">
         {/* Progress */}
         <div className="mb-8 flex items-center justify-center gap-2 mt-4">
-          {[0, 1, 2, 3].map((i) => (
+          {[0, 1, 2, 3, 4].map((i) => (
             <div
               key={i}
               className={cn(
@@ -168,6 +176,37 @@ export function OnboardingPage() {
           <div aria-hidden className="h-1.5 w-full" style={{ background: 'linear-gradient(90deg, #FF0018 0%, #FFA52C 20%, #FFFF41 40%, #008018 60%, #0000F9 80%, #86007D 100%)' }} />
           <div className="p-8 md:p-10">
           {step === 0 && (
+            <div>
+              <div className="mb-6 text-center">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-paper-base border border-gold-hairline shadow-sm text-patina-deep">
+                  <Heart size={22} fill="currentColor" />
+                </div>
+                <h2 className="font-display text-2xl font-semibold text-ink-base">Appartenance à la communauté</h2>
+                <p className="mt-2 text-sm text-ink-muted">Cette plateforme est d'abord pensée pour la communauté LGBTQIA+.</p>
+              </div>
+              <div className="space-y-4">
+                <label className="label">Es-tu membre de la communauté LGBTQIA+ ?</label>
+                <div className="flex gap-4">
+                  <button type="button" onClick={() => { setIsCommunityMember(true); setIsAlly(false); }} className={cn("flex-1 py-3 rounded-xl border transition-all font-medium", isCommunityMember === true ? "bg-paper-base border-patina-deep text-patina-deep ring-2 ring-patina-deep/20" : "bg-white/80 border-gold-hairline hover:bg-paper-base")}>Oui</button>
+                  <button type="button" onClick={() => setIsCommunityMember(false)} className={cn("flex-1 py-3 rounded-xl border transition-all font-medium", isCommunityMember === false ? "bg-paper-base border-patina-deep text-patina-deep ring-2 ring-patina-deep/20" : "bg-white/80 border-gold-hairline hover:bg-paper-base")}>Non</button>
+                </div>
+                
+                {isCommunityMember === false && (
+                  <div className="mt-4 p-4 rounded-2xl border border-gold-hairline bg-white/60">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input type="checkbox" checked={isAlly} onChange={(e) => {
+                        if (e.target.checked) setShowAllyModal(true);
+                        else setIsAlly(false);
+                      }} className="mt-1 h-4 w-4 rounded border-gold-hairline text-patina-deep" />
+                      <span className="text-sm font-medium text-ink-base">Je suis un·e allié·e (Gay Friendly)</span>
+                    </label>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {step === 1 && (
             <div>
               <div className="mb-6 text-center">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-paper-base border border-gold-hairline shadow-sm text-patina-deep">
@@ -224,7 +263,7 @@ export function OnboardingPage() {
             </div>
           )}
 
-          {step === 1 && (
+          {step === 2 && (
             <div>
               <div className="mb-6 text-center">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-paper-base border border-gold-hairline shadow-sm text-patina-deep">
@@ -261,7 +300,7 @@ export function OnboardingPage() {
             </div>
           )}
 
-          {step === 2 && (
+          {step === 3 && (
             <div>
               <div className="mb-6 text-center">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-paper-base border border-gold-hairline shadow-sm text-patina-deep">
@@ -437,7 +476,7 @@ export function OnboardingPage() {
             </div>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <div>
               <div className="mb-6 text-center">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-paper-base border border-gold-hairline shadow-sm text-patina-deep">
@@ -490,7 +529,7 @@ export function OnboardingPage() {
             >
               <ArrowLeft size={16} /> {step === 0 ? 'Annuler' : 'Retour'}
             </button>
-            {step < 3 ? (
+            {step < 4 ? (
               <button onClick={next} disabled={!canProceed} className="flex items-center justify-center gap-2 rounded-xl bg-ink-base px-6 py-2.5 font-semibold text-white shadow-soft transition-transform hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0">
                 Continuer <ArrowRight size={16} />
               </button>
@@ -504,6 +543,27 @@ export function OnboardingPage() {
           </div>
         </div>
       </div>
+
+      {showAllyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-base/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
+            <h3 className="font-display text-xl font-semibold text-ink-base mb-4">Charte des allié·es</h3>
+            <div className="space-y-3 text-sm text-ink-muted mb-6">
+              <p>En tant qu'allié·e sur cette plateforme communautaire, vous vous engagez à :</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Respecter l'espace sécuritaire (safe space) créé pour la communauté.</li>
+                <li>Faire preuve d'écoute, de bienveillance et d'ouverture.</li>
+                <li>Ne pas porter de jugement sur les identités de genre et orientations sexuelles.</li>
+                <li>Vous informer par vous-même sur les enjeux LGBTQIA+ si besoin.</li>
+              </ul>
+            </div>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => { setShowAllyModal(false); setIsAlly(false); }} className="px-4 py-2 text-sm font-medium text-ink-muted hover:text-ink-base transition-colors">Annuler</button>
+              <button onClick={() => { setShowAllyModal(false); setIsAlly(true); }} className="px-4 py-2 rounded-xl bg-ink-base text-white text-sm font-medium shadow-soft">J'accepte</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

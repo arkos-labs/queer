@@ -22,19 +22,8 @@ interface MissionForModal {
 // Deliberately scoped per mission rather than reusing whatever connection
 // already exists between the two people: the same client and provider
 // can have several independent missions on the go (or one finished and a
-// new one starting), each with its own price negotiation. The "one
-// active payment per connection" guard in stripe-request-payment is
-// scoped to a connection, so folding every mission into a single shared
-// thread would make finishing mission #1 block proposing a rate on
-// mission #2 — reusing another mission's connection, or a generic
-// contact thread, isn't safe here.
-//
-// A proposed rate goes through the exact same payment-request system as
-// the "Demander un devis" flow on a profile page (same payments table,
-// same PaymentOfferCard in the thread with accept/counter/pay) — just
-// with payer and payee reversed, since here it's the applicant (payee)
-// proposing a price for the mission poster (payer) to accept. See the
-// `role: 'payee'` handling in stripe-request-payment.
+// new one starting), each with its own rate discussion — reusing another
+// mission's connection, or a generic contact thread, would mix them up.
 export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForModal; onClose: () => void }) {
   const { user, profile } = useAuth();
   const { navigate } = useRouter();
@@ -97,10 +86,6 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
       connId = created.id as string;
     }
 
-    // Same idea as PaymentRequestModal: the tarif proposé used to live
-    // only in the payment row/PaymentOfferCard, never in the actual
-    // message text — fold it into the first message so it's readable
-    // without needing the offer card below to know what was proposed.
     const rateLine = rateAmount.trim() ? `\n\nTarif proposé : ${rateAmount.trim()}€ ${rateUnit}` : '';
     const { error: msgErr } = await supabase.from('messages').insert({
       connection_id: connId,

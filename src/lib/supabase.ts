@@ -15,16 +15,14 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // message threads, mission applicants, conversation lists, etc.). The
 // profiles table's RLS lets any authenticated member read any row (needed
 // for the directory to work), so it's on every query to not pull more than
-// it needs — deliberately excludes stripe_account_id and
-// identity_document_path (payment-account identifier and private ID
+// it needs — deliberately excludes identity_document_path (private ID
 // document reference: only ever needed by the profile's own owner, in
 // Settings, or by an admin reviewing verification) and is_admin (no
-// legitimate use outside admin tooling). stripe_charges_enabled is kept
-// because the UI needs it to know whether that member can accept payments.
+// legitimate use outside admin tooling).
 // Use `select('*')` only when loading your OWN profile (auth.tsx,
 // SettingsPage) or in AdminPage, which both have a real need for every field.
 export const PUBLIC_PROFILE_COLUMNS =
-  'id, display_name, email, phone, civilite, pronouns, account_type, bio, photo_url, city, skills, needs, intervention_zone, indicative_rates, budget_indicatif, charte_accepted, charte_accepted_at, verification_status, verified_at, profile_status, stripe_charges_enabled, created_at, updated_at';
+  'id, display_name, email, phone, civilite, pronouns, account_type, bio, photo_url, city, skills, needs, intervention_zone, indicative_rates, budget_indicatif, charte_accepted, charte_accepted_at, verification_status, verified_at, profile_status, created_at, updated_at';
 
 // supabase.functions.invoke() sets `data` to null on any non-2xx response
 // and collapses the real error into a generic "Edge Function returned a

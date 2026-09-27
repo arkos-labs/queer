@@ -6,7 +6,6 @@ import type { Category, Subcategory, PublicProfile, Place } from '@/lib/types';
 import { avg } from '@/lib/utils';
 import { FALLBACK_CATEGORIES, FALLBACK_SUBCATEGORIES } from '@/lib/taxonomy';
 import { AddPlaceModal } from '@/components/AddPlaceModal';
-import { AnnouncementsBanner } from '@/components/AnnouncementsBanner';
 import { Breadcrumbs, type BreadcrumbItem } from '@/components/Breadcrumbs';
 import { useDirectoryCategorySEO } from '@/lib/useSEO';
 import { CATEGORY_ICONS, CATEGORY_ICON_FALLBACK } from '@/lib/categoryIcons';
@@ -262,10 +261,6 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
     <div className="min-h-full bg-paper-base animate-fade-in">
       {activeCatDef && <Breadcrumbs items={breadcrumbItems} navigate={navigate} />}
 
-      <div className="px-4">
-        <AnnouncementsBanner />
-      </div>
-
       <div className="px-4 mt-4">
         <div className="relative">
           <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
@@ -288,12 +283,13 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
           className="flex min-w-fit cursor-pointer flex-col items-center gap-2"
         >
           <div className={`flex h-[60px] w-[60px] items-center justify-center rounded-full transition-all ${
-            !activeCategory ? 'bg-patina-deep shadow-soft text-white' : 'bg-white border border-gold-hairline shadow-sm hover:shadow-soft text-ink-muted'
+            !activeCategory ? 'bg-rainbow animate-gradient-x shadow-soft text-white' : 'bg-white border border-gold-hairline shadow-sm hover:shadow-soft text-ink-muted'
           }`}>
             <Users size={22} />
           </div>
-          <span className={`text-[11px] ${!activeCategory ? 'font-bold text-ink-base border-b-2 border-patina-deep pb-1' : 'font-semibold text-ink-muted pb-1'}`}>
+          <span className={`text-[11px] relative pb-1 ${!activeCategory ? 'font-bold text-ink-base' : 'font-semibold text-ink-muted'}`}>
             Tous les membres
+            {!activeCategory && <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-rainbow animate-gradient-x" />}
           </span>
         </button>
 
@@ -307,12 +303,13 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
               className="flex min-w-fit cursor-pointer flex-col items-center gap-2"
             >
               <div className={`flex h-[60px] w-[60px] items-center justify-center rounded-full transition-all ${
-                isActive ? 'bg-patina-deep shadow-soft text-white' : 'bg-white border border-gold-hairline shadow-sm hover:shadow-soft text-ink-muted'
+                isActive ? 'bg-rainbow animate-gradient-x shadow-soft text-white' : 'bg-white border border-gold-hairline shadow-sm hover:shadow-soft text-ink-muted'
               }`}>
                 <Icon size={22} />
               </div>
-              <span className={`text-[11px] ${isActive ? 'font-bold text-ink-base border-b-2 border-patina-deep pb-1' : 'font-semibold text-ink-muted pb-1'}`}>
+              <span className={`text-[11px] relative pb-1 ${isActive ? 'font-bold text-ink-base' : 'font-semibold text-ink-muted'}`}>
                 {c.label.replace(' & ', ' & ')}
+                {isActive && <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-rainbow animate-gradient-x" />}
               </span>
             </button>
           );

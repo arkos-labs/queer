@@ -306,73 +306,163 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
   confidentialite: {
     title: 'Politique de confidentialité',
     icon: ShieldCheck,
-    intro: `Cette politique explique quelles données ${c.siteName} collecte, pourquoi, comment elles sont protégées, et quels sont vos droits, conformément au Règlement Général sur la Protection des Données (RGPD) et à la loi Informatique et Libertés.`,
+    intro: `Version consolidée en 15 articles — 27 septembre 2026. Fait pour nous, par nous.`,
     sections: [
       {
-        heading: '1. Responsable de traitement',
-        body: [`${c.legalName}, ${c.address} — contact données personnelles : ${c.dpoEmail}.`],
-      },
-      {
-        heading: '2. Données collectées',
+        heading: 'Article 1 — Objet et champ d’application',
         body: [
-          `Données de compte : email, mot de passe (chiffré), civilité, prénom/nom affiché, pronoms.`,
-          `Données de profil : type de compte, bio, ville, compétences, besoins, photo, budget indicatif, et pour les comptes association/structure : zone d'intervention, tarifs indicatifs.`,
-          `Données d'usage : avis et notes laissés, mises en relation, signalements, badges obtenus.`,
-          `⚠️ Catégorie particulière de données (art. 9 RGPD) : en vous inscrivant sur un annuaire communautaire LGBTQI+, votre seule présence sur la plateforme peut être assimilée à une donnée relative à l'orientation sexuelle et/ou à l'identité de genre. Cette donnée n'est traitée qu'avec votre consentement explicite, recueilli lors de l'inscription, et n'est jamais utilisée à d'autres fins que le fonctionnement de la plateforme.`,
-        ],
+          `Queer Services est une plateforme communautaire de mise en relation et d’entraide, particulièrement attentive aux besoins des personnes LGBTQIA+ et ouverte à toute personne respectant ses valeurs.`,
+          `La présente politique définit les conditions dans lesquelles Queer Services collecte, utilise, conserve et protège les données personnelles. Elle s’applique aux visiteurs du site, aux utilisateurs de la plateforme, aux membres, aux adhérent·es, aux bénévoles, aux dirigeant·es et aux personnes accompagnées.`,
+          `Elle précise également les obligations de confidentialité, de probité et de respect qui s’imposent aux personnes participant aux activités de l’association.`
+        ]
       },
       {
-        heading: '3. Finalités du traitement',
+        heading: 'Article 2 — Responsable du traitement',
         body: [
-          `Créer et gérer votre compte et votre profil public au sein de la communauté.`,
-          `Permettre la recherche, la mise en relation et les échanges d'avis entre membres.`,
-          `Assurer la sécurité, la modération et la lutte contre les comportements abusifs.`,
-          `Respecter nos obligations légales.`,
-        ],
+          `Le responsable du traitement est la personne physique ou morale qui détermine les finalités et les moyens d’utilisation des données personnelles.`,
+          `Le responsable envisagé est l’association Queer Services, représentée par sa présidente, Sandrine KHOTO THINU, sous réserve de son enregistrement définitif.`,
+          `Pour toute question relative à la protection des données personnelles ou à l’exercice de vos droits :`,
+          `• Courriel : contact@queerservices.fr`,
+          `• Site internet : https://www.queerservices.fr/`,
+          `Si la plateforme est exploitée par une autre personne physique ou morale avant l’enregistrement de l’association, l’identité du responsable du traitement sera actualisée.`,
+          `Si un délégué à la protection des données est désigné, ses coordonnées seront également communiquées.`
+        ]
       },
       {
-        heading: '4. Base légale',
+        heading: 'Article 3 — Données collectées et protection des données sensibles',
         body: [
-          `Exécution du contrat (fourniture du service) pour les données de compte et de profil.`,
-          `Consentement explicite (art. 9 RGPD) pour le traitement des données sensibles liées à l'orientation sexuelle et à l'identité de genre. Ce consentement peut être retiré à tout moment en supprimant votre compte.`,
-          `Intérêt légitime pour la modération et la prévention des abus.`,
-        ],
+          `Selon les services utilisés, Queer Services peut collecter les données suivantes :`,
+          `• Les informations d’identification et de contact : nom, prénom, pseudonyme, photographie, adresse électronique et téléphone.`,
+          `• Les informations de profil : compétences, services proposés ou recherchés, disponibilités et zone géographique.`,
+          `• Les informations liées à la vie associative : adhésion, fonctions, participation aux activités et cotisations éventuelles.`,
+          `• Les informations liées aux prestations : messages, réservations, rendez-vous, paiements et évaluations.`,
+          `• Les données techniques et de sécurité : adresse IP, journaux de connexion, signalements et informations relatives aux appareils utilisés.`,
+          `Une attention particulière est portée aux informations susceptibles de révéler l’orientation sexuelle, l’état de santé ou d’autres données sensibles.`,
+          `L’inscription sur Queer Services ne constitue pas une déclaration d’appartenance à la communauté LGBTQIA+. Aucune personne n’est tenue de révéler son orientation sexuelle ou son identité de genre pour accéder aux fonctionnalités générales.`,
+          `Les données sensibles ne peuvent être traitées que lorsqu’une base légale et une condition particulière prévues par le RGPD le permettent.`
+        ]
       },
       {
-        heading: '5. Destinataires des données',
+        heading: 'Article 4 — Finalités et bases légales',
         body: [
-          `Vos données de profil public (nom affiché, bio, compétences, ville, avis) sont visibles par les autres membres authentifiés de la plateforme.`,
-          `Votre email et téléphone ne sont affichés qu'aux membres consultant votre fiche détaillée, si vous choisissez de les renseigner.`,
-          `Aucune donnée n'est vendue à des tiers. Des sous-traitants techniques (hébergement, base de données via ${c.backendHost}) traitent les données pour notre compte, dans le respect du RGPD.`,
-        ],
+          `Queer Services utilise les données personnelles pour gérer les comptes et les adhésions, permettre la mise en relation, faciliter les échanges et les réservations, gérer les paiements, assurer l’assistance, prévenir les abus et respecter ses obligations légales.`,
+          `Selon les traitements concernés, les bases légales sont l’exécution des CGU ou de l’adhésion, le respect d’une obligation légale, l’intérêt légitime ou le consentement.`,
+          `Les communications facultatives et les traceurs non essentiels reposent sur le consentement lorsque celui-ci est requis.`,
+          `Les informations obligatoires sont signalées lors de leur collecte. Leur absence peut empêcher l’utilisation de certaines fonctionnalités. Les informations facultatives peuvent être omises.`
+        ]
       },
       {
-        heading: '6. Durée de conservation',
+        heading: 'Article 5 — Destinataires et confidentialité des données',
         body: [
-          `Les données sont conservées tant que votre compte est actif. En cas de suppression du compte, les données sont effacées immédiatement, à l'exception de celles dont la conservation est requise par la loi (ex. obligations comptables pour les comptes professionnels).`,
-        ],
+          `Les données personnelles sont accessibles uniquement aux personnes habilitées, dans la limite des informations nécessaires à leurs missions.`,
+          `Elles peuvent être communiquées aux membres et bénévoles autorisés, aux utilisateurs concernés par une prestation, aux prestataires techniques et de paiement ou aux autorités compétentes lorsque la loi le prévoit.`,
+          `Queer Services ne vend pas les données personnelles de ses utilisateurs, membres ou adhérent·es.`,
+          `Les personnes ayant accès à des informations confidentielles s’engagent à ne pas les divulguer ni les utiliser à des fins personnelles. Cette obligation demeure applicable après la fin de leur adhésion ou de leurs fonctions, tant que les informations conservent leur caractère confidentiel.`
+        ]
       },
       {
-        heading: '7. Sécurité',
+        heading: 'Article 6 — Engagements éthiques des membres et adhérent·es',
         body: [
-          `Les données sont hébergées au sein de l'Union Européenne, chiffrées au repos et en transit. L'accès aux données est protégé par des règles de sécurité au niveau base de données (Row Level Security) : chaque membre ne peut modifier que ses propres données ; seuls les administrateurs habilités peuvent accéder aux outils de modération.`,
-        ],
+          `Les membres, adhérent·es, bénévoles et dirigeant·es s’engagent à respecter les valeurs d’Ubuntu, de solidarité, d’entraide, de confiance et d’inclusion qui fondent Queer Services.`,
+          `Ils s’engagent notamment à :`,
+          `• Faire preuve d’intégrité, de probité et d’honnêteté dans leurs activités associatives.`,
+          `• Respecter la dignité, la vie privée et les choix des autres personnes.`,
+          `• Adopter une attitude d’écoute bienveillante, sans jugement ni discrimination.`,
+          `• Préserver les intérêts légitimes et la réputation de l’association.`,
+          `• S’abstenir de tout comportement harcelant, menaçant, humiliant ou discriminatoire.`,
+          `• Prévenir les conflits d’intérêts et signaler rapidement toute situation susceptible de compromettre leur impartialité.`,
+          `Ces engagements ne limitent pas le droit de formuler des critiques de bonne foi, de signaler des dysfonctionnements ou d’exercer les droits reconnus par la loi.`
+        ]
       },
       {
-        heading: '8. Vos droits',
+        heading: 'Article 7 — Utilisation des coordonnées et représentation de l’association',
         body: [
-          `Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité de vos données.`,
-          `Depuis la page « Paramètres & confidentialité », vous pouvez à tout moment exporter l'intégralité de vos données (droit à la portabilité) ou supprimer définitivement votre compte (droit à l'effacement).`,
-          `Pour toute autre demande, contactez-nous à ${c.dpoEmail}. Vous disposez également du droit d'introduire une réclamation auprès de la CNIL (www.cnil.fr).`,
-        ],
+          `Les coordonnées et les informations personnelles recueillies dans le cadre de Queer Services ne peuvent être utilisées à des fins étrangères à celles pour lesquelles elles ont été collectées.`,
+          `Il est notamment interdit de constituer des fichiers personnels à partir des données de l’association, de communiquer ces informations à des tiers sans autorisation appropriée ou de les utiliser pour une prospection commerciale non autorisée.`,
+          `Aucun membre ou adhérent ne peut agir, négocier, prendre un engagement ou s’exprimer officiellement au nom de Queer Services sans habilitation expresse et écrite de la présidence ou de l’organe compétent.`,
+          `Cette disposition ne limite pas la liberté d’expression à titre personnel.`
+        ]
       },
       {
-        heading: '9. Mineurs',
-        body: [`La plateforme n'est pas destinée aux personnes mineures. Nous ne collectons pas sciemment de données concernant des mineurs.`],
+        heading: 'Article 8 — Confidentialité des accompagnements et des échanges',
+        body: [
+          `Toute personne participant à une mission d’accompagnement, de mise en relation ou d’assistance s’engage à respecter la confidentialité des informations recueillies et à adopter une posture d’écoute bienveillante.`,
+          `Les informations personnelles ne sont partagées qu’avec les personnes habilitées, lorsque cela est nécessaire à la mission, avec l’accord approprié de la personne concernée ou dans les autres cas prévus par la loi.`,
+          `Les documents confiés doivent être conservés dans des conditions adaptées de sécurité, restitués selon les modalités convenues et supprimés ou anonymisés lorsqu’ils ne sont plus nécessaires, sous réserve des obligations légales de conservation.`,
+          `Les membres et bénévoles utilisent les canaux de communication autorisés par l’association. Ils partagent les informations utiles à leurs missions sans diffuser inutilement les données personnelles.`,
+          `Lorsqu’un bénévole ne peut plus assurer une mission acceptée, il est invité à prévenir suffisamment tôt les personnes concernées afin de faciliter la continuité de l’accompagnement.`
+        ]
       },
       {
-        heading: '10. Mise à jour',
-        body: [`Cette politique peut évoluer. Dernière mise à jour : ${c.lastUpdated}.`],
+        heading: 'Article 9 — Profils, messagerie et mise en relation',
+        body: [
+          `Les informations volontairement publiées sur un profil peuvent être visibles par d’autres utilisateurs, selon les fonctionnalités et les paramètres proposés par la plateforme.`,
+          `Les utilisateurs sont invités à ne publier que les informations nécessaires à la mise en relation.`,
+          `Les messages privés ne sont pas destinés à être rendus publics. Un accès limité et justifié peut néanmoins être nécessaire pour traiter un signalement, prévenir une fraude, assurer la sécurité ou respecter une obligation légale.`,
+          `Queer Services peut proposer automatiquement des profils ou des services en fonction des compétences, des disponibilités, des recherches ou des zones géographiques renseignées.`,
+          `Si une fonctionnalité impliquant une décision exclusivement automatisée produisant des effets juridiques ou affectant significativement les personnes est mise en place, une information spécifique et les garanties requises seront prévues.`
+        ]
+      },
+      {
+        heading: 'Article 10 — Conservation et suppression des données',
+        body: [
+          `Les données personnelles sont conservées pendant une durée proportionnée à leur finalité et conformément aux obligations légales applicables.`,
+          `Les données de compte et d’adhésion sont conservées pendant leur période d’utilisation, puis supprimées ou archivées lorsque cela est justifié.`,
+          `Les messages, réservations, transactions, signalements et journaux techniques sont conservés pendant les durées nécessaires à leur traitement, à la sécurité du service et aux éventuelles obligations légales.`,
+          `Les documents comptables sont conservés pendant dix ans lorsque cette durée légale s’applique.`,
+          `Toute personne peut demander la suppression de ses données lorsque les conditions légales sont réunies. Certaines informations peuvent néanmoins être conservées pour respecter une obligation légale ou gérer un litige.`,
+          `Les durées précises applicables à chaque catégorie seront fixées en fonction des traitements effectivement mis en œuvre.`
+        ]
+      },
+      {
+        heading: 'Article 11 — Sécurité, hébergement et transferts de données',
+        body: [
+          `Queer Services met en œuvre des mesures techniques et organisationnelles adaptées pour protéger les données personnelles contre les accès non autorisés, les pertes, les divulgations et les utilisations abusives.`,
+          `Les personnes habilitées doivent respecter les consignes de sécurité et signaler rapidement tout incident ou toute suspicion de violation de données.`,
+          `En cas de violation, Queer Services applique les obligations de documentation, de notification et d’information prévues par le RGPD.`,
+          `Les informations relatives aux prestataires techniques, à la localisation des données et aux éventuels transferts hors de l’Espace économique européen seront précisées après vérification des services et contrats effectivement utilisés.`
+        ]
+      },
+      {
+        heading: 'Article 12 — Cookies et collecte indirecte',
+        body: [
+          `Queer Services peut utiliser des cookies nécessaires au fonctionnement de son site et, lorsque les utilisateurs y consentent si cela est requis, des traceurs facultatifs.`,
+          `Les utilisateurs doivent pouvoir gérer leurs préférences et retirer leur consentement.`,
+          `Certaines données peuvent également être obtenues indirectement, notamment lorsqu’une personne est mentionnée dans un message, un avis, une réservation ou un signalement, ou lorsqu’un prestataire de paiement transmet le statut d’une transaction.`,
+          `Les personnes concernées sont informées de ces traitements conformément au RGPD, sous réserve des exceptions légales applicables.`
+        ]
+      },
+      {
+        heading: 'Article 13 — Signalements, manquements et radiation',
+        body: [
+          `Tout utilisateur, membre, adhérent·e ou bénévole peut signaler une violation présumée de la confidentialité, une utilisation abusive de données personnelles, un comportement discriminatoire ou un manquement aux engagements éthiques.`,
+          `Les signalements sont adressés à contact@queerservices.fr et examinés avec discrétion, impartialité et dans le respect des droits des personnes concernées.`,
+          `Les signalements effectués de bonne foi ne doivent donner lieu à aucune mesure de représailles.`,
+          `Tout manquement aux obligations associatives peut entraîner les mesures prévues par les statuts et le règlement intérieur : rappel des règles, avertissement, restriction des accès, suspension de responsabilités ou procédure disciplinaire.`,
+          `En cas de manquement grave ou répété, Queer Services se réserve le droit d’engager une procédure pouvant conduire à la radiation du membre ou de l’adhérent·e concerné·e.`,
+          `La radiation est prononcée par l’organe compétent, selon la procédure prévue par les statuts et le règlement intérieur. La personne concernée doit être informée des faits reprochés et pouvoir présenter ses observations avant toute décision définitive.`,
+          `Les mesures prises doivent être proportionnées à la gravité des faits.`
+        ]
+      },
+      {
+        heading: 'Article 14 — Droits des personnes et réclamations',
+        body: [
+          `Conformément au RGPD, chaque personne dispose, dans les conditions prévues par la réglementation, de droits d’accès, de rectification, d’effacement, de limitation, d’opposition et de portabilité.`,
+          `Lorsqu’un traitement repose sur son consentement, elle peut le retirer à tout moment.`,
+          `Pour exercer ces droits ou poser une question relative à ses données personnelles : contact@queerservices.fr`,
+          `Queer Services répond en principe dans un délai d’un mois à compter de la réception de la demande, sous réserve des prolongations légalement autorisées.`,
+          `Toute personne estimant que ses données ne sont pas traitées conformément à la réglementation peut adresser une réclamation à la Commission nationale de l’informatique et des libertés (CNIL) : https://www.cnil.fr/.`
+        ]
+      },
+      {
+        heading: 'Article 15 — Adhésion et modification de la politique',
+        body: [
+          `Les membres, adhérent·es, bénévoles et dirigeant·es sont informés des obligations de confidentialité et de protection des données applicables à leurs activités.`,
+          `L’adhésion implique le respect des statuts, du règlement intérieur et des règles associatives régulièrement adoptées et portées à la connaissance des membres.`,
+          `Les personnes ayant accès à des données personnelles dans le cadre de leurs fonctions peuvent être tenues de signer un engagement spécifique de confidentialité.`,
+          `Queer Services peut modifier la présente politique afin de tenir compte de l’évolution de ses activités, de ses fonctionnalités, de ses prestataires ou de la réglementation.`,
+          `La date de mise à jour figure en tête du document. Les personnes concernées sont informées des modifications lorsque cela est nécessaire.`
+        ]
       },
     ],
   },
