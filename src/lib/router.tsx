@@ -58,6 +58,7 @@ export function parseRoute(path: string): { name: string; params: Record<string,
   if (first === 'profil' && second) return { name: 'profile', params: { id: second } };
   if (first === 'profil') return { name: 'my-profile', params: {} };
   if (first === 'connexion') return { name: 'signin', params: {} };
+  if (first === 'mot-de-passe-oublie') return { name: 'forgot-password', params: {} };
   if (first === 'inscription') return { name: 'signup', params: {} };
   if (first === 'onboarding') return { name: 'onboarding', params: {} };
   if (first === 'parametres') return { name: 'settings', params: {} };

@@ -22,6 +22,8 @@ export interface Profile {
   intervention_zone: string | null;
   indicative_rates: string | null;
   budget_indicatif: string | null;
+  linkedin_url: string | null;
+  external_reviews_url: string | null;
   charte_accepted: boolean;
   charte_accepted_at: string | null;
   verification_status: VerificationStatus;

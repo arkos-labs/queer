@@ -6,6 +6,7 @@ import type { PublicProfile, Badge, Review } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
 import { BadgeList } from '@/components/BadgeChip';
 import { TrustPanel } from '@/components/TrustPanel';
+import { SCREENSHOT_DEMO_PROFILES } from '@/lib/screenshotDemo';
 import { StarRating } from '@/components/StarRating';
 import { avg, timeAgo } from '@/lib/utils';
 import {
@@ -19,6 +20,12 @@ import {
   ShieldCheck,
   MessageSquare,
   Settings,
+  UserMinus,
+  Calendar,
+  Box,
+  Hammer,
+  Heart,
+  Check,
 } from 'lucide-react';
 
 
@@ -39,6 +46,7 @@ export function ProfileDetailPage({ id }: { id: string }) {
   const [reportReason, setReportReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [actionDone, setActionDone] = useState<string | null>(null);
+  const [isBlocked, setIsBlocked] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -48,7 +56,15 @@ export function ProfileDetailPage({ id }: { id: string }) {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
-      const [profRes, pbRes, revRes] = await Promise.all([
+      const demoProfile = SCREENSHOT_DEMO_PROFILES.find((profile) => profile.id === id);
+      if (demoProfile) {
+        setTarget(demoProfile);
+        setBadges([]);
+        setReviews([]);
+        setLoading(false);
+        return;
+      }
+      const [profRes, pbRes, revRes, blockRes] = await Promise.all([
         supabase.from('profiles').select(PUBLIC_PROFILE_COLUMNS).eq('id', id).maybeSingle(),
         supabase.from('profile_badges').select('badge:badges(*)').eq('profile_id', id),
         supabase
@@ -56,11 +72,13 @@ export function ProfileDetailPage({ id }: { id: string }) {
           .select('*, author:profiles!reviews_author_id_fkey(id, display_name, photo_url)')
           .eq('target_id', id)
           .order('created_at', { ascending: false }),
+        supabase.from('blocked_users').select('blocked_id').eq('blocker_id', user.id).eq('blocked_id', id).maybeSingle(),
       ]);
       if (cancelled) return;
       setTarget(profRes.data as PublicProfile | null);
       setBadges(((pbRes.data ?? []) as unknown as { badge: Badge }[]).map((x) => x.badge).filter(Boolean));
       setReviews((revRes.data ?? []) as ReviewWithAuthor[]);
+      setIsBlocked(!!blockRes.data);
       setLoading(false);
     };
     load();
@@ -152,6 +170,21 @@ export function ProfileDetailPage({ id }: { id: string }) {
     }, 2000);
   };
 
+  const toggleBlock = async () => {
+    if (!user || !target) return;
+    setActionLoading(true);
+    const result = isBlocked
+      ? await supabase.from('blocked_users').delete().eq('blocker_id', user.id).eq('blocked_id', target.id)
+      : await supabase.from('blocked_users').insert({ blocker_id: user.id, blocked_id: target.id });
+    setActionLoading(false);
+    if (result.error) {
+      setActionDone('Erreur : ' + result.error.message);
+      return;
+    }
+    setIsBlocked(!isBlocked);
+    setActionDone(isBlocked ? 'Membre débloqué.' : 'Membre bloqué. Vous ne pourrez plus vous contacter.');
+  };
+
   if (loading) {
     return (
       <div className="container-app py-16">
@@ -173,6 +206,8 @@ export function ProfileDetailPage({ id }: { id: string }) {
   }
 
   const isSelf = user?.id === target.id;
+
+  if (target.id === 'demo-alex') return <DemoInesProfile />;
 
   const typeMeta = {
     particulier: { icon: Users, label: 'Particulier·e' },
@@ -200,14 +235,14 @@ export function ProfileDetailPage({ id }: { id: string }) {
             <Settings size={18} strokeWidth={1.5} />
           </button>
         ) : (
-          <button
-            onClick={() => setReportOpen(true)}
-            aria-label="Signaler ce profil"
-            title="Signaler ce profil"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-paper-raised border border-error-200 text-error-600 shadow-card transition-all hover:scale-105 hover:bg-error-50"
-          >
-            <Flag size={18} strokeWidth={1.5} />
-          </button>
+          <div className="flex gap-2">
+            <button onClick={toggleBlock} disabled={actionLoading} aria-label={isBlocked ? 'Débloquer ce profil' : 'Bloquer ce profil'} title={isBlocked ? 'Débloquer' : 'Bloquer'} className="flex h-10 w-10 items-center justify-center rounded-full border border-gold-hairline bg-paper-raised text-ink-muted shadow-card transition-all hover:scale-105">
+              <UserMinus size={18} strokeWidth={1.5} />
+            </button>
+            <button onClick={() => setReportOpen(true)} aria-label="Signaler ce profil" title="Signaler ce profil" className="flex h-10 w-10 items-center justify-center rounded-full bg-paper-raised border border-error-200 text-error-600 shadow-card transition-all hover:scale-105 hover:bg-error-50">
+              <Flag size={18} strokeWidth={1.5} />
+            </button>
+          </div>
         )}
       </div>
 
@@ -258,8 +293,8 @@ export function ProfileDetailPage({ id }: { id: string }) {
                    </button>
                 ) : (
                   <>
-                    <button onClick={() => setContactOpen(true)} className="flex items-center justify-center rounded-xl bg-ink-base px-6 py-2.5 font-semibold text-white shadow-soft transition-transform hover:-translate-y-0.5 w-full sm:w-auto">
-                       <MessageSquare size={18} className="mr-1.5" /> Message
+                    <button onClick={() => setContactOpen(true)} disabled={isBlocked} className="flex items-center justify-center rounded-xl bg-ink-base px-6 py-2.5 font-semibold text-white shadow-soft transition-transform hover:-translate-y-0.5 disabled:opacity-50 w-full sm:w-auto">
+                       <MessageSquare size={18} className="mr-1.5" /> {isBlocked ? 'Membre bloqué' : 'Message'}
                     </button>
                   </>
                 )}
@@ -419,6 +454,56 @@ export function ProfileDetailPage({ id }: { id: string }) {
     </div>
   );
 }
+
+function DemoInesProfile() {
+  const { navigate } = useRouter();
+  const ines = SCREENSHOT_DEMO_PROFILES.find((profile) => profile.id === 'demo-alex')!;
+  const services = [
+    { icon: Box, title: 'Montage de meubles en kit', detail: 'IKEA, Leroy Merlin, Conforama… Lits, commodes, penderies modulaires.' },
+    { icon: Hammer, title: 'Fixations murales & déco', detail: 'Perçage sûr, étagères, miroirs lourds, tringles et rideaux.' },
+    { icon: WrenchIcon, title: 'Petits travaux & ajustements', detail: 'Poignées de portes, rabotage léger, joints et finitions soignées.' },
+  ];
+  return (
+    <div className="min-h-screen bg-paper-base pb-32 animate-fade-in">
+      <div className="sticky top-0 z-30 border-b border-gold-hairline bg-white/85 backdrop-blur-xl">
+        <div className="container-app flex items-center justify-between py-3">
+          <button onClick={() => navigate('/annuaire')} aria-label="Retour à l’annuaire" className="flex h-11 w-11 items-center justify-center rounded-full border border-gold-hairline bg-white text-ink-base shadow-soft"><ArrowLeft size={21} /></button>
+          <h1 className="font-display text-lg font-bold text-ink-base">Profil</h1>
+          <button aria-label="Signaler ce profil" className="flex h-11 w-11 items-center justify-center rounded-full border border-gold-hairline bg-white text-ink-muted shadow-soft"><Flag size={18} /></button>
+        </div>
+      </div>
+
+      <main className="container-app space-y-5 py-5">
+        <section className="overflow-hidden rounded-[28px] border border-gold-hairline bg-white shadow-soft">
+          <div className="h-20 bg-paper-base" style={{ background: 'linear-gradient(105deg, #fff9ec 0%, #f4efff 45%, #ecf9f3 100%)' }} />
+          <div className="relative px-5 pb-6 text-center">
+            <div className="-mt-12 inline-flex rounded-full bg-white p-1.5 shadow-card"><Avatar name={ines.display_name} src={ines.photo_url} size={96} className="border-2 border-white" /></div>
+            <div className="-mt-6 ml-16 inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary-600 text-white shadow-card"><Check size={16} strokeWidth={3} /></div>
+            <div className="mt-1 flex flex-wrap items-center justify-center gap-2"><h2 className="font-display text-3xl font-bold text-ink-base">Inès D.</h2><span className="rounded-full border border-primary-100 bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">Particulier·e</span></div>
+            <p className="mt-2 flex items-center justify-center gap-1.5 text-sm font-medium text-ink-muted"><MapPin size={15} className="text-primary-600" /> Paris (11e) <span className="text-gold-hairline">•</span> Déplacement 5 km <span className="text-gold-hairline">•</span> <span className="rounded-full bg-primary-50 px-2 py-0.5 text-primary-700">25 € / heure</span></p>
+            <blockquote className="mt-5 rounded-2xl border border-primary-100 bg-primary-50/40 px-5 py-4 text-[15px] italic leading-relaxed text-ink-muted">« Je donne un coup de main pour les petits travaux et le montage de meubles. Ponctuelle, soignée et outillée. »</blockquote>
+            <button onClick={() => navigate('/messages/demo-connection-hugo')} className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-ink-base px-5 py-4 font-semibold text-white shadow-soft"><MessageSquare size={19} className="text-emerald-300" /> Envoyer un message</button>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-3 gap-3">
+          {[['TARIF','25 €','/ heure'],['RÉPONSE','< 1 h','● Très réactive'],['MISSIONS','38','100 % menées']].map(([label,value,caption]) => <div key={label} className="rounded-2xl border border-gold-hairline bg-white p-3 text-center shadow-soft"><p className="text-[10px] font-bold tracking-wide text-ink-muted">{label}</p><p className="mt-1 font-display text-xl font-bold text-ink-base">{value}</p><p className={`mt-1 text-[11px] font-medium ${label === 'RÉPONSE' ? 'text-emerald-600' : 'text-primary-700'}`}>{caption}</p></div>)}
+        </section>
+
+        <section className="rounded-[28px] border border-gold-hairline bg-white p-5 shadow-soft"><div className="flex items-center justify-between"><h2 className="font-display text-lg font-bold text-ink-base">Compétences & services</h2><span className="rounded-full bg-primary-50 px-2.5 py-1 text-xs font-bold text-primary-700">3 prestations</span></div><div className="mt-4 space-y-3">{services.map((service) => <div key={service.title} className="flex gap-3 rounded-2xl bg-primary-50/45 p-3"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-primary-600 shadow-sm"><service.icon size={19} /></div><div className="min-w-0 flex-1"><div className="flex gap-2"><h3 className="flex-1 text-sm font-bold text-ink-base">{service.title}</h3><span className="whitespace-nowrap text-sm font-bold text-primary-700">25 €/h</span></div><p className="mt-1 text-xs leading-relaxed text-ink-muted">{service.detail}</p></div></div>)}</div><p className="mt-4 flex items-center gap-2 text-xs font-medium text-ink-muted"><Check size={15} className="text-emerald-600" /> Outillage personnel complet inclus</p></section>
+
+        <section className="rounded-[28px] border border-gold-hairline bg-white p-5 shadow-soft"><h2 className="font-display text-lg font-bold text-ink-base">Confiance & sécurité</h2><div className="mt-4 space-y-3">{[['Identité vérifiée','Vérifiée par notre équipe','Validé'],['Charte d’inclusion','Engagement safe space','Acceptée'],['Notes de la communauté','4,8 · 12 avis','Excellent']].map(([title,detail,state]) => <div key={title} className="flex items-center gap-3"><ShieldCheck size={20} className="text-primary-600" /><div className="flex-1"><p className="text-sm font-semibold text-ink-base">{title}</p><p className="text-xs text-ink-muted">{detail}</p></div><span className="text-xs font-bold text-emerald-600">{state}</span></div>)}</div><p className="mt-4 text-[11px] leading-relaxed text-ink-muted">Ces indicateurs sont des repères communautaires et ne remplacent pas une vérification professionnelle officielle.</p></section>
+
+        <section className="rounded-[28px] border border-gold-hairline bg-white p-5 shadow-soft"><div className="flex items-center justify-between"><h2 className="font-display text-lg font-bold text-ink-base">Avis de la communauté</h2><span className="text-sm font-bold text-primary-700">4,8 ★ · 12 avis</span></div><p className="mt-3 text-sm leading-relaxed text-ink-muted">« Très ponctuelle et méticuleuse, le meuble est parfaitement monté. »</p><p className="mt-2 text-xs font-semibold text-ink-base">Camille R. · il y a 2 semaines</p></section>
+
+        <section className="rounded-[28px] border border-gold-hairline bg-white p-5 shadow-soft"><h2 className="font-display text-lg font-bold text-ink-base">Badges obtenus</h2><div className="mt-3 flex flex-wrap gap-2">{['Membre bienveillant·e','Ponctualité exemplaire','Éco-responsable'].map((badge) => <span key={badge} className="rounded-full border border-gold-hairline bg-paper-base px-3 py-1.5 text-xs font-semibold text-ink-base">{badge}</span>)}</div></section>
+      </main>
+      <div className="fixed bottom-[calc(61px+env(safe-area-inset-bottom))] z-30 w-full border-t border-gold-hairline bg-white/95 px-4 py-3 backdrop-blur-xl"><div className="mx-auto flex max-w-6xl items-center gap-3"><div className="flex-1"><p className="text-xs text-ink-muted">Disponible ce samedi</p><p className="font-bold text-ink-base">25 € <span className="font-normal text-ink-muted">/ heure</span></p></div><button onClick={() => navigate('/messages/demo-connection-hugo')} className="flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 font-semibold text-white shadow-soft"><Calendar size={17} /> Réserver</button></div></div>
+    </div>
+  );
+}
+
+function WrenchIcon({ size }: { size?: number }) { return <Hammer size={size} />; }
 
 function Modal({ children, onClose, title }: { children: React.ReactNode; onClose: () => void; title: string }) {
   return (

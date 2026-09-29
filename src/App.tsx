@@ -4,6 +4,8 @@ import { useSEO } from '@/lib/useSEO';
 import { Layout } from '@/components/Layout';
 import { LandingPage } from '@/pages/LandingPage';
 import { AuthPage } from '@/pages/AuthPage';
+import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
+import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
 import { OnboardingPage } from '@/pages/OnboardingPage';
 import { DirectoryPage } from '@/pages/DirectoryPage';
 import { PublicDirectoryPreview } from '@/pages/PublicDirectoryPreview';
@@ -22,10 +24,11 @@ import { LegalPage, type LegalSlug } from '@/pages/LegalPage';
 import { InstallGuidePage } from '@/pages/InstallGuidePage';
 import { CookieBanner } from '@/components/CookieBanner';
 import { InstallPWABanner } from '@/components/InstallPWABanner';
+import { Capacitor } from '@capacitor/core';
 
 function Routes() {
   const { path, navigate } = useRouter();
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, isPasswordRecovery } = useAuth();
   const { name, params } = parseRoute(path);
 
   useSEO(name, { skip: name === 'directory' && !!params.category });
@@ -41,6 +44,8 @@ function Routes() {
       </div>
     );
   }
+
+  if (isPasswordRecovery) return <ResetPasswordPage />;
 
   // Protect authenticated routes — 'directory' is deliberately not here: it
   // renders an anonymized public preview when logged out (see the
@@ -68,6 +73,8 @@ function Routes() {
       return <LandingPage />;
     case 'signin':
       return <AuthPage mode="signin" />;
+    case 'forgot-password':
+      return <ForgotPasswordPage />;
     case 'signup':
       return <AuthPage mode="signup" />;
     case 'onboarding':
@@ -108,14 +115,16 @@ function Routes() {
 }
 
 export default function App() {
+  const isNativeApp = Capacitor.isNativePlatform();
+
   return (
     <AuthProvider>
       <RouterProvider>
         <Layout>
           <Routes />
         </Layout>
-        <InstallPWABanner />
-        <CookieBanner />
+        {!isNativeApp && <InstallPWABanner />}
+        {!isNativeApp && <CookieBanner />}
       </RouterProvider>
     </AuthProvider>
   );

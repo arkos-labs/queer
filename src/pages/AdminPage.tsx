@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import type { Profile, Report, Category, Place, PlaceReview, Badge } from '@/lib/types';
+import type { Profile, Report, Category, Place, PlaceReview, Badge, Connection } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
 import { StarRating } from '@/components/StarRating';
 import { cn, timeAgo } from '@/lib/utils';

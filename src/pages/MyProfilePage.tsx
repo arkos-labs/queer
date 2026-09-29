@@ -92,9 +92,10 @@ export function MyProfilePage() {
   }[profile.account_type];
 
   return (
-    <div className="animate-fade-in container-app py-6 max-w-2xl mx-auto">
+    <div className="min-h-full bg-[#f7f5ff] pt-3 animate-fade-in">
+      <div className="container-app max-w-2xl mx-auto pb-28">
       {showWelcome && (
-        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-gold-hairline bg-white/60 backdrop-blur-sm p-4 shadow-soft">
+        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-gold-hairline bg-white p-4 shadow-soft">
           <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-patina-deep" />
           <div className="flex-1">
             <p className="text-sm font-medium text-ink-base">Bienvenue, votre inscription est terminée !</p>
@@ -113,19 +114,9 @@ export function MyProfilePage() {
         </div>
       )}
 
-      <div className="mb-6">
-        <button
-          onClick={() => window.history.back()}
-          aria-label="Retour"
-          title="Retour"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-paper-raised border border-gold-hairline text-ink-base shadow-card transition-all hover:scale-105 hover:border-patina-deep hover:text-patina-deep"
-        >
-          <ArrowLeft size={18} strokeWidth={1.5} />
-        </button>
-      </div>
       <div className="flex flex-col gap-6">
           {/* Main Card */}
-          <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft overflow-hidden pb-8 relative">
+          <div className="relative overflow-hidden rounded-[30px] border border-white bg-white pb-8 shadow-soft">
             {/* Elegant Kinpaku banner */}
             <div aria-hidden="true" className="h-28 sm:h-32 bg-paper-base relative overflow-hidden">
                <div className="absolute top-0 inset-x-0 h-1.5 z-10" style={{ background: 'linear-gradient(90deg, #FF0018 0%, #FFA52C 20%, #FFFF41 40%, #008018 60%, #0000F9 80%, #86007D 100%)' }} />
@@ -133,7 +124,7 @@ export function MyProfilePage() {
                <div className="absolute -right-20 top-10 h-40 w-40 rounded-full bg-blue-500/10 blur-[50px]" />
             </div>
             <div className="relative -mt-14 flex justify-center sm:-mt-16">
-              <div className="rounded-full bg-white p-1.5 shadow-sm">
+              <div className="rounded-full bg-white p-1.5 shadow-card">
                 <Avatar name={profile.display_name} src={profile.photo_url} size={112} className="bg-paper-raised text-ink-muted border border-gold-hairline" />
               </div>
               {profile.verification_status === 'verified' && (
@@ -164,7 +155,7 @@ export function MyProfilePage() {
               )}
 
               <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <button onClick={() => navigate('/profil/modifier')} className="flex items-center justify-center rounded-xl bg-ink-base px-6 py-2.5 font-semibold text-white shadow-soft transition-transform hover:-translate-y-0.5 w-full sm:w-auto">
+                <button onClick={() => navigate('/profil/modifier')} className="flex w-full items-center justify-center rounded-2xl bg-ink-base px-6 py-4 font-semibold text-white shadow-soft transition-transform hover:-translate-y-0.5">
                   Modifier mon profil
                 </button>
                 <button 
@@ -172,7 +163,7 @@ export function MyProfilePage() {
                     await signOut();
                     navigate('/');
                   }} 
-                  className="flex items-center justify-center gap-2 rounded-xl border border-error-200 bg-error-50/50 px-6 py-2.5 font-semibold text-error-600 transition-colors hover:bg-error-50 w-full sm:w-auto"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-error-200 bg-white px-6 py-4 font-semibold text-error-600 transition-colors hover:bg-error-50"
                 >
                   <LogOut size={16} />
                   Se déconnecter
@@ -211,7 +202,7 @@ export function MyProfilePage() {
 
           {/* Additional info if applicable */}
           {(profile.intervention_zone || profile.indicative_rates) && (
-            <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft p-6">
+            <div className="rounded-[30px] border border-white bg-white p-6 shadow-soft">
               <h2 className="font-display text-lg font-semibold text-ink-base mb-4">Informations complémentaires</h2>
               <div className="flex flex-col gap-4 text-sm text-ink-muted">
                 {profile.intervention_zone && (
@@ -233,7 +224,7 @@ export function MyProfilePage() {
           <TrustPanel profile={profile} badges={badges} reviewCount={reviews.length} avgRating={avgRating} />
 
           {/* Mises en relation */}
-          <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft p-6">
+          <div className="rounded-[30px] border border-white bg-white p-6 shadow-soft">
             <h2 className="mb-4 font-display text-lg font-bold text-ink-base">Mises en relation</h2>
             {connections.length === 0 ? (
               <div className="rounded-2xl bg-paper-base border border-gold-hairline p-8 text-center shadow-inner">
@@ -267,7 +258,7 @@ export function MyProfilePage() {
           </div>
 
           {/* Avis reçus */}
-          <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft p-6">
+          <div className="rounded-[30px] border border-white bg-white p-6 shadow-soft">
             <h2 className="mb-4 font-display text-lg font-bold text-ink-base">Avis reçus</h2>
             {reviews.length === 0 ? (
               <p className="text-sm text-ink-muted">Aucun avis pour le moment.</p>
@@ -295,7 +286,7 @@ export function MyProfilePage() {
           </div>
 
           {/* Badges obtenus */}
-          <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft p-6">
+          <div className="rounded-[30px] border border-white bg-white p-6 shadow-soft">
             <h2 className="mb-4 font-display text-lg font-bold text-ink-base">Badges obtenus</h2>
             {badges.length === 0 ? (
               <p className="text-sm text-ink-muted">Aucun badge obtenu.</p>
@@ -304,6 +295,7 @@ export function MyProfilePage() {
             )}
           </div>
         </div>
+      </div>
       </div>
   );
 }

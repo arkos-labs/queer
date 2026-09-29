@@ -63,7 +63,8 @@ export function MissionsWidget() {
       <button
         onClick={() => setOpen(!open)}
         aria-label="Missions recherchées"
-        className="flex h-10 w-10 items-center justify-center rounded-2xl border border-neutral-200 bg-white text-neutral-900 hover:border-secondary-300 hover:bg-secondary-50 transition-all duration-200 shadow-sm relative"
+        aria-expanded={open}
+        className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow-sm transition-colors hover:bg-secondary-50"
       >
         <Megaphone size={20} className="text-secondary-600" />
         {missions.length > 0 && (
@@ -77,7 +78,7 @@ export function MissionsWidget() {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div
-            className="absolute left-0 mt-2 w-80 rounded-2xl bg-white/95 backdrop-blur-xl z-50 overflow-hidden animate-slide-up origin-top-left"
+            className="absolute -right-12 mt-2 w-[min(320px,calc(100vw-32px))] rounded-2xl bg-white/95 backdrop-blur-xl z-50 overflow-hidden animate-slide-up origin-top-right"
             style={{ boxShadow: '0 20px 60px -12px rgba(0,0,0,0.15), 0 0 0 1px rgba(139,92,246,0.08)' }}
           >
             <div className="px-4 py-3 bg-neutral-50 border-b border-neutral-100 flex items-center justify-between gap-2">

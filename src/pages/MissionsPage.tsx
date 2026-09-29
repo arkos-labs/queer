@@ -8,6 +8,7 @@ import { ApplyToMissionModal } from '@/components/ApplyToMissionModal';
 import { MissionDetailModal } from '@/components/MissionDetailModal';
 import { timeAgo } from '@/lib/utils';
 import { ArrowLeft, Megaphone, PlusCircle, Send, Clock } from 'lucide-react';
+import { SCREENSHOT_DEMO_MISSIONS } from '@/lib/screenshotDemo';
 
 interface MissionRequest {
   id: string;
@@ -48,7 +49,7 @@ export function MissionsPage() {
     if (fetchErr) {
       setError(fetchErr.message);
     } else {
-      setRequests((data ?? []) as unknown as MissionRequest[]);
+      setRequests([...SCREENSHOT_DEMO_MISSIONS, ...((data ?? []) as unknown as MissionRequest[])]);
     }
     setLoading(false);
   };

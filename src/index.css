@@ -9,6 +9,8 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
   body {
     @apply bg-paper-base text-neutral-900 font-sans antialiased;
@@ -29,41 +31,45 @@
   @apply flex w-full flex-1 flex-col;
   min-height: 100vh;
   min-height: 100dvh;
+  min-width: 0;
 }
 .mobile-content {
   @apply flex-1 overflow-x-hidden pb-32 sm:pb-20;
 }
 
-/* ── Bottom tab bar — Premium pill style ── */
+/* Bottom navigation: full-width bar with room for the home indicator. */
 .mobile-tabbar {
-  @apply fixed bottom-4 left-4 right-4 z-50 flex items-stretch justify-around
-         px-2 py-1;
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(24px) saturate(1.8);
-  -webkit-backdrop-filter: blur(24px) saturate(1.8);
-  border-radius: 22px;
-  border: 1px solid rgba(139,92,246,0.1);
-  box-shadow: 0 8px 32px -8px rgba(0,0,0,0.12), 0 2px 8px -2px rgba(139,92,246,0.08), 0 0 0 1px rgba(255,255,255,0.9) inset;
-  padding-bottom: max(env(safe-area-inset-bottom), 4px);
-}
-@media (min-width: 640px) {
-  .mobile-tabbar {
-    @apply bottom-6 left-1/2 w-auto max-w-md -translate-x-1/2 px-4;
-  }
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 50;
+  display: flex;
+  align-items: stretch;
+  padding: 6px max(4px, env(safe-area-inset-right, 0px)) max(6px, calc(env(safe-area-inset-bottom, 0px) - 16px)) max(4px, env(safe-area-inset-left, 0px));
+  background: rgba(255, 255, 255, 0.96);
+  border-top: 1px solid rgba(35, 25, 55, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 .mobile-tab {
-  @apply flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold transition-all duration-200;
-  letter-spacing: 0.04em;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 49px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 2px 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 150ms ease;
 }
-.mobile-tab-active   { @apply text-primary-600; }
-.mobile-tab-inactive { @apply text-neutral-400 hover:text-neutral-600; }
-
-/* Active tab pill glow */
-.mobile-tab-active .tab-icon-wrap {
-  background: rgba(139,92,246,0.1);
-  border-radius: 12px;
-  padding: 6px 14px;
-}
+.mobile-tab-active { color: #7c3aed; }
+.mobile-tab-inactive { color: #73717d; }
+.mobile-tab:focus-visible { outline: 2px solid #7c3aed; outline-offset: -2px; border-radius: 8px; }
+.mobile-tab .tab-icon-wrap { position: relative; display: flex; align-items: center; justify-content: center; width: 28px; height: 26px; }
+.mobile-tab-label { font-size: 10px; line-height: 14px; font-weight: 500; white-space: nowrap; }
+.mobile-tab-active .mobile-tab-label { font-weight: 700; }
 
 /* ── Components ── */
 @layer components {
@@ -123,7 +129,7 @@
            text-sm text-neutral-900 placeholder-neutral-400 transition-all
            focus:border-primary-400 focus:outline-none focus:ring-4
            focus:ring-primary-500/10;
-    font-size: 15px;
+    font-size: 16px;
   }
   .label {
     @apply mb-1.5 block text-sm font-semibold text-neutral-700;
@@ -217,16 +223,29 @@ body { overscroll-behavior-y: none; }
 
 /* ── Animations ── */
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 @keyframes slide-up {
   from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: none; }
 }
 @keyframes scale-in {
   from { opacity: 0; transform: scale(0.96); }
-  to   { opacity: 1; transform: scale(1); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Keep editable controls readable without triggering iPhone focus zoom.
+   A local text-size utility must not shrink a mobile input below this floor. */
+@media (max-width: 767px), (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select,
+  [contenteditable="true"] {
+    font-size: max(16px, 1rem) !important;
+    min-width: 0;
+    max-width: 100%;
+  }
 }
 @keyframes float {
   0%,100% { transform: translateY(0); }

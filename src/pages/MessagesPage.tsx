@@ -5,7 +5,8 @@ import { useAuth } from '@/lib/auth';
 import type { Connection, Message, PublicProfile } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
 import { timeAgo } from '@/lib/utils';
-import { MessageCircle, ArrowRight } from 'lucide-react';
+import { MessageCircle, ArrowRight, ShieldCheck } from 'lucide-react';
+import { SCREENSHOT_DEMO_PROFILES } from '@/lib/screenshotDemo';
 
 interface ConversationRow {
   connection: Connection;
@@ -43,7 +44,10 @@ export function MessagesPage() {
           return;
         }
 
-        const connections = (connRes.data ?? []) as Connection[];
+        const allConnections = (connRes.data ?? []) as Connection[];
+        const { data: blockRows } = await supabase.from('blocked_users').select('blocker_id, blocked_id').or(`blocker_id.eq.${user.id},blocked_id.eq.${user.id}`);
+        const blockedIds = new Set((blockRows ?? []).map((block) => block.blocker_id === user.id ? block.blocked_id : block.blocker_id));
+        const connections = allConnections.filter((connection) => !blockedIds.has(connection.user_a === user.id ? connection.user_b : connection.user_a));
         const otherIds = Array.from(
           new Set(connections.map((c) => (c.user_a === user.id ? c.user_b : c.user_a))),
         );
@@ -78,7 +82,14 @@ export function MessagesPage() {
           };
         });
 
-        setRows(built);
+        const hugo = SCREENSHOT_DEMO_PROFILES.find((profile) => profile.id === 'demo-eden');
+        const demoConversation: ConversationRow = {
+          connection: { id: 'demo-connection-hugo', user_a: user.id, user_b: 'demo-eden', service_label: 'Aide pour un déménagement', status: 'accepted', mission_request_id: null, is_paid: false, created_at: '2026-09-28T15:00:00Z', updated_at: '2026-09-28T16:20:00Z' },
+          other: hugo,
+          lastMessage: { id: 'demo-message-hugo-last', connection_id: 'demo-connection-hugo', sender_id: 'demo-eden', body: 'Parfait, à samedi !', created_at: '2026-09-28T16:20:00Z', read_at: null },
+          unreadCount: 1,
+        };
+        setRows([demoConversation, ...built]);
         setLoading(false);
       } catch (e) {
         if (cancelled) return;
@@ -149,15 +160,19 @@ export function MessagesPage() {
         ) : (
           <div className="space-y-2">
             {rows.map((r) => (
+              (() => {
+                const isSupport = r.connection.service_label === 'Support Queer Service';
+                const name = isSupport ? 'Admin' : (r.other?.display_name ?? 'Membre');
+                return (
               <button
                 key={r.connection.id}
                 onClick={() => navigate(`/messages/${r.connection.id}`)}
                 className="flex w-full items-center gap-4 rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-lift hover:bg-white/80 shadow-soft"
               >
-                <Avatar name={r.other?.display_name ?? 'Membre'} src={r.other?.photo_url} size={48} className="bg-paper-raised text-ink-muted border border-gold-hairline" />
+                {isSupport ? <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-100 text-primary-700"><ShieldCheck size={23} /></span> : <Avatar name={r.other?.display_name ?? 'Membre'} src={r.other?.photo_url} size={48} className="bg-paper-raised text-ink-muted border border-gold-hairline" />}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate font-bold text-ink-base">{r.other?.display_name ?? 'Membre'}</p>
+                    <p className="truncate font-bold text-ink-base">{name}</p>
                     {r.lastMessage && (
                       <span className="shrink-0 text-xs font-medium text-patina-deep">{timeAgo(r.lastMessage.created_at)}</span>
                     )}
@@ -165,7 +180,7 @@ export function MessagesPage() {
                   <p className={`mt-0.5 truncate text-sm ${r.unreadCount > 0 ? 'font-bold text-ink-base' : 'text-ink-muted'}`}>
                     {r.lastMessage
                       ? `${r.lastMessage.sender_id === user.id ? 'Vous : ' : ''}${r.lastMessage.body}`
-                      : r.connection.service_label ?? 'Nouvelle mise en relation'}
+                      : isSupport ? 'Équipe Queer Services' : (r.connection.service_label ?? 'Nouvelle mise en relation')}
                   </p>
                 </div>
                 {r.unreadCount > 0 && (
@@ -174,6 +189,8 @@ export function MessagesPage() {
                   </span>
                 )}
               </button>
+                );
+              })()
             ))}
           </div>
         )}

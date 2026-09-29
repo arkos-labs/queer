@@ -1,14 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import { Download, Trash2, AlertTriangle, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight, LifeBuoy, CheckCircle2, Clock, LogOut, UserCheck, Upload, XCircle, MessageCircle } from 'lucide-react';
+import { Trash2, AlertTriangle, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight, LifeBuoy, CheckCircle2, Clock, LogOut, UserCheck, Upload, XCircle, MessageCircle } from 'lucide-react';
 
 export function SettingsPage() {
   const { user, profile, signOut, refreshProfile } = useAuth();
   const { navigate } = useRouter();
-  const [exporting, setExporting] = useState(false);
-  const [exportData, setExportData] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,11 +70,6 @@ export function SettingsPage() {
     }
   };
 
-  useEffect(() => {
-    // Empty useEffect or remove it, wait, it has nothing left.
-    // I'll just leave it empty.
-  }, []);
-
   if (!user) {
     navigate('/connexion');
     return null;
@@ -117,38 +110,6 @@ export function SettingsPage() {
     await refreshProfile();
   };
 
-  const exportMyData = async () => {
-    setExporting(true);
-    setError(null);
-    const [profRes, pbRes, revRes, connRes] = await Promise.all([
-      supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
-      supabase.from('profile_badges').select('badge:badges(*)').eq('profile_id', user.id),
-      supabase.from('reviews').select('*').eq('author_id', user.id),
-      supabase.from('connections').select('*').or(`user_a.eq.${user.id},user_b.eq.${user.id}`),
-    ]);
-    setExporting(false);
-    if (profRes.error) {
-      setError(profRes.error.message);
-      return;
-    }
-    const dump = {
-      exported_at: new Date().toISOString(),
-      profile: profRes.data,
-      badges: pbRes.data,
-      reviews_authored: revRes.data,
-      connections: connRes.data,
-    };
-    const json = JSON.stringify(dump, null, 2);
-    setExportData(json);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `queer-service-donnees-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
   const handleSignOut = async () => {
     setSigningOut(true);
     await signOut();
@@ -172,69 +133,54 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="animate-fade-in">
-      <div className="border-b border-neutral-200 bg-white">
-        <div className="container-app py-6">
-          <h1 className="font-display text-3xl font-semibold text-neutral-900">Paramètres & <span className="gradient-text">confidentialité</span></h1>
-          <p className="mt-2 text-neutral-500">Gérez vos données et votre compte, conformément au RGPD.</p>
+    <div className="animate-fade-in bg-paper-base pb-28">
+      <div className="container-app pt-4">
+        <div className="overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,#5221b8_0%,#7c3aed_52%,#d946a6_100%)] px-5 py-5 text-white shadow-lift">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-white/35 bg-white/20 text-lg font-bold">
+              {profile?.photo_url ? <img src={profile.photo_url} alt="" className="h-full w-full object-cover" /> : (profile?.display_name?.slice(0, 1).toUpperCase() ?? 'Q')}
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/70">Mon espace</p>
+              <h1 className="font-display text-2xl font-semibold">Réglages</h1>
+            </div>
+          </div>
+          <p className="mt-4 text-sm leading-relaxed text-white/85">Gérez votre compte et gardez le contrôle sur vos données.</p>
         </div>
       </div>
 
-      <div className="container-app max-w-3xl py-8 space-y-6">
-        {/* Help */}
-        <button
-          onClick={() => navigate('/ressources')}
-          className="card flex w-full items-center gap-4 p-6 text-left transition-all hover:-translate-y-0.5 hover:shadow-lift md:p-8"
-        >
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-secondary-50 text-secondary-600">
-            <LifeBuoy size={20} />
+      <div className="container-app max-w-xl space-y-5 py-5">
+        <section>
+          <p className="mb-2 px-2 text-[11px] font-bold tracking-[0.12em] text-ink-muted">AIDE &amp; CONTACT</p>
+          <div className="overflow-hidden rounded-3xl border border-white bg-white shadow-soft">
+            <SettingsRow icon={<LifeBuoy size={20} />} iconClass="bg-secondary-50 text-secondary-600" label="Besoin d’aide ?" description="Guides et numéros d’écoute" onClick={() => navigate('/ressources')} />
+            <SettingsRow icon={<MessageCircle size={20} />} iconClass="bg-primary-50 text-primary-600" label="Contacter l’équipe" description={contactingSupport ? 'Ouverture de la messagerie…' : 'Assistance directe dans l’application'} onClick={contactSupport} disabled={contactingSupport} />
           </div>
-          <div className="flex-1">
-            <h2 className="font-display text-lg font-semibold text-neutral-900">Besoin d'aide ?</h2>
-            <p className="mt-1 text-sm text-neutral-500">Numéros d'écoute et guides pratiques, gratuits et confidentiels.</p>
-          </div>
-          <ChevronRight size={18} className="shrink-0 text-neutral-400" />
-        </button>
-
-        {/* Contact Support */}
-        <button
-          onClick={contactSupport}
-          disabled={contactingSupport}
-          className="card flex w-full items-center gap-4 p-6 text-left transition-all hover:-translate-y-0.5 hover:shadow-lift md:p-8"
-        >
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
-            <MessageCircle size={20} />
-          </div>
-          <div className="flex-1">
-            <h2 className="font-display text-lg font-semibold text-neutral-900">Contacter l'équipe</h2>
-            <p className="mt-1 text-sm text-neutral-500">
-              {contactingSupport ? 'Ouverture de la messagerie...' : 'Un problème, une question ? Écrivez-nous directement dans l\'application.'}
-            </p>
-          </div>
-          <ChevronRight size={18} className="shrink-0 text-neutral-400" />
-        </button>
+        </section>
 
         {/* Privacy */}
-        <div className="card p-6 md:p-8">
+        <section>
+          <p className="mb-2 px-2 text-[11px] font-bold tracking-[0.12em] text-ink-muted">CONFIDENTIALITÉ &amp; RGPD</p>
+        <div className="rounded-3xl border border-white bg-white p-5 shadow-soft">
           <div className="flex items-start gap-4">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
               <ShieldCheck size={20} />
             </div>
             <div>
-              <h2 className="font-display text-lg font-semibold text-neutral-900">Confidentialité</h2>
+              <h2 className="font-display text-lg font-semibold text-neutral-900">Données &amp; visibilité</h2>
               <p className="mt-1 text-sm text-neutral-500">
-                Votre profil est visible par les autres membres de la communauté. Votre email et téléphone ne sont
-                affichés que sur la fiche détaillée, aux membres connectés.
+                Votre profil est visible par les membres. Vos coordonnées privées restent confidentielles.
               </p>
               <p className="mt-2 text-sm text-neutral-500">
-                Vos données sont hébergées en Union Européenne, chiffrées au repos et en transit.
+                <span className="rounded-full bg-success-50 px-2 py-1 text-xs font-medium text-success-700">● Hébergement UE · Chiffrement AES-256</span>
               </p>
             </div>
           </div>
         </div>
+        </section>
 
         {/* Identity verification */}
-        <div className="card p-6 md:p-8">
+        <div className="rounded-3xl border border-white bg-white p-5 shadow-soft">
           <div className="flex items-start gap-4">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
               <UserCheck size={20} />
@@ -258,14 +204,10 @@ export function SettingsPage() {
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-sm text-neutral-500">
-                Envoyez une photo de votre pièce d'identité (carte d'identité, passeport ou titre de séjour) pour
-                obtenir le badge « vérifié·e ». Un membre de l'équipe la vérifie manuellement ; elle n'est jamais
-                rendue publique et reste accessible uniquement à vous et à l'équipe de modération.
-              </p>
+              <p className="mt-1 text-sm text-neutral-500">Obtenez le badge vérifié·e. Votre document reste privé et est examiné par la modération.</p>
               {profile?.verification_status !== 'verified' && (
                 <div className="mt-4">
-                  <label className="btn-outline cursor-pointer">
+                  <label className="btn-outline w-full cursor-pointer justify-center">
                     <Upload size={16} />
                     {uploadingId ? 'Envoi…' : profile?.identity_document_path ? 'Envoyer un nouveau document' : 'Envoyer ma pièce d\'identité'}
                     <input
@@ -289,50 +231,8 @@ export function SettingsPage() {
 
 
 
-        {/* Export */}
-        <div className="card p-6 md:p-8">
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent-50 text-accent-600">
-              <FileText size={20} />
-            </div>
-            <div className="flex-1">
-              <h2 className="font-display text-lg font-semibold text-neutral-900">Droit à la portabilité</h2>
-              <p className="mt-1 text-sm text-neutral-500">
-                Téléchargez toutes les données associées à votre compte (profil, badges, avis, mises en relation) au
-                format JSON.
-              </p>
-              <button onClick={exportMyData} disabled={exporting} className="btn-outline mt-4">
-                <Download size={16} /> {exporting ? 'Exportation…' : 'Exporter mes données'}
-              </button>
-              {exportData && (
-                <p className="mt-3 text-xs text-success-600">Export généré et téléchargé.</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Install App */}
-        <div className="card p-6 md:p-8">
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
-              <Download size={20} />
-            </div>
-            <div className="flex-1">
-              <h2 className="font-display text-lg font-semibold text-neutral-900">Installer l'application</h2>
-              <p className="mt-1 text-sm text-neutral-500">
-                Installez Queer Service sur votre écran d'accueil pour y accéder plus rapidement.
-              </p>
-              <button onClick={() => navigate('/installer')} className="btn-outline mt-4">
-                <Download size={16} /> Voir les instructions
-              </button>
-            </div>
-          </div>
-        </div>
-
-
-
         {/* Delete */}
-        <div className="card border-error-200 p-6 md:p-8">
+        <div className="rounded-3xl border border-error-100 bg-white p-5 shadow-soft">
           <div className="flex items-start gap-4">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-error-50 text-error-600">
               <AlertTriangle size={20} />
@@ -343,7 +243,7 @@ export function SettingsPage() {
                 La suppression de votre compte est définitive. Toutes vos données (profil, avis, mises en relation,
                 badges) seront effacées. Cette action est irréversible.
               </p>
-              <button onClick={() => setDeleteOpen(true)} className="btn mt-4 border border-error-300 bg-white text-error-600 hover:bg-error-50">
+              <button onClick={() => setDeleteOpen(true)} className="btn mt-4 w-full justify-center border border-error-300 bg-white text-error-600 hover:bg-error-50">
                 <Trash2 size={16} /> Supprimer mon compte
               </button>
             </div>
@@ -351,7 +251,7 @@ export function SettingsPage() {
         </div>
 
         {/* Legal */}
-        <div className="card overflow-hidden p-0">
+        <div className="overflow-hidden rounded-3xl border border-white bg-white p-0 shadow-soft">
           <div className="flex items-start gap-4 p-6 md:p-8 md:pb-4">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500">
               <Scale size={20} />
@@ -382,7 +282,7 @@ export function SettingsPage() {
         </div>
 
         {/* Sign out */}
-        <div className="card p-6 md:p-8">
+        <div className="rounded-3xl border border-white bg-white p-5 shadow-soft">
           <div className="flex items-start gap-4">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500">
               <LogOut size={20} />
@@ -390,7 +290,7 @@ export function SettingsPage() {
             <div className="flex-1">
               <h2 className="font-display text-lg font-semibold text-neutral-900">Se déconnecter</h2>
               <p className="mt-1 text-sm text-neutral-500">Terminez votre session sur cet appareil.</p>
-              <button onClick={handleSignOut} disabled={signingOut} className="btn-outline mt-4 text-error-600 hover:text-error-700 hover:bg-error-50 border-error-200">
+              <button onClick={handleSignOut} disabled={signingOut} className="btn-outline mt-4 w-full justify-center text-error-600 hover:text-error-700 hover:bg-error-50 border-error-200">
                 <LogOut size={16} /> {signingOut ? 'Déconnexion…' : 'Se déconnecter'}
               </button>
             </div>
@@ -442,5 +342,32 @@ function ConfirmInput({ onConfirm, loading }: { onConfirm: () => void; loading: 
         </button>
       </div>
     </div>
+  );
+}
+
+function SettingsRow({
+  icon,
+  iconClass,
+  label,
+  description,
+  onClick,
+  disabled = false,
+}: {
+  icon: ReactNode;
+  iconClass: string;
+  label: string;
+  description: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button onClick={onClick} disabled={disabled} className="flex w-full items-center gap-3 border-b border-neutral-100 px-5 py-4 text-left last:border-0 disabled:opacity-60">
+      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${iconClass}`}>{icon}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[16px] font-semibold text-neutral-900">{label}</span>
+        <span className="mt-0.5 block truncate text-[13px] text-neutral-500">{description}</span>
+      </span>
+      <ChevronRight size={18} className="shrink-0 text-neutral-300" />
+    </button>
   );
 }

@@ -1,3 +1,4 @@
+import { BrandHeader } from '@/components/BrandHeader';
 import { type ReactNode, useEffect, useState } from 'react';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
@@ -114,64 +115,36 @@ export function Layout({ children }: { children: ReactNode }) {
     { label: 'Réglages', to: '/parametres', icon: Settings, show: !!user, badge: 0 },
   ].filter((t) => t.show);
 
-  const isLanding = path === '/' || path === '/connexion' || path === '/inscription';
+  const isLanding = path === '/' || path === '/connexion' || path === '/inscription' || path === '/mot-de-passe-oublie';
+  const isFixedAuthScreen = path === '/connexion' || path === '/mot-de-passe-oublie';
+  const isOnboarding = path === '/onboarding';
+  const isMessageThread = path.startsWith('/messages/');
 
   return (
-    <div className="mobile-shell">
-      <div className="mobile-frame">
-        {/* Big floating logo: seamless dissolve, no header line, no box, logo always crisp and visible */}
-        {(path === '/' || !isLanding) && (
-          <div
-            className={cn(
-              "fixed top-0 inset-x-0 z-50 flex items-center justify-center transition-all duration-300 pointer-events-none",
-              scrolled
-                ? "pt-0.5 sm:pt-1 pb-12 sm:pb-16"
-                : "pt-1 sm:pt-1.5 pb-2"
-            )}
-            style={{ isolation: 'isolate' }}
-          >
-            {/* Seamless dissolved frosted background only when scrolled — starts fading strictly below the logo */}
-            <div
-              className={cn(
-                "absolute inset-0 pointer-events-none transition-opacity duration-300 z-0",
-                scrolled ? "opacity-100" : "opacity-0"
-              )}
-              style={{
-                background: 'linear-gradient(to bottom, #ede9fe 0%, #ede9fe 72%, rgba(237, 233, 254, 0) 100%)',
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-                maskImage: 'linear-gradient(to bottom, black 72%, transparent 100%)',
-                WebkitMaskImage: 'linear-gradient(to bottom, black 72%, transparent 100%)',
-              }}
-            />
-
-            <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              aria-label="Retour en haut"
-              className="relative z-20 pointer-events-auto flex items-center justify-center group focus:outline-none transition-transform active:scale-95 -mt-[1.5mm]"
-            >
-              <img
-                src="/logo.png"
-                alt="Queer Service"
-                className="h-20 sm:h-24 md:h-28 object-contain transition-transform duration-200 group-hover:scale-105 filter drop-shadow-md"
-              />
-            </button>
-          </div>
+    <div className={isFixedAuthScreen ? 'fixed inset-0 flex overflow-hidden overscroll-none' : 'mobile-shell'}>
+      <div className={isFixedAuthScreen ? 'flex h-full min-h-0 w-full flex-col overflow-hidden' : 'mobile-frame'}>
+        {/* Fixed 80px header below the iPhone safe area. */}
+        {!isMessageThread && (path === '/' || (!isLanding && !isOnboarding)) && (
+          <BrandHeader fixed scrolled={scrolled} onLogo={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
         )}
 
         {/* Floating Bell (for app pages) */}
-        {!isLanding && (
+        {!isMessageThread && !isLanding && !isOnboarding && (
           <div className={cn(
-               "fixed top-0 inset-x-0 z-[60] flex flex-col px-4 w-full transition-all duration-300 pointer-events-none",
-               scrolled ? "pt-7 sm:pt-9 pb-2" : "pt-10 sm:pt-12 pb-3"
-             )}>
-          <div className={cn("flex items-center pb-1", user && profile ? "justify-between" : "justify-end")}>
+               "fixed top-0 inset-x-0 z-[60] flex flex-col justify-center px-4 w-full pointer-events-none",
+             )} style={{
+               paddingTop: 'env(safe-area-inset-top, 0px)',
+               height: 'calc(88px + env(safe-area-inset-top, 0px))',
+             }}>
+          <div className="flex items-center justify-end gap-2">
             {user && profile && <MissionsWidget />}
             {user && profile ? (
               <div className="relative pointer-events-auto">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="flex h-10 w-10 items-center justify-center rounded-2xl border border-neutral-200 bg-white text-neutral-900 hover:border-primary-300 hover:bg-primary-50 transition-all duration-200 shadow-sm relative"
+                  aria-label="Notifications"
+                  aria-expanded={showNotifications}
+                  className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-primary-600 shadow-sm transition-colors hover:bg-primary-50"
                 >
                   <Bell size={22} className="text-primary-500" />
                   {unreadNotifsCount > 0 && (
@@ -228,7 +201,13 @@ export function Layout({ children }: { children: ReactNode }) {
         )}
 
         {/* Scrollable app content */}
-        <main className={cn("mobile-content", isLanding ? "pt-0" : "pt-[110px]")}>
+        <main
+          className={isFixedAuthScreen ? 'min-h-0 flex-1 overflow-hidden overscroll-none' : 'mobile-content'}
+          style={{
+            paddingTop: isMessageThread ? 0 : (isLanding || isOnboarding) ? 'env(safe-area-inset-top, 0px)' : 'calc(112px + env(safe-area-inset-top, 0px))',
+            paddingBottom: (isLanding || isOnboarding || isMessageThread) ? 0 : undefined,
+          }}
+        >
           {user && profile && profile.is_community_member === null && path !== '/onboarding' && !isLanding && (
             <CommunityConfirmationModal 
               profile={profile} 
@@ -239,27 +218,23 @@ export function Layout({ children }: { children: ReactNode }) {
         </main>
 
         {/* Bottom tab bar */}
-        {user && profile && tabs.length > 0 && (
-          <nav className="mobile-tabbar">
+        {user && profile && !isOnboarding && !isMessageThread && tabs.length > 0 && (
+          <nav className="mobile-tabbar" aria-label="Navigation principale">
             {tabs.map((t) => {
               const Icon = t.icon;
-              const active = path.startsWith(t.to);
+              const active = path.startsWith(t.to) || (t.to === '/annuaire' && path === '/');
               return (
                 <button
                   key={t.to}
+                  aria-current={active ? 'page' : undefined}
                   onClick={() => go(t.to)}
                   className={cn(
                     'mobile-tab relative',
                     active ? 'mobile-tab-active' : 'mobile-tab-inactive',
                   )}
                 >
-                  <span className={cn(
-                    'relative inline-flex items-center justify-center transition-all duration-200',
-                    active
-                      ? 'bg-primary-100 rounded-xl px-3.5 py-1.5 -mt-0.5'
-                      : 'px-3.5 py-1.5 -mt-0.5'
-                  )}>
-                    <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
+                  <span className="tab-icon-wrap">
+                    <Icon size={23} strokeWidth={active ? 2.3 : 1.8} />
                     {t.badge > 0 && (
                       <span
                         aria-hidden
@@ -269,10 +244,7 @@ export function Layout({ children }: { children: ReactNode }) {
                       </span>
                     )}
                   </span>
-                  <span className={cn(
-                    'text-[9px] font-bold mt-0.5 tracking-wider uppercase transition-all',
-                    active ? 'text-primary-600 opacity-100' : 'opacity-70'
-                  )}>
+                  <span className="mobile-tab-label">
                     {t.label}
                     {t.badge > 0 && <span className="sr-only"> ({t.badge} non lus)</span>}
                   </span>

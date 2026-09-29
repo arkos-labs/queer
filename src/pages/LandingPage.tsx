@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from '@/lib/router';
+import { Capacitor } from '@capacitor/core';
 import {
   ShieldCheck,
   BadgeCheck,
@@ -14,8 +15,6 @@ import {
   Monitor,
   Truck,
   Baby,
-  Scissors,
-  Tent,
 } from 'lucide-react';
 
 function CategoryTile({
@@ -55,7 +54,7 @@ function CategoryTile({
         e.preventDefault();
         onNavigate(to);
       }}
-      className="group flex flex-col items-center gap-3 py-4 px-2 text-center transition-all duration-200"
+      className="group flex w-[68px] shrink-0 flex-col items-center gap-2 py-1 text-center transition-all duration-200"
       onMouseEnter={e => {
         (e.currentTarget.querySelector('[data-circle]') as HTMLElement).style.transform = 'translateY(-4px) scale(1.03)';
         (e.currentTarget.querySelector('[data-circle]') as HTMLElement).style.boxShadow = `0 8px 32px -8px rgba(0,0,0,0.14), 0 16px 48px -12px ${color}40`;
@@ -67,7 +66,7 @@ function CategoryTile({
     >
       <div
         data-circle
-        className="w-full aspect-square rounded-full flex items-center justify-center overflow-hidden transition-all duration-200"
+        className="flex h-[62px] w-[62px] items-center justify-center overflow-hidden rounded-2xl bg-white shadow-soft transition-all duration-200"
         style={{
           background: bg,
         }}
@@ -85,11 +84,11 @@ function CategoryTile({
             className="h-1/2 w-1/2 rounded-full flex items-center justify-center"
             style={{ background: bg }}
           >
-            <Icon size={28} style={{ color }} strokeWidth={1.75} />
+            <Icon size={20} style={{ color }} strokeWidth={1.75} />
           </div>
         )}
       </div>
-      <span className="text-[12px] sm:text-[13px] font-extrabold text-neutral-800 leading-snug line-clamp-2">
+      <span className="max-w-[66px] text-[10px] font-bold leading-[1.15] text-neutral-700 line-clamp-2">
         {label}
       </span>
     </a>
@@ -98,7 +97,7 @@ function CategoryTile({
 
 export function LandingPage() {
   const { navigate } = useRouter();
-  const [activeTab, setActiveTab] = useState<'signup' | 'login'>('signup');
+  const isNativeApp = Capacitor.isNativePlatform();
 
   return (
     <div className="min-h-screen font-sans text-neutral-900 flex flex-col relative overflow-hidden"
@@ -150,30 +149,35 @@ export function LandingPage() {
               Trouvez ou proposez des services en toute confiance au sein de votre communauté queer — modéré, sécurisé, construit ensemble.
             </p>
 
-            {/* Social proof */}
-            <div className="flex items-center gap-4 mt-9 flex-wrap">
-              <div className="flex">
-                {[
-                  'linear-gradient(135deg,#f9a8d4,#c084fc)',
-                  'linear-gradient(135deg,#93c5fd,#818cf8)',
-                  'linear-gradient(135deg,#6ee7b7,#34d399)',
-                  'linear-gradient(135deg,#fde68a,#fb923c)',
-                  'linear-gradient(135deg,#c084fc,#818cf8)',
-                ].map((bg, i) => (
-                  <div key={i}
-                       className="h-[34px] w-[34px] rounded-full border-[2.5px] border-white flex items-center justify-center text-[11px] font-bold text-white"
-                       style={{ background: bg, marginLeft: i === 0 ? 0 : -9 }} />
-                ))}
+            {/* Services compacts — keep the established category illustrations. */}
+            <div className="mt-6">
+              <div className="mb-3 flex items-center justify-between px-1">
+                <p className="text-[11px] font-extrabold uppercase tracking-wide text-neutral-500">Catégories fréquentes</p>
+                <button onClick={() => navigate('/annuaire')} className="text-[12px] font-bold text-primary-600">Voir tout</button>
               </div>
-              <div>
-                <div className="flex gap-[2px] mb-0.5">
-                  {[1,2,3,4,5].map(i => (
-                    <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                  ))}
-                </div>
-                <p className="text-xs text-neutral-500 font-medium">
-                  <span className="font-bold text-neutral-800">+1 200 membres</span> nous font confiance
-                </p>
+              <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+                {[
+                  { label: 'Bricolage & travaux', image: '/categories/bricolage.png', icon: Wrench, color: '#d97706', bg: '#fffbeb', scale: 1.45, category: 'maison-depannage' },
+                  { label: 'Ménage & aide', image: '/categories/menage.png', icon: SprayCan, color: '#0891b2', bg: '#ecfeff', scale: 1.45, category: 'maison-depannage' },
+                  { label: "Garde d’animaux", image: '/categories/animaux.png', icon: PawPrint, color: '#ea580c', bg: '#fff7ed', scale: 1.45, category: 'services-entre-particuliers' },
+                  { label: 'Jardinage', image: '/categories/jardinage.png', icon: Leaf, color: '#16a34a', bg: '#f0fdf4', scale: 1.45, category: 'maison-depannage' },
+                  { label: 'Tech & informatique', image: '/categories/tech.png', icon: Monitor, color: '#2563eb', bg: '#eff6ff', scale: 1.45, category: 'maison-depannage' },
+                  { label: 'Transport & déménagement', image: '/categories/transport.png', icon: Truck, color: '#7c3aed', bg: '#f5f3ff', scale: 1.45, category: 'maison-depannage' },
+                  { label: "Garde d’enfants", image: '/categories/enfants.png', icon: Baby, color: '#db2777', bg: '#fdf2f8', scale: 1.45, category: 'services-entre-particuliers' },
+                  { label: 'Santé & bien-être', image: '/categories/sante.png', icon: Heart, color: '#e11d48', bg: '#fff1f2', scale: 2.1, category: 'sante-bien-etre' },
+                ].map(({ label, image, icon, color, bg, scale, category }) => (
+                  <CategoryTile
+                    key={label}
+                    label={label}
+                    image={image}
+                    icon={icon}
+                    color={color}
+                    bg={bg}
+                    scale={scale}
+                    to={`/annuaire/${category}`}
+                    onNavigate={navigate}
+                  />
+                ))}
               </div>
             </div>
           </div>
@@ -189,81 +193,35 @@ export function LandingPage() {
               boxShadow: '0 8px 40px -8px rgba(124,58,237,0.2), 0 20px 60px -16px rgba(124,58,237,0.12), 0 2px 8px -2px rgba(0,0,0,0.06)',
               padding: '10px',
             }}>
-              {/* Tabs */}
-              <div className="flex rounded-[20px] p-[5px] gap-1 mb-5"
-                   style={{ background: 'rgba(139,92,246,0.07)' }}>
-                {(['signup', 'login'] as const).map((t, i) => (
-                  <button
-                    key={t}
-                    onClick={() => setActiveTab(t)}
-                    className="flex-1 py-2.5 text-[13px] font-bold rounded-2xl transition-all duration-200"
-                    style={activeTab === t ? {
-                      background: '#fff',
-                      color: '#5b21b6',
-                      boxShadow: '0 2px 8px -2px rgba(91,33,182,0.18), 0 0 0 1px rgba(124,58,237,0.1)',
-                    } : { color: '#9ca3af' }}
-                  >
-                    {i === 0 ? 'Nouveau membre' : 'Déjà inscrit·e'}
-                  </button>
-                ))}
-              </div>
+              <div className="px-3 pt-4 pb-4 text-center">
+                <p className="text-[13px] text-neutral-500 mb-5 leading-relaxed">
+                  Rejoignez la communauté pour proposer vos services ou contacter des membres de confiance.
+                </p>
 
-              {/* Contenu */}
-              <div className="px-2.5 pb-4">
-                {activeTab === 'signup' ? (
-                  <div className="animate-fade-in text-center">
-                    <p className="text-[13px] text-neutral-400 mb-5 leading-relaxed">
-                      Rejoignez la communauté pour proposer vos services ou contacter des membres de confiance.
-                    </p>
-                    <button
-                      onClick={() => navigate('/inscription')}
-                      className="w-full flex items-center justify-center gap-2.5 font-extrabold text-[15px] text-white py-4 rounded-[18px] transition-all duration-200"
-                      style={{
-                        background: 'linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)',
-                        boxShadow: '0 8px 32px -4px rgba(124,58,237,0.45), 0 2px 8px -2px rgba(124,58,237,0.2)',
-                        letterSpacing: '-0.01em',
-                      }}
-                      onMouseEnter={e => {
-                        (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-                        (e.currentTarget as HTMLElement).style.boxShadow = '0 14px 48px -6px rgba(124,58,237,.6), 0 4px 16px -4px rgba(124,58,237,.3)';
-                      }}
-                      onMouseLeave={e => {
-                        (e.currentTarget as HTMLElement).style.transform = '';
-                        (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 32px -4px rgba(124,58,237,0.45), 0 2px 8px -2px rgba(124,58,237,0.2)';
-                      }}
-                    >
-                      <UserPlus size={18} strokeWidth={2.2} />
-                      Créer mon compte
-                    </button>
-                  </div>
-                ) : (
-                  <div className="animate-fade-in text-center">
-                    <p className="text-[13px] text-neutral-400 mb-5 leading-relaxed">
-                      Bon retour parmi nous. Retrouvez vos messages et vos favoris.
-                    </p>
-                    <button
-                      onClick={() => navigate('/connexion')}
-                      className="w-full flex items-center justify-center gap-2.5 font-extrabold text-[15px] py-4 rounded-[18px] transition-all duration-200"
-                      style={{
-                        color: '#5b21b6',
-                        border: '1.5px solid rgba(124,58,237,0.2)',
-                        background: 'transparent',
-                        letterSpacing: '-0.01em',
-                      }}
-                      onMouseEnter={e => {
-                        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.4)';
-                        (e.currentTarget as HTMLElement).style.background = 'rgba(139,92,246,0.05)';
-                      }}
-                      onMouseLeave={e => {
-                        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.2)';
-                        (e.currentTarget as HTMLElement).style.background = 'transparent';
-                      }}
-                    >
-                      Se connecter
-                      <ArrowRight size={18} strokeWidth={2.2} />
-                    </button>
-                  </div>
-                )}
+                <button
+                  onClick={() => navigate('/inscription')}
+                  className="w-full flex items-center justify-center gap-2.5 font-extrabold text-[15px] text-white py-4 rounded-2xl active:scale-[0.98] transition-all duration-150"
+                  style={{
+                    background: 'linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)',
+                    boxShadow: '0 8px 24px -6px rgba(124,58,237,0.48)',
+                  }}
+                >
+                  <UserPlus size={19} strokeWidth={2.2} />
+                  Créer mon compte
+                </button>
+
+                <button
+                  onClick={() => navigate('/connexion')}
+                  className="mt-3 w-full flex items-center justify-center gap-2 font-bold text-[14px] py-3.5 rounded-2xl active:scale-[0.98] transition-all duration-150"
+                  style={{
+                    color: '#6d28d9',
+                    background: '#f5f3ff',
+                    border: '1px solid rgba(124,58,237,0.16)',
+                  }}
+                >
+                  J’ai déjà un compte
+                  <ArrowRight size={17} strokeWidth={2.2} />
+                </button>
 
                 <div className="mt-4 pt-4 text-center" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
                   <button
@@ -311,52 +269,8 @@ export function LandingPage() {
           </div>
         </div>
 
-        {/* ── CATEGORIES ── */}
-        <div className="max-w-6xl mx-auto px-5 sm:px-8 pb-20">
-          {/* Section header */}
-          <div className="mb-2">
-            <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 mb-5"
-                 style={{ background: 'rgba(139,92,246,0.07)', border: '1px solid rgba(124,58,237,0.12)' }}>
-              <span className="text-[10px] font-bold tracking-[0.1em] uppercase text-primary-600">Services disponibles</span>
-            </div>
-            <h2 className="font-extrabold text-neutral-900 mb-3"
-                style={{ fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', letterSpacing: '-0.03em', lineHeight: 1.05 }}>
-              Bien plus qu'un annuaire
-            </h2>
-            <p className="text-[14px] text-neutral-500 leading-relaxed max-w-md">
-              Bricolage, ménage, animaux, tech — des services entre membres qui se font confiance.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
-            {[
-              { label: 'Bricolage & Travaux',      image: '/categories/bricolage.png', icon: Wrench,   color: '#d97706', bg: '#fffbeb', scale: 1.45, category: 'maison-depannage' },
-              { label: 'Ménage & Aide',            image: '/categories/menage.png',    icon: SprayCan, color: '#0891b2', bg: '#ecfeff', scale: 1.45, category: 'maison-depannage' },
-              { label: "Garde d'animaux",          image: '/categories/animaux.png',   icon: PawPrint, color: '#ea580c', bg: '#fff7ed', scale: 1.45, category: 'services-entre-particuliers' },
-              { label: 'Jardinage',                image: '/categories/jardinage.png', icon: Leaf,     color: '#16a34a', bg: '#f0fdf4', scale: 1.45, category: 'maison-depannage' },
-              { label: 'Tech & Informatique',      image: '/categories/tech.png',      icon: Monitor,  color: '#2563eb', bg: '#eff6ff', scale: 1.45, category: 'maison-depannage' },
-              { label: 'Transport & Déménagement', image: '/categories/transport.png', icon: Truck,    color: '#7c3aed', bg: '#f5f3ff', scale: 1.45, category: 'maison-depannage' },
-              { label: "Garde d'enfants",          image: '/categories/enfants.png',   icon: Baby,     color: '#db2777', bg: '#fdf2f8', scale: 1.45, category: 'services-entre-particuliers' },
-              { label: 'Santé & Bien-être',       image: '/categories/sante.png',    icon: Heart, color: '#e11d48', bg: '#fff1f2', scale: 2.1, category: 'sante-bien-etre' },
-              { label: 'Voyages & Hébergements',    image: '/categories/voyages.png',   icon: Tent, color: '#0ea5e9', bg: '#f0f9ff', scale: 1.45, category: 'voyages-hebergements' },
-            ].map(({ label, image, icon, color, bg, scale, category }) => (
-              <CategoryTile
-                key={label}
-                label={label}
-                image={image}
-                icon={icon}
-                color={color}
-                bg={bg}
-                scale={scale}
-                to={`/annuaire/${category}`}
-                onNavigate={navigate}
-              />
-            ))}
-          </div>
-        </div>
-
         {/* ── COMMENT ÇA MARCHE ── */}
-        <div className="max-w-6xl mx-auto px-5 sm:px-8 pb-24">
+        <div className={`max-w-6xl mx-auto px-5 sm:px-8 ${isNativeApp ? 'pb-28' : 'pb-24'}`}>
           <div className="mb-2">
             <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 mb-5"
                  style={{ background: 'rgba(139,92,246,0.07)', border: '1px solid rgba(124,58,237,0.12)' }}>
@@ -368,31 +282,29 @@ export function LandingPage() {
             </h2>
           </div>
 
-          <div className="mt-8 rounded-3xl relative overflow-hidden p-8 sm:p-14"
-               style={{ background: 'rgba(139,92,246,0.04)', border: '1px solid rgba(124,58,237,0.1)' }}>
+          <div className="relative mt-8 overflow-hidden rounded-3xl bg-white p-7 shadow-soft sm:p-14"
+               style={{ border: '1px solid rgba(124,58,237,0.1)' }}>
             {/* Glows */}
             <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full pointer-events-none"
                  style={{ background: 'radial-gradient(ellipse, rgba(124,58,237,0.08), transparent 70%)' }} />
             <div className="absolute -bottom-12 -left-8 w-40 h-40 rounded-full pointer-events-none"
                  style={{ background: 'radial-gradient(ellipse, rgba(219,39,119,0.07), transparent 70%)' }} />
 
-            <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-10">
+            <div className="relative z-10 grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-10">
               {[
                 { n: '1', title: 'Créez votre profil',     desc: 'Inscrivez-vous gratuitement. Remplissez votre bio et précisez si vous offrez ou cherchez des services.' },
                 { n: '2', title: 'Déclarez vos talents',   desc: 'Ajoutez vos compétences ou vos besoins. Notre moteur connecte les bons profils ensemble.' },
                 { n: '3', title: 'Échangez en sécurité',   desc: 'Utilisez la messagerie intégrée. Après la prestation, laissez un avis pour faire grandir la confiance.' },
               ].map(({ n, title, desc }) => (
-                <div key={n} className="flex flex-col items-center text-center">
-                  <div className="h-[50px] w-[50px] rounded-2xl bg-white flex items-center justify-center font-extrabold text-[18px] text-primary-600 mb-5"
-                       style={{
-                         border: '1px solid rgba(124,58,237,0.15)',
+                <div key={n} className="flex items-start gap-4 text-left md:flex-col md:items-center md:text-center">
+                  <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-full bg-primary-600 text-[18px] font-extrabold text-white shadow-soft md:mb-1"
+                     style={{
                          boxShadow: '0 2px 12px -2px rgba(124,58,237,0.2)',
                          letterSpacing: '-0.03em',
                        }}>
                     {n}
                   </div>
-                  <h3 className="text-[15px] font-extrabold text-neutral-900 mb-2" style={{ letterSpacing: '-0.02em' }}>{title}</h3>
-                  <p className="text-[13px] text-neutral-500 leading-relaxed">{desc}</p>
+                  <div><div className="mb-1 flex flex-wrap items-center gap-2 md:justify-center"><h3 className="text-[17px] font-extrabold text-neutral-900" style={{ letterSpacing: '-0.02em' }}>{title}</h3><span className="rounded-full bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600">{n === '1' ? 'Gratuit' : n === '2' ? 'Filtres' : 'Sécurisé'}</span></div><p className="text-[14px] leading-relaxed text-neutral-500">{desc}</p></div>
                 </div>
               ))}
             </div>
@@ -424,8 +336,8 @@ export function LandingPage() {
 
       </main>
 
-      {/* ── FOOTER ── */}
-      <footer className="relative z-10 px-5 sm:px-8 py-8 pb-36 sm:pb-10"
+      {/* The website keeps its footer; native apps expose these links in Settings. */}
+      {!isNativeApp && <footer className="relative z-10 px-5 sm:px-8 py-8 pb-36 sm:pb-10"
               style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
         <div className="max-w-6xl mx-auto flex items-center justify-between flex-wrap gap-4">
           <p className="text-[11px] font-extrabold uppercase tracking-widest text-neutral-400">
@@ -449,7 +361,7 @@ export function LandingPage() {
             ))}
           </div>
         </div>
-      </footer>
+      </footer>}
     </div>
   );
 }

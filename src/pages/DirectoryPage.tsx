@@ -10,6 +10,7 @@ import { Breadcrumbs, type BreadcrumbItem } from '@/components/Breadcrumbs';
 import { useDirectoryCategorySEO } from '@/lib/useSEO';
 import { CATEGORY_ICONS, CATEGORY_ICON_FALLBACK } from '@/lib/categoryIcons';
 import { TARGET_CITIES, cityMatches } from '@/lib/cities';
+import { SCREENSHOT_DEMO_PROFILES } from '@/lib/screenshotDemo';
 import {
   Compass,
   Search,
@@ -33,6 +34,7 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeSub, setActiveSub] = useState<string | null>(null);
+  const [profileKind, setProfileKind] = useState<'all' | 'member' | 'organization' | 'places'>('all');
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
@@ -78,11 +80,10 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
 
       // Real member data can't be faked — surface a real error if this fails.
       try {
-        const profRes = await supabase
-          .from('profiles')
-          .select(PUBLIC_PROFILE_COLUMNS)
-          .eq('profile_status', 'active')
-          .order('created_at', { ascending: false });
+        const [profRes, blocksRes] = await Promise.all([
+          supabase.from('profiles').select(PUBLIC_PROFILE_COLUMNS).eq('profile_status', 'active').order('created_at', { ascending: false }),
+          supabase.from('blocked_users').select('blocker_id, blocked_id').or(`blocker_id.eq.${user.id},blocked_id.eq.${user.id}`),
+        ]);
         if (cancelled) return;
 
         if (profRes.error) {
@@ -92,7 +93,9 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
           return;
         }
 
-        const allProfiles = (profRes.data ?? []) as PublicProfile[];
+        const blockedIds = new Set((blocksRes.data ?? []).map((block) => block.blocker_id === user.id ? block.blocked_id : block.blocker_id));
+        const realProfiles = ((profRes.data ?? []) as PublicProfile[]).filter((member) => !blockedIds.has(member.id));
+        const allProfiles = [...SCREENSHOT_DEMO_PROFILES, ...realProfiles];
         const ids = allProfiles.map((p) => p.id);
 
         const [pscRes, revRes] = await Promise.all([
@@ -119,11 +122,12 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
 
         const withStats: ProfileWithStats[] = allProfiles.map((p) => {
           const ratings = ratingsByProfile.get(p.id) ?? [];
+          const demoRating = p.id.startsWith('demo-') ? { avg: 4.8, count: 12 } : null;
           return {
             ...p,
             subIds: subsByProfile.get(p.id) ?? new Set(),
-            avgRating: avg(ratings),
-            reviewCount: ratings.length,
+            avgRating: demoRating?.avg ?? avg(ratings),
+            reviewCount: demoRating?.count ?? ratings.length,
           };
         });
 
@@ -153,6 +157,7 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
   }, [categorySlug, categories]);
 
   const activeCatDef = categories.find((c) => c.id === activeCategory);
+  const isShoppingCategory = activeCatDef?.slug === 'shopping-bonnes-adresses';
   const activeCity = citySlug ? TARGET_CITIES.find((c) => c.slug === citySlug) ?? null : null;
   const subsForActiveCat = subcategories.filter((s) => s.category_id === activeCategory);
   const subcategoryById = useMemo(() => new Map(subcategories.map((s) => [s.id, s])), [subcategories]);
@@ -162,7 +167,6 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
     const { data } = await supabase
       .from('places')
       .select('*, subcategory:subcategories(id, label)')
-      .eq('status', 'approved')
       .order('created_at', { ascending: false });
     setPlaces((data ?? []) as Place[]);
     setPlacesLoading(false);
@@ -196,6 +200,9 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
 
   const filtered = useMemo(() => {
     let list = profiles.filter((p) => p.id !== myProfile?.id);
+
+    if (profileKind === 'member') list = list.filter((p) => p.account_type === 'particulier');
+    if (profileKind === 'organization') list = list.filter((p) => p.account_type === 'pro');
 
     if (activeCategory) {
       const subsInCat = subcategories.filter((s) => s.category_id === activeCategory);
@@ -231,7 +238,7 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
     }
 
     return list;
-  }, [profiles, activeCategory, activeSub, activeCity, search, subcategories, subcategoryById, myProfile]);
+  }, [profiles, activeCategory, activeSub, activeCity, search, subcategories, subcategoryById, myProfile, profileKind]);
 
   useDirectoryCategorySEO(activeCatDef, filtered.length, activeCity);
 
@@ -258,10 +265,10 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
   }
 
   return (
-    <div className="min-h-full bg-paper-base animate-fade-in">
+    <div className="min-h-full bg-[#f3f0ff] pt-3 animate-fade-in">
       {activeCatDef && <Breadcrumbs items={breadcrumbItems} navigate={navigate} />}
 
-      <div className="px-4 mt-4">
+      <div className="px-5">
         <div className="relative">
           <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
             <Compass size={20} className="text-primary-500" />
@@ -271,25 +278,25 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Montage cuisine, ménage, pet-sitting..."
-            className="block w-full pl-12 pr-4 py-3 bg-white text-neutral-900 rounded-2xl border border-neutral-200 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 shadow-sm text-base md:text-sm outline-none placeholder-text-muted"
+            className="block w-full rounded-[26px] border border-white bg-white py-4 pl-12 pr-4 text-base text-neutral-900 shadow-soft outline-none placeholder-text-muted focus:border-primary-500 focus:ring-1 focus:ring-primary-500 md:text-sm"
           />
         </div>
       </div>
 
       {/* Categories (Main) */}
-      <section className="no-scrollbar flex items-center gap-6 overflow-x-auto px-6 pb-2 mt-4">
+      <section className="no-scrollbar flex items-start gap-7 overflow-x-auto px-7 pb-2 pt-6">
         <button
           onClick={() => navigate('/annuaire')}
           className="flex min-w-fit cursor-pointer flex-col items-center gap-2"
         >
-          <div className={`flex h-[60px] w-[60px] items-center justify-center rounded-full transition-all ${
-            !activeCategory ? 'bg-rainbow animate-gradient-x shadow-soft text-white' : 'bg-white border border-gold-hairline shadow-sm hover:shadow-soft text-ink-muted'
+          <div className={`flex h-[66px] w-[66px] items-center justify-center rounded-full transition-all ${
+            !activeCategory ? 'bg-[#20c7a3] shadow-lift text-white' : 'border border-gold-hairline bg-white shadow-soft hover:shadow-lift text-ink-muted'
           }`}>
             <Users size={22} />
           </div>
-          <span className={`text-[11px] relative pb-1 ${!activeCategory ? 'font-bold text-ink-base' : 'font-semibold text-ink-muted'}`}>
+          <span className={`relative max-w-[92px] pb-2 text-center text-[12px] leading-tight ${!activeCategory ? 'font-bold text-ink-base' : 'font-semibold text-ink-muted'}`}>
             Tous les membres
-            {!activeCategory && <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-rainbow animate-gradient-x" />}
+            {!activeCategory && <span className="absolute bottom-0 left-0 right-0 h-[3px] rounded-full bg-gradient-to-r from-[#20c7a3] to-primary-600" />}
           </span>
         </button>
 
@@ -302,14 +309,14 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
               onClick={() => navigate(isActive ? '/annuaire' : `/annuaire/${c.slug}`)}
               className="flex min-w-fit cursor-pointer flex-col items-center gap-2"
             >
-              <div className={`flex h-[60px] w-[60px] items-center justify-center rounded-full transition-all ${
-                isActive ? 'bg-rainbow animate-gradient-x shadow-soft text-white' : 'bg-white border border-gold-hairline shadow-sm hover:shadow-soft text-ink-muted'
+              <div className={`flex h-[66px] w-[66px] items-center justify-center rounded-full transition-all ${
+                isActive ? 'bg-[#20c7a3] shadow-lift text-white' : 'border border-gold-hairline bg-white shadow-soft hover:shadow-lift text-ink-muted'
               }`}>
                 <Icon size={22} />
               </div>
-              <span className={`text-[11px] relative pb-1 ${isActive ? 'font-bold text-ink-base' : 'font-semibold text-ink-muted'}`}>
+              <span className={`relative max-w-[96px] pb-2 text-center text-[12px] leading-tight ${isActive ? 'font-bold text-ink-base' : 'font-semibold text-ink-muted'}`}>
                 {c.label.replace(' & ', ' & ')}
-                {isActive && <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-rainbow animate-gradient-x" />}
+                {isActive && <span className="absolute bottom-0 left-0 right-0 h-[3px] rounded-full bg-gradient-to-r from-[#20c7a3] to-primary-600" />}
               </span>
             </button>
           );
@@ -338,38 +345,37 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
         </div>
       )}
 
-      {/* City chips — only within a category (see cities.ts) */}
-      {activeCatDef && (
-        <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 py-2 mt-1 mb-2">
-          {TARGET_CITIES.map((city) => {
-            const isCityActive = activeCity?.slug === city.slug;
-            return (
-              <button
-                key={city.slug}
-                onClick={() => navigate(isCityActive ? `/annuaire/${activeCatDef.slug}` : `/annuaire/${activeCatDef.slug}/${city.slug}`)}
-                className={`shrink-0 rounded-xl px-3.5 py-1.5 text-[12px] font-semibold transition-all ${
-                  isCityActive
-                    ? 'bg-patina-deep text-white shadow-soft'
-                    : 'border border-gold-hairline bg-white/50 backdrop-blur-md text-ink-muted hover:bg-white/80'
-                }`}
-              >
-                {city.label}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <div className="no-scrollbar flex gap-2 overflow-x-auto px-5 py-3">
+        {[
+          { id: 'all' as const, label: 'Tout voir' },
+          { id: 'member' as const, label: 'Membres' },
+          { id: 'organization' as const, label: 'Associations & structures' },
+        ].map((kind) => (
+          <button
+            key={kind.id}
+            onClick={() => setProfileKind(kind.id)}
+            className={`shrink-0 rounded-full px-4 py-2 text-[12px] font-semibold transition-all ${
+              profileKind === kind.id
+                ? 'bg-ink-base text-white shadow-soft'
+                : 'border border-gold-hairline bg-white text-ink-muted shadow-sm'
+            }`}
+          >
+            {kind.label}
+          </button>
+        ))}
+      </div>
 
       {/* Results count */}
-      <div className="container-app flex items-center justify-between py-2 mt-4">
-        <p className="text-[13px] font-medium text-ink-muted">
-          <span className="font-bold text-ink-base">{filtered.length}</span>{' '}
-          membre{filtered.length > 1 ? 's' : ''} {activeSub && subcategoryById.get(activeSub) && <span>en <span className="font-bold text-ink-base">{subcategoryById.get(activeSub)!.label}</span></span>}
+      <div className="container-app mt-5 flex items-center justify-between py-2">
+        <p className="text-[16px] font-medium text-ink-muted">
+          {isShoppingCategory ? (
+            <><span className="font-display text-2xl font-bold text-ink-base">{filteredPlaces.length}</span> lieu{filteredPlaces.length > 1 ? 'x' : ''}</>
+          ) : (
+            <><span className="font-display text-2xl font-bold text-ink-base">{filtered.length}</span> membre{filtered.length > 1 ? 's' : ''} <span className="text-xs">· {places.length} lieu{places.length > 1 ? 'x' : ''} recommandé{places.length > 1 ? 's' : ''}</span></>
+          )} {activeSub && subcategoryById.get(activeSub) && <span>en <span className="font-bold text-ink-base">{subcategoryById.get(activeSub)!.label}</span></span>}
           {activeCity && <span> à <span className="font-bold text-ink-base">{activeCity.label}</span></span>}
         </p>
-        <button onClick={() => setAddPlaceOpen(true)} className="flex items-center gap-1.5 rounded-xl border border-gold-hairline bg-white/50 px-3 py-2 text-[11px] font-semibold text-ink-base hover:bg-white/80 transition-all shadow-sm">
-          <Plus size={12} /> Proposer un lieu
-        </button>
+        {isShoppingCategory && <button onClick={() => setAddPlaceOpen(true)} className="flex items-center gap-1.5 rounded-2xl border border-gold-hairline bg-white px-4 py-2.5 text-[12px] font-semibold text-ink-base shadow-soft transition-all hover:bg-white/80"><Plus size={14} /> Proposer un lieu</button>}
       </div>
 
       {error && (
@@ -393,8 +399,8 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
         </button>
       )}
 
-      {activeCatDef?.slug !== 'shopping-bonnes-adresses' && (
-        <main className="container-app grid grid-cols-2 gap-4 pb-12 pt-2 sm:grid-cols-3 lg:grid-cols-4" data-purpose="provider-directory">
+      {!isShoppingCategory && (
+        <main className="container-app grid grid-cols-2 gap-4 pb-12 pt-4 sm:grid-cols-3 lg:grid-cols-4" data-purpose="provider-directory">
           {loading ? (
           Array.from({ length: 8 }).map((_, i) => (
             <article key={i} className="flex flex-col items-center gap-2 rounded-2xl border border-gold-hairline bg-white/60 backdrop-blur-sm p-4 shadow-soft">
@@ -419,10 +425,10 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
               <article
                 key={p.id}
                 onClick={() => navigate(`/profil/${p.id}`)}
-                className="group relative flex cursor-pointer flex-col items-center rounded-2xl border border-gold-hairline bg-white/60 backdrop-blur-sm p-4 text-center shadow-soft transition-all hover:-translate-y-1 hover:shadow-lift"
+                className="group relative flex h-60 cursor-pointer flex-col items-center rounded-[28px] border border-white bg-white p-4 text-center shadow-soft transition-all hover:-translate-y-1 hover:shadow-lift"
               >
-                <div className="relative mb-3 mt-1">
-                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-paper-base shadow-sm ring-2 ring-white text-xl font-bold uppercase text-ink-muted">
+                <div className="relative mb-2">
+                  <div className="flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full bg-paper-base shadow-sm ring-2 ring-white text-lg font-bold uppercase text-ink-muted">
                     {p.photo_url ? (
                       <img src={p.photo_url} alt={p.display_name} className="h-full w-full object-cover" loading="lazy" />
                     ) : (
@@ -433,36 +439,39 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
                   {p.verification_status === 'verified' && (
                     <div className="absolute -bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center whitespace-nowrap rounded-full border border-gold-hairline bg-white px-1.5 py-0.5 shadow-sm">
                       <ShieldCheck size={9} className="mr-0.5 text-patina-deep" />
-                      <span className="text-[7px] font-bold uppercase tracking-wider text-patina-deep">Vérifié</span>
+                      <span className="text-[8px] font-bold uppercase tracking-wider text-patina-deep">Vérifié</span>
                     </div>
                   )}
                 </div>
 
-                <h3 className="w-full truncate px-0.5 font-display text-[13px] font-semibold text-ink-base">{p.display_name}</h3>
+                <h3 className="w-full truncate px-0.5 font-display text-[17px] font-bold text-ink-base">{p.display_name}</h3>
 
-                <div className="mt-0.5 flex items-center gap-1 text-[11px] font-bold text-ink-base">
-                  <Star size={11} className="fill-[#D4AF37] text-[#D4AF37]" />
+                {p.account_type === 'pro' && (
+                  <span className="mt-1 rounded-full bg-primary-50 px-2 py-0.5 text-[9px] font-bold text-primary-700">Association / structure</span>
+                )}
+
+                <div className="mt-1 flex items-center gap-0.5 text-[12px] font-bold text-ink-base">
                   {p.avgRating > 0 ? (
-                    <span>{p.avgRating.toFixed(1)} <span className="font-normal text-ink-muted">({p.reviewCount})</span></span>
+                    <><span className="flex">{Array.from({ length: 5 }, (_, index) => <Star key={index} size={10} className="fill-[#D4AF37] text-[#D4AF37]" />)}</span><span className="ml-1">{p.avgRating.toFixed(1)} <span className="font-normal text-ink-muted">({p.reviewCount})</span></span></>
                   ) : (
                     <span className="font-normal text-ink-muted">-</span>
                   )}
                 </div>
 
-                <div className="mt-0.5 flex items-center gap-0.5 truncate px-0.5 text-[10px] text-ink-muted">
+                <div className="mt-1 flex items-center gap-0.5 truncate px-0.5 text-[11px] text-ink-muted">
                   <MapPin size={11} /> {p.city || 'Partout'}
                 </div>
 
-                <div className="mt-2 flex w-full flex-col items-center gap-1.5">
-                  {p.skills.slice(0, 2).map((s) => (
-                    <span key={s} className="w-[90%] truncate rounded-full border border-gold-hairline bg-white px-2 py-0.5 text-[10px] font-medium text-ink-base shadow-sm">
+                <div className="mt-1.5 flex w-full flex-col items-center gap-1">
+                  {p.skills.slice(0, 1).map((s) => (
+                    <span key={s} className="w-[94%] truncate rounded-full bg-primary-50 px-2 py-1 text-[10px] font-semibold text-primary-700">
                       {s}
                     </span>
                   ))}
                 </div>
 
                 {p.indicative_rates && (
-                  <div className="mt-auto w-full pt-2">
+                  <div className="mt-auto w-full pt-1.5">
                     <span className="inline-block max-w-full truncate rounded-full bg-paper-base border border-gold-hairline px-2.5 py-1 text-[10px] font-bold text-ink-base shadow-sm">
                       {p.indicative_rates}
                     </span>
@@ -475,8 +484,7 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
       </main>
       )}
 
-      {/* Places (Lieux recommandés) - Only shown when a category is selected */}
-      {activeCategory && (filteredPlaces.length > 0 || placesLoading) && (
+      {isShoppingCategory && (
         <div className="container-app pb-28 pt-6 border-t border-gold-hairline">
           <div className="mb-4 flex items-center justify-between">
             <div>
@@ -493,7 +501,9 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
                     <div className="h-2 w-1/2 rounded bg-paper-base animate-pulse" />
                   </div>
                 ))
-              : filteredPlaces.map((place) => (
+              : filteredPlaces.length === 0 ? (
+                  <div className="col-span-full rounded-2xl bg-white p-6 text-center text-sm text-ink-muted shadow-soft">Aucun lieu ne correspond encore à cette recherche.</div>
+                ) : filteredPlaces.map((place) => (
                   <article key={place.id} onClick={() => navigate(`/lieux/${place.id}`)} className="group relative flex cursor-pointer flex-col gap-2 rounded-2xl border border-gold-hairline bg-white/60 backdrop-blur-sm p-2 shadow-soft transition-all hover:shadow-lift hover:-translate-y-0.5">
                     {place.photo_url ? (
                       <div className="aspect-square w-full overflow-hidden rounded-xl bg-paper-base">
@@ -524,7 +534,8 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
 
       {addPlaceOpen && (
         <AddPlaceModal
-          subcategories={subsForActiveCat}
+          subcategories={subcategories}
+          categories={categories}
           onClose={() => setAddPlaceOpen(false)}
           onSubmitted={loadPlaces}
         />

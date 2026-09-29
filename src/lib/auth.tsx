@@ -10,6 +10,10 @@ interface AuthContextValue {
   loading: boolean;
   signUp: (email: string, password: string) => Promise<{ error: string | null; needsConfirmation: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null; profile?: Profile | null }>;
+  requestPasswordReset: (email: string) => Promise<{ error: string | null }>;
+  updatePassword: (password: string) => Promise<{ error: string | null }>;
+  isPasswordRecovery: boolean;
+  finishPasswordRecovery: () => void;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   /** Set the in-memory profile directly from a row you already have (e.g.
@@ -33,6 +37,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(
+    () => new URLSearchParams(window.location.search).get('recovery') === '1',
+  );
 
   const loadProfile = async (uid: string): Promise<Profile | null> => {
     try {
@@ -65,8 +72,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
       (async () => {
+        if (event === 'PASSWORD_RECOVERY') setIsPasswordRecovery(true);
         setLoading(true);
         setSession(newSession);
         setUser(newSession?.user ?? null);
@@ -117,6 +125,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: null };
   };
 
+  const requestPasswordReset = async (email: string) => {
+    const resetUrl = `${window.location.origin}/connexion?recovery=1`;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: resetUrl });
+    return { error: error?.message ?? null };
+  };
+
+  const updatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    return { error: error?.message ?? null };
+  };
+
+  const finishPasswordRecovery = () => setIsPasswordRecovery(false);
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
@@ -147,6 +168,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           intervention_zone: null,
           indicative_rates: null,
           budget_indicatif: null,
+          linkedin_url: null,
+          external_reviews_url: null,
           charte_accepted: true,
           charte_accepted_at: new Date().toISOString(),
           verification_status: 'none',
@@ -154,6 +177,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           identity_document_path: null,
           profile_status: 'active',
           is_admin: true,
+          is_community_member: null,
+          is_ally: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
@@ -165,7 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ session, user, profile, loading, signUp, signIn, signOut, refreshProfile, setProfile, devLogin }}
+      value={{ session, user, profile, loading, signUp, signIn, requestPasswordReset, updatePassword, isPasswordRecovery, finishPasswordRecovery, signOut, refreshProfile, setProfile, devLogin }}
     >
       {children}
     </AuthContext.Provider>

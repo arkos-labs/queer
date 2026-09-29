@@ -1,6 +1,6 @@
 import type { PublicProfile, Badge as BadgeType } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
-import { ShieldCheck, Info, CheckCircle2, Handshake, Star, Clock, Heart } from 'lucide-react';
+import { ShieldCheck, Info, CheckCircle2, Handshake, Star, Clock, Heart, Linkedin, ExternalLink } from 'lucide-react';
 import { ReactNode } from 'react';
 
 interface TrustPanelProps {
@@ -101,6 +101,31 @@ export function TrustPanel({ profile, badges, reviewCount, avgRating }: TrustPan
           />
         )}
       </div>
+
+      {(profile.linkedin_url || profile.external_reviews_url) && (
+        <div className="mt-5 grid gap-2 border-t border-neutral-200 pt-5 sm:grid-cols-2">
+          {profile.linkedin_url && (
+            <a
+              href={profile.linkedin_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 text-sm font-bold text-blue-700 active:scale-[0.98]"
+            >
+              <Linkedin size={18} /> LinkedIn <ExternalLink size={14} />
+            </a>
+          )}
+          {profile.external_reviews_url && (
+            <a
+              href={profile.external_reviews_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-3 text-sm font-bold text-violet-700 active:scale-[0.98]"
+            >
+              <Star size={18} /> Vérifier les avis <ExternalLink size={14} />
+            </a>
+          )}
+        </div>
+      )}
 
       <div className="mt-5 rounded-xl bg-indigo-50/80 p-4 text-[13px] text-indigo-800 flex items-start gap-2.5">
         <Info size={16} className="shrink-0 mt-0.5" />

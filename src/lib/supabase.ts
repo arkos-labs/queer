@@ -22,7 +22,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Use `select('*')` only when loading your OWN profile (auth.tsx,
 // SettingsPage) or in AdminPage, which both have a real need for every field.
 export const PUBLIC_PROFILE_COLUMNS =
-  'id, display_name, civilite, pronouns, account_type, bio, photo_url, city, skills, needs, intervention_zone, indicative_rates, budget_indicatif, charte_accepted, charte_accepted_at, verification_status, verified_at, profile_status, created_at, updated_at';
+  'id, display_name, civilite, pronouns, account_type, bio, photo_url, city, skills, needs, intervention_zone, indicative_rates, budget_indicatif, linkedin_url, external_reviews_url, charte_accepted, charte_accepted_at, verification_status, verified_at, profile_status, created_at, updated_at';
 
 // supabase.functions.invoke() sets `data` to null on any non-2xx response
 // and collapses the real error into a generic "Edge Function returned a

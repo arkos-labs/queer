@@ -5,6 +5,7 @@ import './index.css';
 
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { Capacitor } from '@capacitor/core';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -18,7 +19,7 @@ createRoot(document.getElementById('root')!).render(
 // beforeinstallprompt (see InstallPWABanner.tsx) — without an active
 // service worker, the manifest.json alone isn't enough and the "Installer
 // l'application" banner never appears on Android.
-if ('serviceWorker' in navigator) {
+if (!Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   });

@@ -17,6 +17,15 @@ const RATE_UNITS = ['/ heure', '/ jour', '/ prestation', '/ mois'];
 // value with no unit at all) — otherwise saving again would double it up.
 const stripEuro = (s: string) => s.replace(/€\s*$/, '').trim();
 
+const normalizeHttpsUrl = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  const url = new URL(candidate);
+  if (url.protocol !== 'https:') throw new Error('Seuls les liens sécurisés HTTPS sont acceptés.');
+  return url.toString();
+};
+
 export function ProfileEditPage() {
   const { user, profile, refreshProfile } = useAuth();
   const { navigate } = useRouter();
@@ -41,6 +50,8 @@ export function ProfileEditPage() {
     intervention_zone: '',
     indicative_rates: '',
     budget_indicatif: '',
+    linkedin_url: '',
+    external_reviews_url: '',
     skills: [] as string[],
     needs: [] as string[],
   });
@@ -92,6 +103,8 @@ export function ProfileEditPage() {
           intervention_zone: profile.intervention_zone ?? '',
           indicative_rates: profile.indicative_rates ?? '',
           budget_indicatif: profile.budget_indicatif ?? '',
+          linkedin_url: profile.linkedin_url ?? '',
+          external_reviews_url: profile.external_reviews_url ?? '',
           skills: profile.skills,
           needs: profile.needs,
         });
@@ -182,6 +195,20 @@ export function ProfileEditPage() {
     setError(null);
     setSaved(false);
 
+    let linkedinUrl: string | null;
+    let externalReviewsUrl: string | null;
+    try {
+      linkedinUrl = normalizeHttpsUrl(form.linkedin_url);
+      externalReviewsUrl = normalizeHttpsUrl(form.external_reviews_url);
+      if (linkedinUrl && !/(^|\.)linkedin\.com$/i.test(new URL(linkedinUrl).hostname)) {
+        throw new Error('Le lien LinkedIn doit pointer vers linkedin.com.');
+      }
+    } catch (urlError) {
+      setError(urlError instanceof Error ? urlError.message : 'Vérifiez les liens saisis.');
+      setSaving(false);
+      return;
+    }
+
     const { error: upErr } = await supabase.from('profiles').upsert({
       id: user.id,
       display_name: form.display_name,
@@ -195,6 +222,8 @@ export function ProfileEditPage() {
       intervention_zone: form.intervention_zone || null,
       indicative_rates: rateAmount.trim() ? `${rateAmount.trim()}€ ${rateUnit}` : null,
       budget_indicatif: budgetAmount.trim() ? `${budgetAmount.trim()}€ ${budgetUnit}` : null,
+      linkedin_url: linkedinUrl,
+      external_reviews_url: externalReviewsUrl,
       skills: form.skills,
       needs: form.needs,
       charte_accepted: profile?.charte_accepted ?? true,
@@ -300,6 +329,37 @@ export function ProfileEditPage() {
               <div className="sm:col-span-2">
                 <label className="label">Bio</label>
                 <textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} rows={4} className="input" placeholder="Présentez-vous en quelques mots…" />
+              </div>
+            </div>
+          </section>
+
+          <section className="mt-8">
+            <h2 className="font-display text-lg font-semibold text-neutral-900">Liens de confiance</h2>
+            <p className="mt-1 text-sm text-neutral-500">
+              Ajoutez des sources externes que les membres pourront consulter pour vérifier votre activité.
+            </p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="label">Profil LinkedIn</label>
+                <input
+                  type="url"
+                  value={form.linkedin_url}
+                  onChange={(e) => setForm({ ...form, linkedin_url: e.target.value })}
+                  className="input"
+                  placeholder="https://linkedin.com/in/..."
+                  inputMode="url"
+                />
+              </div>
+              <div>
+                <label className="label">Page contenant vos avis</label>
+                <input
+                  type="url"
+                  value={form.external_reviews_url}
+                  onChange={(e) => setForm({ ...form, external_reviews_url: e.target.value })}
+                  className="input"
+                  placeholder="Google, Trustpilot, votre site…"
+                  inputMode="url"
+                />
               </div>
             </div>
           </section>

@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
-import { AlertCircle, ArrowRight, MailCheck } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, Check, Eye, EyeOff, LockKeyhole, Mail, MailCheck, ShieldCheck } from 'lucide-react';
+import { BrandHeader } from '@/components/BrandHeader';
 
 export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
   const { signIn, signUp } = useAuth();
@@ -12,6 +13,7 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
   const [loading, setLoading] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptSensitiveData, setAcceptSensitiveData] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   // Set when signup succeeded but Supabase requires the person to confirm
   // their email address before a session exists — shown instead of
   // silently bouncing them to /onboarding (where they'd have no active
@@ -55,156 +57,190 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
 
   if (confirmationSent) {
     return (
-      <div className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden px-4 py-12 bg-paper-base">
-        <div className="w-full max-w-md animate-scale-in">
-          <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm p-8 text-center md:p-10 shadow-soft">
-            <MailCheck size={40} className="mx-auto mb-4 text-patina-deep" />
-            <h1 className="font-display text-xl font-semibold text-ink-base">Vérifiez votre boîte mail</h1>
-            <p className="mt-3 text-sm text-ink-muted">
+      <div className="flex min-h-screen items-center justify-center bg-[#ede9fe] px-5 py-12">
+        <div className="w-full max-w-sm rounded-[28px] bg-white p-7 text-center shadow-[0_20px_60px_-20px_rgba(91,33,182,0.28)]">
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-violet-100">
+              <MailCheck size={30} className="text-violet-700" />
+            </div>
+            <h1 className="font-display text-2xl font-bold text-neutral-900">Vérifiez votre boîte mail</h1>
+            <p className="mt-3 text-sm leading-relaxed text-neutral-600">
               Nous avons envoyé un lien de confirmation à <strong>{email}</strong>. Cliquez dessus pour activer votre
               compte, vous pourrez ensuite compléter votre profil.
             </p>
-            <p className="mt-4 text-xs text-patina-deep/70">
+            <p className="mt-5 text-xs text-neutral-500">
               Rien reçu ? Vérifiez vos spams, ou{' '}
-              <button onClick={() => setConfirmationSent(false)} className="font-medium text-patina-deep hover:underline">
+              <button onClick={() => setConfirmationSent(false)} className="font-bold text-violet-700">
                 réessayez
               </button>
               .
             </p>
-          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden px-4 py-12 bg-paper-base">
-      <div className="absolute -right-20 top-0 -z-10 h-72 w-72 rounded-full bg-yellow-500/10 blur-3xl" />
-      <div className="absolute -left-20 bottom-0 -z-10 h-72 w-72 rounded-full bg-pink-500/10 blur-3xl" />
+    <div className={isSignup
+      ? 'min-h-[100dvh] bg-[#ede9fe] px-5 pb-[max(16px,env(safe-area-inset-bottom))] pt-2'
+      : 'h-full overflow-hidden bg-[#ede9fe] px-5 pb-[max(10px,env(safe-area-inset-bottom))] pt-2'
+    }>
+      <div className={isSignup
+        ? 'relative mx-auto flex min-h-[calc(100dvh-18px)] w-full max-w-sm flex-col'
+        : 'relative mx-auto flex h-full w-full max-w-sm flex-col'
+      }>
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="absolute left-0 top-1 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/80 text-neutral-800 shadow-sm active:scale-95"
+          aria-label="Retour à l’accueil"
+        >
+          <ArrowLeft size={21} />
+        </button>
 
-      <div className="w-full max-w-md animate-scale-in">
-        <div className="overflow-hidden rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft">
-          <div aria-hidden className="h-1.5 w-full" style={{ background: 'linear-gradient(90deg, #FF0018 0%, #FFA52C 20%, #FFFF41 40%, #008018 60%, #0000F9 80%, #86007D 100%)' }} />
-          <div className="p-8 md:p-10">
-          <div className="mb-8 text-center">
-            <img src="/logo.png" alt="Queer Service" className="mx-auto mb-4 h-16 w-16 object-contain" />
-            <h1 className="font-display text-2xl font-semibold text-ink-base">
-              {isSignup ? 'Rejoignez la communauté' : 'Bon retour parmi nous'}
-            </h1>
-            <p className="mt-2 text-sm text-ink-muted">
-              {isSignup
-                ? 'Fait pour nous, par nous. Je suis parce que nous sommes.'
-                : 'Connectez-vous pour accéder à l\'annuaire et vos échanges.'}
-            </p>
-          </div>
+        <div className="mb-5 text-center">
+          <BrandHeader safeArea={false} />
+          <h1 className="font-display text-[28px] font-extrabold tracking-tight text-neutral-900">
+            {isSignup ? 'Créer votre compte' : 'Ravi·e de vous revoir'}
+          </h1>
+          <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-neutral-600">
+            {isSignup
+              ? 'Rejoignez un espace d’entraide pensé par et pour la communauté.'
+              : 'Connectez-vous pour retrouver votre profil et vos échanges.'}
+          </p>
+        </div>
+
+        <div className="rounded-[28px] border border-violet-200/60 bg-white p-5 shadow-[0_18px_55px_-24px_rgba(91,33,182,0.35)]">
 
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
-              <label className="label" htmlFor="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input"
-                placeholder="vous@exemple.fr"
-                autoComplete="email"
-              />
+              <label className="mb-1.5 block text-xs font-bold text-neutral-700" htmlFor="email">Adresse e-mail</label>
+              <div className="relative">
+                <Mail size={19} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" />
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-14 w-full rounded-2xl border border-neutral-200 bg-neutral-50 pl-12 pr-4 text-base text-neutral-900 outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
+                  placeholder="vous@exemple.fr"
+                  autoComplete="email"
+                  inputMode="email"
+                />
+              </div>
             </div>
             <div>
-              <label className="label" htmlFor="password">Mot de passe</label>
-              <input
-                id="password"
-                type="password"
-                required
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input"
-                placeholder="Au moins 6 caractères"
-                autoComplete={isSignup ? 'new-password' : 'current-password'}
-              />
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className="block text-xs font-bold text-neutral-700" htmlFor="password">Mot de passe</label>
+                {!isSignup && <button type="button" onClick={() => navigate('/mot-de-passe-oublie')} className="text-xs font-bold text-violet-700">Mot de passe oublié ?</button>}
+              </div>
+              <div className="relative">
+                <LockKeyhole size={19} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" />
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-14 w-full rounded-2xl border border-neutral-200 bg-neutral-50 pl-12 pr-12 text-base text-neutral-900 outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
+                  placeholder={isSignup ? '6 caractères minimum' : 'Votre mot de passe'}
+                  autoComplete={isSignup ? 'new-password' : 'current-password'}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                  className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-neutral-500 active:bg-neutral-100"
+                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                >
+                  {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+                </button>
+              </div>
             </div>
 
             {isSignup && (
-              <div className="space-y-2.5 rounded-2xl bg-white border border-gold-hairline p-4 shadow-sm">
-                <label className="flex cursor-pointer items-start gap-2.5">
+              <div className="space-y-3 rounded-2xl bg-violet-50/70 p-4">
+                <label className="flex cursor-pointer items-start gap-3">
                   <input
                     type="checkbox"
                     checked={acceptTerms}
                     onChange={(e) => setAcceptTerms(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-gold-hairline text-patina-deep focus:ring-patina-deep"
+                    className="mt-0.5 h-5 w-5 shrink-0 rounded-md border-violet-300 text-violet-700 focus:ring-violet-500"
                     required
                   />
-                  <span className="text-xs text-ink-muted">
+                  <span className="text-xs leading-relaxed text-neutral-600">
                     J'ai lu et j'accepte les{' '}
-                    <a href="#/cgu" target="_blank" rel="noopener noreferrer" className="font-semibold text-patina-deep hover:underline">
+                    <a href="#/cgu" target="_blank" rel="noopener noreferrer" className="font-bold text-violet-700 underline underline-offset-2">
                       CGU
                     </a>{' '}
                     et la{' '}
-                    <a href="#/confidentialite" target="_blank" rel="noopener noreferrer" className="font-semibold text-patina-deep hover:underline">
+                    <a href="#/confidentialite" target="_blank" rel="noopener noreferrer" className="font-bold text-violet-700 underline underline-offset-2">
                       politique de confidentialité
                     </a>
                     .
                   </span>
                 </label>
-                <label className="flex cursor-pointer items-start gap-2.5">
+                <label className="flex cursor-pointer items-start gap-3 border-t border-violet-200/70 pt-3">
                   <input
                     type="checkbox"
                     checked={acceptSensitiveData}
                     onChange={(e) => setAcceptSensitiveData(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-gold-hairline text-patina-deep focus:ring-patina-deep"
+                    className="mt-0.5 h-5 w-5 shrink-0 rounded-md border-violet-300 text-violet-700 focus:ring-violet-500"
                     required
                   />
-                  <span className="text-xs text-ink-muted">
-                    Je comprends que mon inscription à cet annuaire communautaire implique le traitement de données
-                    relatives à l'orientation sexuelle et/ou à l'identité de genre (catégorie particulière de
-                    données), et j'y consens explicitement (art. 9 du RGPD).
+                  <span className="text-xs leading-relaxed text-neutral-600">
+                    Je consens explicitement au traitement des données sensibles nécessaires à mon inscription dans
+                    cet annuaire communautaire (article 9 du RGPD).
                   </span>
                 </label>
               </div>
             )}
 
             {error && (
-              <div className="flex items-start gap-2 rounded-xl bg-error-50 p-3 text-sm text-error-700">
+              <div className="flex items-start gap-2 rounded-2xl bg-red-50 p-3 text-sm text-red-700">
                 <AlertCircle size={16} className="mt-0.5 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
-            <button type="submit" disabled={loading || !canSubmit} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-ink-base px-4 py-3 font-semibold text-white shadow-soft transition-transform hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0">
+            <button type="submit" disabled={loading || !canSubmit} className="mt-2 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-violet-800 px-4 font-bold text-white shadow-[0_10px_26px_-8px_rgba(109,40,217,0.65)] transition active:scale-[0.98] disabled:opacity-45">
               {loading ? 'Veuillez patienter…' : isSignup ? 'Créer mon compte' : 'Se connecter'}
-              {!loading && <ArrowRight size={16} />}
+              {!loading && <ArrowRight size={18} />}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-ink-muted">
+          <p className="mt-5 text-center text-sm text-neutral-600">
             {isSignup ? (
               <>
                 Déjà un compte ?{' '}
-                <button onClick={() => navigate('/connexion')} className="font-semibold text-patina-deep hover:underline">
+                <button onClick={() => navigate('/connexion')} className="font-bold text-violet-700">
                   Se connecter
                 </button>
               </>
             ) : (
               <>
                 Pas encore de compte ?{' '}
-                <button onClick={() => navigate('/inscription')} className="font-semibold text-patina-deep hover:underline">
-                  Rejoindre la communauté
+                <button onClick={() => navigate('/inscription')} className="font-bold text-violet-700">
+                  Créer un compte
                 </button>
               </>
             )}
           </p>
-          </div>
         </div>
-        <p className="mt-6 text-center text-xs text-patina-deep/70">
-          En vous inscrivant, vous acceptez de respecter la charte communautaire de Queer Service.
-          {' '}
-          <a href="#/mentions-legales" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink-muted">
-            Mentions légales
-          </a>
-        </p>
+
+        {!isSignup && (
+          <div className="mt-3 flex items-center gap-3 rounded-2xl border border-white/70 bg-white/45 px-4 py-3 text-left">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-700">
+              <ShieldCheck size={20} />
+            </div>
+            <div className="min-w-0">
+              <p className="font-display text-sm font-bold text-neutral-800">Votre espace reste privé</p>
+              <p className="mt-0.5 text-[11px] leading-snug text-neutral-600">
+                Connexion sécurisée, données protégées et communauté modérée.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

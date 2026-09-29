@@ -76,36 +76,26 @@ export function EventsPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-full bg-white animate-fade-in">
-
-      {/* Header */}
-      <div className="bg-gradient-to-br from-primary-600 to-primary-800 px-4 pb-6 pt-6 text-white">
-        <h1 className="font-display text-2xl font-bold">Événements 🏳️‍🌈</h1>
-        <p className="mt-1 text-sm text-primary-200">Soirées, festivals, ateliers LGBTQIA+ en France</p>
-
-        {/* Search */}
-        <div className="mt-4 flex items-center gap-2 rounded-xl bg-white/15 px-3 py-2 backdrop-blur-sm">
-          <Search size={16} className="shrink-0 text-white/70" />
-          <input
-            type="text"
-            placeholder="Rechercher un événement…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full bg-transparent text-sm text-white placeholder-white/60 outline-none"
-          />
+    <div className="min-h-full bg-[#f7f5ff] pt-3 animate-fade-in">
+      <div className="px-5 pb-2">
+        <h1 className="sr-only">Événements</h1>
+        <label className="sr-only" htmlFor="event-search">Rechercher un événement</label>
+        <div className="flex items-center gap-2 rounded-2xl border border-white bg-white px-3 py-2.5 shadow-soft">
+          <Search size={16} className="shrink-0 text-primary-600" />
+          <input id="event-search" type="search" placeholder="Rechercher un événement…" value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-transparent text-sm text-ink-base placeholder-text-muted outline-none" />
         </div>
       </div>
 
       {/* City tabs */}
-      <div className="no-scrollbar flex gap-2 overflow-x-auto border-b border-neutral-200 bg-white px-4 py-3">
+      <div className="no-scrollbar flex gap-3 overflow-x-auto px-5 py-4">
         {CITIES.map(c => (
           <button
             key={c}
             onClick={() => setCity(c)}
-            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+            className={`shrink-0 rounded-full px-5 py-3 text-[14px] font-semibold transition-colors ${
               city === c
-                ? 'bg-primary-600 text-white shadow-soft'
-                : 'border border-neutral-200 bg-white text-neutral-500 hover:border-primary-500'
+                ? 'bg-primary-600 text-white shadow-lift'
+                : 'border border-gold-hairline bg-white text-ink-muted shadow-sm hover:border-primary-500'
             }`}
           >
             {c}
@@ -113,11 +103,11 @@ export function EventsPage() {
         ))}
       </div>
 
-      <div className="container-app pb-28 pt-4 space-y-8">
+      <div className="container-app space-y-8 pb-28 pt-4">
         {loading ? (
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-28 rounded-2xl bg-neutral-100 animate-pulse" />
+              <div key={i} className="h-36 rounded-[28px] bg-white animate-pulse" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
@@ -134,7 +124,7 @@ export function EventsPage() {
           <>
             {groupedByTheme.map(([theme, themeEvents]) => (
               <section key={theme}>
-                <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-primary-600">
+                <h2 className="mb-4 text-[13px] font-bold uppercase tracking-wider text-primary-700">
                   {theme} · {themeEvents.length} événement{themeEvents.length > 1 ? 's' : ''}
                 </h2>
                 <div className="space-y-3">
@@ -153,14 +143,14 @@ export function EventsPage() {
 
 function EventCard({ event: e, highlight }: { event: Event; highlight?: boolean }) {
   return (
-    <article className={`overflow-hidden rounded-2xl border transition-shadow hover:shadow-lift ${highlight ? 'border-primary-200 bg-primary-50/30' : 'border-neutral-200 bg-white'}`}>
-      <div className="flex gap-3 p-3">
+    <article className={`overflow-hidden rounded-[28px] border border-white transition-shadow hover:shadow-lift ${highlight ? 'bg-primary-50/30' : 'bg-white shadow-soft'}`}>
+      <div className="flex gap-4 p-4">
         {/* Photo ou placeholder */}
-        <div className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl ${highlight ? 'bg-primary-100' : 'bg-neutral-100'}`}>
+        <div className={`flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl ${highlight ? 'bg-primary-100' : 'bg-[#f1eff7]'}`}>
           {e.photo_url ? (
             <img src={e.photo_url} alt={e.name} className="h-full w-full object-cover" loading="lazy" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-2xl">🏳️‍🌈</div>
+            <div className="flex h-full w-full items-center justify-center text-3xl">🏳️‍🌈</div>
           )}
         </div>
 
@@ -170,33 +160,33 @@ function EventCard({ event: e, highlight }: { event: Event; highlight?: boolean 
               Aujourd'hui
             </span>
           )}
-          <p className="truncate font-semibold text-neutral-900 text-sm leading-tight">{e.name}</p>
+          <p className="truncate font-display text-lg font-bold leading-tight text-ink-base">{e.name}</p>
 
-          <p className="mt-0.5 flex items-center gap-1 text-[11px] text-primary-600 font-medium">
-            <Calendar size={11} />
+          <p className="mt-2 flex items-center gap-1.5 text-[13px] font-semibold text-primary-700">
+            <Calendar size={14} />
             {formatDate(e.event_date, e.event_end_date)}
           </p>
 
           {(e.address || e.city) && (
-            <p className="mt-0.5 flex items-center gap-1 text-[11px] text-neutral-500">
-              <MapPin size={11} />
+            <p className="mt-1 flex items-center gap-1.5 text-[13px] text-ink-muted">
+              <MapPin size={14} />
               <span className="truncate">{e.address ?? e.city}</span>
             </p>
           )}
 
           {e.description && (
-            <p className="mt-1 line-clamp-2 text-[11px] text-neutral-500 leading-snug">{e.description}</p>
+            <p className="mt-2 line-clamp-2 text-[13px] leading-snug text-ink-muted">{e.description}</p>
           )}
         </div>
       </div>
 
       {e.website_url && (
-        <div className="border-t border-neutral-200 px-3 py-2">
+        <div className="border-t border-gold-hairline px-4 py-3">
           <a
             href={e.website_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-800"
+            className="flex items-center gap-1.5 text-sm font-semibold text-primary-700 hover:text-primary-800"
           >
             <ExternalLink size={12} />
             Voir l'événement

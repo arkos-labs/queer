@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { supabase, PUBLIC_PROFILE_COLUMNS } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
@@ -7,7 +7,9 @@ import { Avatar } from '@/components/Avatar';
 import { ReviewOfferCard } from '@/components/ReviewOfferCard';
 import { ReviewModal } from '@/components/ReviewModal';
 import { formatDate, timeAgo } from '@/lib/utils';
-import { ArrowLeft, Send, CheckCircle2, XCircle, Clock, Flag, AlertTriangle, Phone } from 'lucide-react';
+import { ArrowLeft, Send, CheckCircle2, XCircle, Clock, Flag, AlertTriangle, Phone, ShieldCheck } from 'lucide-react';
+import { SCREENSHOT_DEMO_PROFILES } from '@/lib/screenshotDemo';
+import { BrandHeader } from '@/components/BrandHeader';
 
 const STATUS_META: Record<Connection['status'], { label: string; cls: string; icon: typeof Clock }> = {
   pending: { label: 'En attente', cls: 'bg-warning-100 text-warning-700', icon: Clock },
@@ -17,6 +19,11 @@ const STATUS_META: Record<Connection['status'], { label: string; cls: string; ic
 };
 
 export function MessageThreadPage({ id }: { id: string }) {
+  if (id === 'demo-connection-hugo') return <DemoHugoThread />;
+  return <LiveMessageThread id={id} />;
+}
+
+function LiveMessageThread({ id }: { id: string }) {
   const { user, profile } = useAuth();
   const { navigate } = useRouter();
   const [connection, setConnection] = useState<Connection | null>(null);
@@ -32,10 +39,7 @@ export function MessageThreadPage({ id }: { id: string }) {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
-  const footerRef = useRef<HTMLDivElement>(null);
-  const [headerHeight, setHeaderHeight] = useState(0);
-  const [footerHeight, setFooterHeight] = useState(0);
+  const messagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) {
@@ -123,29 +127,10 @@ export function MessageThreadPage({ id }: { id: string }) {
   }, [id, user, navigate]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const list = messagesRef.current;
+    if (list) list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' });
   }, [messages.length]);
 
-  // The header (name row + optional payment banner + optional action row)
-  // and footer (composer) are fixed-position, so the scrollable message list
-  // needs matching padding — but their heights change depending on
-  // connection/payment state. A hardcoded pixel padding drifts out of sync
-  // and clips the first/last messages behind the fixed bars, so measure the
-  // real rendered heights instead.
-  useLayoutEffect(() => {
-    const header = headerRef.current;
-    const footer = footerRef.current;
-    if (!header || !footer) return;
-    const update = () => {
-      setHeaderHeight(header.offsetHeight);
-      setFooterHeight(footer.offsetHeight);
-    };
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(header);
-    ro.observe(footer);
-    return () => ro.disconnect();
-  }, [connection?.status, profile?.charte_accepted, alreadyReviewed]);
 
   const sendMessage = async (e: FormEvent) => {
     e.preventDefault();
@@ -218,6 +203,8 @@ export function MessageThreadPage({ id }: { id: string }) {
   }
 
   const isInitiator = connection.user_a === user.id;
+  const isSupport = connection.service_label === 'Support Queer Service';
+  const conversationName = isSupport ? 'Admin' : (other?.display_name ?? 'Membre');
   const statusMeta = STATUS_META[connection.status];
 
   type TimelineItem = { kind: 'message'; data: Message; created_at: string };
@@ -226,7 +213,7 @@ export function MessageThreadPage({ id }: { id: string }) {
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
   return (
-    <div className="flex flex-col animate-fade-in min-h-screen bg-paper-base">
+    <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-paper-base">
       {reviewOpen && other && (
         <ReviewModal
           targetId={other.id}
@@ -242,23 +229,19 @@ export function MessageThreadPage({ id }: { id: string }) {
         />
       )}
       {/* Thread header */}
-      <div ref={headerRef} className="fixed top-[84px] z-40 mx-auto w-full max-w-6xl border-b border-gold-hairline bg-white/60 backdrop-blur-xl">
+      <div className="z-10 w-full shrink-0 border-b border-gold-hairline bg-[#ede9fe]">
+        <BrandHeader onBack={() => navigate('/messages')} />
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate('/messages')} aria-label="Retour aux messages" className="rounded-full p-1.5 text-ink-muted hover:bg-paper-base">
-            <ArrowLeft size={18} />
-          </button>
-          <button onClick={() => other && navigate(`/profil/${other.id}`)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
-            <Avatar name={other?.display_name ?? 'Membre'} src={other?.photo_url} size={36} className="bg-paper-raised text-ink-muted border border-gold-hairline" />
+          <button onClick={() => !isSupport && other && navigate(`/profil/${other.id}`)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+            {isSupport ? <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-100 text-primary-700"><ShieldCheck size={18} /></span> : <Avatar name={other?.display_name ?? 'Membre'} src={other?.photo_url} size={36} className="bg-paper-raised text-ink-muted border border-gold-hairline" />}
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-ink-base">{other?.display_name ?? 'Membre'}</p>
-              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${statusMeta.cls}`}>
-                <statusMeta.icon size={10} /> {statusMeta.label}
-              </span>
+              <p className="truncate text-sm font-semibold text-ink-base">{conversationName}</p>
+              {isSupport ? <span className="text-[11px] font-medium text-primary-700">Équipe Queer Services</span> : <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${statusMeta.cls}`}><statusMeta.icon size={10} /> {statusMeta.label}</span>}
             </div>
           </button>
         </div>
 
-        {connection.status !== 'cancelled' && connection.status !== 'completed' && (
+        {!isSupport && connection.status !== 'cancelled' && connection.status !== 'completed' && (
           <div className="flex flex-col border-t border-gold-hairline bg-white/40">
             <div className="flex flex-wrap items-center gap-2 px-4 py-2">
               {connection.status === 'pending' && !isInitiator && (
@@ -300,13 +283,11 @@ export function MessageThreadPage({ id }: { id: string }) {
 
       {/* Messages */}
       <div
-        className="flex-1 space-y-3 px-4"
-        style={{ paddingTop: headerHeight ? headerHeight + 12 : undefined, paddingBottom: footerHeight ? footerHeight + 12 : undefined }}
+        ref={messagesRef}
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-5"
       >
         {timeline.length === 0 ? (
-          <p className="py-10 text-center text-sm text-ink-muted">
-            Aucun message pour l'instant. Dites bonjour à {other?.display_name?.split(' ')[0] ?? 'ce membre'} !
-          </p>
+          isSupport ? <div className="mx-auto mt-5 max-w-sm rounded-2xl border border-primary-100 bg-primary-50 p-4 text-center"><ShieldCheck size={22} className="mx-auto text-primary-600" /><p className="mt-2 text-sm font-semibold text-primary-900">Bonjour, comment pouvons-nous vous aider ?</p><p className="mt-1 text-xs leading-relaxed text-primary-700">Écrivez votre question à l’équipe. Nous vous répondrons ici.</p></div> : <p className="py-10 text-center text-sm text-ink-muted">Aucun message pour l'instant. Dites bonjour à {other?.display_name?.split(' ')[0] ?? 'ce membre'} !</p>
         ) : (
           timeline.map((item, i) => {
             const prev = timeline[i - 1];
@@ -322,7 +303,7 @@ export function MessageThreadPage({ id }: { id: string }) {
                   return (
                     <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
                       <div
-                        className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm shadow-sm border border-gold-hairline ${
+                        className={`max-w-[65%] rounded-2xl px-3 py-2 text-[13px] shadow-sm border border-gold-hairline ${
                           mine
                             ? 'rounded-br-sm bg-patina-deep text-white'
                             : 'rounded-bl-sm bg-white text-ink-base'
@@ -345,7 +326,6 @@ export function MessageThreadPage({ id }: { id: string }) {
             onReview={() => setReviewOpen(true)}
           />
         )}
-        <div className="h-40" />
         <div ref={bottomRef} />
       </div>
 
@@ -358,7 +338,7 @@ export function MessageThreadPage({ id }: { id: string }) {
       )}
 
       {/* Composer */}
-      <div ref={footerRef} className="fixed bottom-[calc(61px+env(safe-area-inset-bottom))] z-30 mx-auto w-full max-w-6xl">
+      <div className="z-10 w-full shrink-0 bg-white" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         {!profile?.charte_accepted ? (
           <div className="flex items-center gap-2 border-t border-gold-hairline bg-warning-50 px-4 py-3 text-xs text-warning-800">
             <Flag size={14} /> Acceptez la charte de respect depuis votre profil pour pouvoir écrire.
@@ -378,7 +358,7 @@ export function MessageThreadPage({ id }: { id: string }) {
               }}
               rows={1}
               placeholder="Écrire un message…"
-              className="flex-1 resize-none rounded-xl border border-gold-hairline bg-white px-4 py-3 text-[15px] shadow-sm outline-none ring-gold-hairline focus:border-patina-deep focus:ring-1 max-h-28"
+              className="min-w-0 flex-1 resize-none rounded-xl border border-gold-hairline bg-white px-4 py-3 text-base shadow-sm outline-none ring-gold-hairline focus:border-patina-deep focus:ring-1 max-h-28"
               onInput={(e) => {
                 e.currentTarget.style.height = 'auto';
                 e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
@@ -389,6 +369,39 @@ export function MessageThreadPage({ id }: { id: string }) {
             </button>
           </form>
         )}
+      </div>
+    </div>
+  );
+}
+
+function DemoHugoThread() {
+  const { navigate } = useRouter();
+  const hugo = SCREENSHOT_DEMO_PROFILES.find((profile) => profile.id === 'demo-eden')!;
+  const messages = [
+    { mine: true, body: 'Bonjour Hugo, je cherche de l’aide samedi pour quelques cartons.', time: '15:42' },
+    { mine: false, body: 'Bonjour ! Oui, je suis disponible samedi après-midi.', time: '15:48' },
+    { mine: true, body: 'Super, merci. 14 h à Lille, ça te convient ?', time: '16:05' },
+    { mine: false, body: 'Parfait, à samedi !', time: '16:20' },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-paper-base">
+      <div className="z-10 w-full shrink-0 border-b border-gold-hairline bg-[#ede9fe]">
+        <BrandHeader onBack={() => navigate('/messages')} />
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
+          <button onClick={() => navigate('/profil/demo-eden')} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+            <Avatar name={hugo.display_name} src={hugo.photo_url} size={36} className="border border-gold-hairline" />
+            <div><p className="text-sm font-semibold text-ink-base">Hugo S.</p><span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2 py-0.5 text-[11px] font-medium text-primary-600"><CheckCircle2 size={10} /> Acceptée</span></div>
+          </button>
+        </div>
+        <div className="border-t border-gold-hairline bg-primary-50 px-4 py-2 text-center text-xs font-medium text-primary-700">Aide pour un déménagement · Samedi à 14 h</div>
+      </div>
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-5">
+        <p className="my-3 text-center text-xs font-medium text-patina-deep">Aujourd’hui</p>
+        {messages.map((message, index) => <div key={index} className={`flex ${message.mine ? 'justify-end' : 'justify-start'}`}><div className={`max-w-[78%] rounded-2xl border border-gold-hairline px-4 py-2.5 text-sm shadow-sm ${message.mine ? 'rounded-br-sm bg-patina-deep text-white' : 'rounded-bl-sm bg-white text-ink-base'}`}><p>{message.body}</p><p className={`mt-1 text-[10px] ${message.mine ? 'text-white/80' : 'text-patina-deep'}`}>{message.time}</p></div></div>)}
+      </div>
+      <div className="z-10 flex w-full shrink-0 items-center gap-2 border-t border-gold-hairline bg-white px-4 py-3" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}>
+        <div className="flex-1 rounded-xl border border-gold-hairline bg-white px-4 py-3 text-[15px] text-ink-muted">Écrire un message…</div><button aria-label="Envoyer" className="rounded-xl bg-ink-base p-3 text-white"><Send size={16} /></button>
       </div>
     </div>
   );

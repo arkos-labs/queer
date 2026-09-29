@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { useRouter } from '@/lib/router';
+import { useAuth } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
 import { legalConfig as c } from '@/lib/legalConfig';
-import { ArrowLeft, FileText, ShieldCheck, Cookie, Scale } from 'lucide-react';
+import { ArrowLeft, FileText, ShieldCheck, Cookie, Scale, Download } from 'lucide-react';
 
 export type LegalSlug = 'mentions-legales' | 'cgu' | 'confidentialite' | 'cookies';
 
@@ -500,7 +503,29 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
 
 export function LegalPage({ slug }: { slug: LegalSlug }) {
   const { navigate } = useRouter();
+  const { user } = useAuth();
+  const [exporting, setExporting] = useState(false);
   const page = PAGES[slug];
+
+  const downloadMyData = async () => {
+    if (!user) return;
+    setExporting(true);
+    const [profileResult, badgesResult, reviewsResult, connectionsResult] = await Promise.all([
+      supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
+      supabase.from('profile_badges').select('badge:badges(*)').eq('profile_id', user.id),
+      supabase.from('reviews').select('*').eq('author_id', user.id),
+      supabase.from('connections').select('*').or(`user_a.eq.${user.id},user_b.eq.${user.id}`),
+    ]);
+    setExporting(false);
+    if (profileResult.error) return;
+    const content = JSON.stringify({ exported_at: new Date().toISOString(), profile: profileResult.data, badges: badgesResult.data, reviews_authored: reviewsResult.data, connections: connectionsResult.data }, null, 2);
+    const url = URL.createObjectURL(new Blob([content], { type: 'application/json' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `queer-services-mes-donnees-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="animate-fade-in">
@@ -524,6 +549,13 @@ export function LegalPage({ slug }: { slug: LegalSlug }) {
       <div className="container-app max-w-3xl py-8">
         <div className="card p-6 md:p-8">
           <p className="text-sm text-neutral-500">{page.intro}</p>
+          {slug === 'confidentialite' && user && (
+            <section className="mt-5 rounded-2xl bg-primary-50 p-4">
+              <h2 className="font-display text-base font-semibold text-primary-900">Vos données</h2>
+              <p className="mt-1 text-sm text-primary-800">Téléchargez une copie de vos données personnelles au format JSON.</p>
+              <button onClick={downloadMyData} disabled={exporting} className="btn-primary mt-3 w-full justify-center"><Download size={16} /> {exporting ? 'Préparation…' : 'Télécharger mes données'}</button>
+            </section>
+          )}
 
           <div className="mt-6 space-y-6">
             {page.sections.map((s) => (

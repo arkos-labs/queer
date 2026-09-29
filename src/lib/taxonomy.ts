@@ -106,7 +106,7 @@ export const FALLBACK_SUBCATEGORIES: Subcategory[] = [
   ...subs('cat-voyages-hebergements', [
     ['Hébergement temporaire', 'hebergement-temporaire', 1],
     ['Colocation', 'colocation', 2],
-    ['Échange de maison', 'echange-maison', 3],
+    ['Échange de logement', 'echange-maison', 3],
     ['Covoiturage', 'covoiturage', 4],
     ['Guides locaux', 'guides-locaux', 5],
   ]),
