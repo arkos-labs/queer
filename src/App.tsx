@@ -63,7 +63,9 @@ function Routes() {
   }
 
   // Redirect to directory if user already has a complete profile
-  if (user && profile && profile.display_name && (name === 'onboarding' || name === 'signin' || name === 'signup')) {
+  // (inclut l'accueil et « mot de passe oublié » : une personne déjà connectée
+  // ne revoit plus jamais Connexion / Inscription)
+  if (user && profile && profile.display_name && (name === 'home' || name === 'onboarding' || name === 'signin' || name === 'signup' || name === 'forgot-password')) {
     navigate('/annuaire');
     return null;
   }

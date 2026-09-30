@@ -1,8 +1,9 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
 import { AlertCircle, ArrowLeft, ArrowRight, Check, Eye, EyeOff, LockKeyhole, Mail, MailCheck, ShieldCheck } from 'lucide-react';
 import { BrandHeader } from '@/components/BrandHeader';
+import { supabase } from '@/lib/supabase';
 
 export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
   const { signIn, signUp } = useAuth();
@@ -19,6 +20,11 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
   // silently bouncing them to /onboarding (where they'd have no active
   // session and get redirected straight back to the login page).
   const [confirmationSent, setConfirmationSent] = useState(false);
+  const [code, setCode] = useState('');
+  const [codeBusy, setCodeBusy] = useState(false);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [codeResent, setCodeResent] = useState(false);
+  const [accountCreated, setAccountCreated] = useState(false);
 
   const isSignup = mode === 'signup';
   const canSubmit = !isSignup || (acceptTerms && acceptSensitiveData);
@@ -44,6 +50,12 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
       const res = await signIn(email, password);
       setLoading(false);
       if (res.error) {
+        // Account exists but the e-mail was never confirmed: send a new code.
+        if (res.error.toLowerCase().includes('not confirmed')) {
+          await supabase.auth.resend({ type: 'signup', email });
+          setConfirmationSent(true);
+          return;
+        }
         setError(res.error);
       } else {
         if (!res.profile || !res.profile.display_name) {
@@ -55,25 +67,158 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
     }
   };
 
+  const confirmCode = async () => {
+    if (code.trim().length < 6) return;
+    setCodeBusy(true);
+    setCodeError(null);
+    const { error: verifyErr } = await supabase.auth.verifyOtp({ email, token: code.trim(), type: 'signup' });
+    setCodeBusy(false);
+    if (verifyErr) {
+      setCodeError('Code incorrect ou expiré.');
+      return;
+    }
+
+    setAccountCreated(true);
+  };
+
+  // Auto-redirect après 3 secondes
+  useEffect(() => {
+    if (accountCreated) {
+      const timer = setTimeout(() => {
+        navigate('/onboarding');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [accountCreated, navigate]);
+
+  const resendCode = async () => {
+    setCodeBusy(true);
+    setCodeError(null);
+    const { error: resendErr } = await supabase.auth.resend({ type: 'signup', email });
+    setCodeBusy(false);
+    if (resendErr) setCodeError(resendErr.message);
+    else setCodeResent(true);
+  };
+
+  if (accountCreated) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#ede9fe] px-5 pb-[max(16px,env(safe-area-inset-bottom))] pt-2">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 text-center">
+            <div className="mb-6 flex justify-center">
+              <div className="relative">
+                <div className="absolute inset-0 animate-pulse rounded-full bg-violet-300 blur-lg" />
+                <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-violet-400 to-violet-600">
+                  <Check size={48} className="text-white" />
+                </div>
+              </div>
+            </div>
+
+            <h1 className="font-display text-[32px] font-extrabold tracking-tight text-neutral-900">
+              Bienvenue ! 🌈
+            </h1>
+            <p className="mx-auto mt-4 max-w-xs text-base leading-relaxed text-neutral-600">
+              Votre compte Queer Services a bien été créé.
+            </p>
+          </div>
+
+          <div className="rounded-[28px] border border-violet-200/60 bg-white p-6 shadow-[0_18px_55px_-24px_rgba(91,33,182,0.35)]">
+            <div className="space-y-4 text-center">
+              <div className="flex items-center gap-3 rounded-xl bg-green-50 p-4">
+                <Check size={20} className="shrink-0 text-green-600" />
+                <div className="text-left">
+                  <p className="font-semibold text-green-900">Email vérifié</p>
+                  <p className="text-sm text-green-700">{email}</p>
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <p className="text-sm text-neutral-600 mb-2">Chargement du profil...</p>
+                <div className="flex gap-1 justify-center">
+                  <div className="w-2 h-2 rounded-full bg-violet-400 animate-bounce" style={{animationDelay: '0ms'}} />
+                  <div className="w-2 h-2 rounded-full bg-violet-400 animate-bounce" style={{animationDelay: '150ms'}} />
+                  <div className="w-2 h-2 rounded-full bg-violet-400 animate-bounce" style={{animationDelay: '300ms'}} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p className="mt-6 text-center text-xs text-neutral-500">
+            Vous allez être redirigé vers votre profil dans quelques secondes…
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (confirmationSent) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#ede9fe] px-5 py-12">
-        <div className="w-full max-w-sm rounded-[28px] bg-white p-7 text-center shadow-[0_20px_60px_-20px_rgba(91,33,182,0.28)]">
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-violet-100">
-              <MailCheck size={30} className="text-violet-700" />
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#ede9fe] px-5 pb-[max(16px,env(safe-area-inset-bottom))] pt-2">
+        <button
+          type="button"
+          onClick={() => setConfirmationSent(false)}
+          className="mb-4 self-start flex h-11 w-11 items-center justify-center rounded-full bg-white/80 text-neutral-800 shadow-sm active:scale-95"
+          aria-label="Retour"
+        >
+          <ArrowLeft size={21} />
+        </button>
+
+        <div className="w-full max-w-sm">
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-violet-100">
+              <MailCheck size={36} className="text-violet-700" />
             </div>
-            <h1 className="font-display text-2xl font-bold text-neutral-900">Vérifiez votre boîte mail</h1>
-            <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-              Nous avons envoyé un lien de confirmation à <strong>{email}</strong>. Cliquez dessus pour activer votre
-              compte, vous pourrez ensuite compléter votre profil.
+            <h1 className="font-display text-[28px] font-extrabold tracking-tight text-neutral-900">
+              Vérifiez votre e-mail
+            </h1>
+            <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-neutral-600">
+              Nous avons envoyé un code à <strong>{email}</strong>
             </p>
-            <p className="mt-5 text-xs text-neutral-500">
+          </div>
+
+          <div className="rounded-[28px] border border-violet-200/60 bg-white p-6 shadow-[0_18px_55px_-24px_rgba(91,33,182,0.35)]">
+            <label className="mb-2 block text-xs font-bold text-neutral-700">Code de vérification</label>
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder="000000"
+              maxLength={6}
+              className="h-16 w-full rounded-2xl border-2 border-neutral-200 bg-neutral-50 text-center text-3xl font-bold tracking-[0.2em] text-neutral-900 outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
+            />
+
+            {codeError && (
+              <div className="mt-3 flex items-start gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-700">
+                <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                <span>{codeError}</span>
+              </div>
+            )}
+
+            {codeResent && !codeError && (
+              <div className="mt-3 flex items-start gap-2 rounded-xl bg-green-50 p-3 text-sm text-green-700">
+                <Check size={16} className="mt-0.5 shrink-0" />
+                <span>Nouveau code envoyé à {email}</span>
+              </div>
+            )}
+
+            <button
+              onClick={confirmCode}
+              disabled={codeBusy || code.length < 6}
+              className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-violet-800 font-bold text-white shadow-[0_10px_26px_-8px_rgba(109,40,217,0.65)] transition active:scale-[0.98] disabled:opacity-45"
+            >
+              {codeBusy ? 'Vérification…' : 'Valider le code'}
+              {!codeBusy && <ArrowRight size={18} />}
+            </button>
+
+            <p className="mt-5 text-center text-xs text-neutral-500">
               Rien reçu ? Vérifiez vos spams, ou{' '}
-              <button onClick={() => setConfirmationSent(false)} className="font-bold text-violet-700">
-                réessayez
+              <button onClick={resendCode} disabled={codeBusy} className="font-bold text-violet-700 disabled:opacity-50">
+                renvoyer un code
               </button>
               .
             </p>
+          </div>
         </div>
       </div>
     );

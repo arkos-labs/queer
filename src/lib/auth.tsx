@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import type { Profile } from '@/lib/types';
@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const currentUid = useRef<string | null>(null);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(
     () => new URLSearchParams(window.location.search).get('recovery') === '1',
   );
@@ -49,22 +50,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', uid)
         .maybeSingle();
       if (error) {
+        // Transient failure (network, token mid-refresh): keep the profile we
+        // already have instead of wiping it, which would bounce a signed-in
+        // user back to onboarding / the landing page.
         console.error('Error loading profile:', error);
+        return null;
       }
       const p = (data as Profile | null) ?? null;
       setProfile(p);
       return p;
     } catch (err) {
       console.error('Error loading profile:', err);
-      setProfile(null);
       return null;
     }
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    // Démarrage de l'app : on ne reprend jamais une inscription à moitié faite.
+    //  - session d'un compte qui n'existe plus côté serveur (cause de l'erreur
+    //    "profiles_id_fkey") → on la supprime ;
+    //  - compte vérifié mais sans profil (onboarding non terminé) → on se
+    //    déconnecte et on revient à l'accueil (Connexion / Inscription).
+    const resetToHome = async () => {
+      await supabase.auth.signOut({ scope: 'local' });
+      if (window.location.pathname !== '/') window.location.replace('/');
+    };
+
+    supabase.auth.getSession().then(async ({ data }) => {
+      const uid = data.session?.user?.id;
+      if (uid) {
+        const { error: userErr } = await supabase.auth.getUser();
+        if (userErr && (userErr.status === 401 || userErr.status === 403)) {
+          await resetToHome();
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+        const { data: row, error: rowErr } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', uid)
+          .maybeSingle();
+        if (!rowErr && !row) {
+          await resetToHome();
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+      }
       setSession(data.session);
       setUser(data.session?.user ?? null);
+      currentUid.current = uid ?? null;
       if (data.session?.user) {
         loadProfile(data.session.user.id).finally(() => setLoading(false));
       } else {
@@ -75,7 +113,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
       (async () => {
         if (event === 'PASSWORD_RECOVERY') setIsPasswordRecovery(true);
+        // Token refreshes / app resume / initial-session echo must never show
+        // the splash again or unmount the app: only react to real changes.
+        if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+          setSession(newSession);
+          return;
+        }
+        if (event === 'INITIAL_SESSION') return; // handled by getSession() above
+        // supabase-js re-emits SIGNED_IN when the app comes back to the
+        // foreground: same user => nothing to reload.
+        if (event === 'SIGNED_IN' && newSession?.user && newSession.user.id === currentUid.current) {
+          setSession(newSession);
+          return;
+        }
         setLoading(true);
+        currentUid.current = newSession?.user?.id ?? null;
         setSession(newSession);
         setUser(newSession?.user ?? null);
         if (newSession?.user) {
