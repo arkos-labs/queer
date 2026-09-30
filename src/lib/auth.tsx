@@ -153,6 +153,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       options: { emailRedirectTo: window.location.origin + window.location.pathname },
     });
+    const ALREADY = 'Cet e-mail a déjà un compte. Connectez-vous, ou utilisez « Mot de passe oublié » si besoin.';
+    // Supabase ne renvoie pas d'erreur pour un e-mail déjà confirmé (protection
+    // contre l'énumération): il renvoie un utilisateur sans aucune identité.
+    if (!error && data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      return { error: ALREADY, needsConfirmation: false };
+    }
+    if (error && /already (registered|been registered|exists)/i.test(error.message)) {
+      return { error: ALREADY, needsConfirmation: false };
+    }
     return {
       error: error ? error.message : null,
       needsConfirmation: !error && !data.session,
