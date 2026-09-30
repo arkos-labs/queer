@@ -96,7 +96,10 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
     setCodeError(null);
     const { error: resendErr } = await supabase.auth.resend({ type: 'signup', email });
     setCodeBusy(false);
-    if (resendErr) setCodeError(resendErr.message);
+    if (resendErr) {
+      const wait = resendErr.message.match(/after (\d+) seconds/i);
+      setCodeError(wait ? `Pour votre sécurité, patientez ${wait[1]} secondes avant de redemander un code.` : resendErr.message);
+    }
     else setCodeResent(true);
   };
 

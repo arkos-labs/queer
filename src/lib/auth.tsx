@@ -162,6 +162,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error && /already (registered|been registered|exists)/i.test(error.message)) {
       return { error: ALREADY, needsConfirmation: false };
     }
+    // Même adresse redemandée moins de 60 s après: le code vient déjà d'être
+    // envoyé, on laisse la personne le saisir au lieu d'afficher une erreur.
+    if (error && /only request this after \d+ seconds/i.test(error.message)) {
+      return { error: null, needsConfirmation: true };
+    }
     return {
       error: error ? error.message : null,
       needsConfirmation: !error && !data.session,
