@@ -193,6 +193,38 @@ export function SettingsPage() {
               <p className="mt-2 text-sm text-neutral-500">
                 <span className="rounded-full bg-success-50 px-2 py-1 text-xs font-medium text-success-700">● Hébergement UE · Chiffrement AES-256</span>
               </p>
+
+              <div className="mt-4 rounded-2xl bg-paper-base/70 p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">Vos données en bref</p>
+                <dl className="mt-2 space-y-2 text-sm text-neutral-700">
+                  <div>
+                    <dt className="font-semibold text-neutral-900">Qui peut voir mon profil ?</dt>
+                    <dd className="text-neutral-500">Les membres connectés de la communauté, pas les visiteurs anonymes ni les moteurs de recherche.</dd>
+                  </div>
+                  <div>
+                    <dt className="font-semibold text-neutral-900">Quelles données sont publiques ?</dt>
+                    <dd className="text-neutral-500">Votre nom affiché, bio, ville, services proposés et avis reçus.</dd>
+                  </div>
+                  <div>
+                    <dt className="font-semibold text-neutral-900">Quelles données restent privées ?</dt>
+                    <dd className="text-neutral-500">E-mail, téléphone et pièces d'identité ne sont jamais affichés publiquement.</dd>
+                  </div>
+                  <div>
+                    <dt className="font-semibold text-neutral-900">Comment supprimer mon compte ?</dt>
+                    <dd className="text-neutral-500">Depuis cette page, à tout moment — suppression immédiate et définitive.</dd>
+                  </div>
+                  <div>
+                    <dt className="font-semibold text-neutral-900">Comment demander mes données ?</dt>
+                    <dd className="text-neutral-500">Écrivez à l'équipe Queer Services via la messagerie ; vous recevez un export sous 30 jours.</dd>
+                  </div>
+                </dl>
+                <button
+                  onClick={() => navigate('/confidentialite')}
+                  className="mt-3 text-sm font-bold text-primary-700"
+                >
+                  Lire la politique complète →
+                </button>
+              </div>
             </div>
           </div>
         </div>

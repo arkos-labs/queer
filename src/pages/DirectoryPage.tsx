@@ -406,7 +406,7 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
           {isShoppingCategory ? (
             <><span className="font-display text-2xl font-bold text-ink-base">{filteredPlaces.length}</span> lieu{filteredPlaces.length > 1 ? 'x' : ''}</>
           ) : (
-            <><span className="font-display text-2xl font-bold text-ink-base">{filtered.length}</span> membre{filtered.length > 1 ? 's' : ''} <span className="text-xs">· {places.length} lieu{places.length > 1 ? 'x' : ''} recommandé{places.length > 1 ? 's' : ''}</span></>
+            <><span className="font-display text-2xl font-bold text-ink-base">{filtered.length}</span> membre{filtered.length > 1 ? 's' : ''} <span className="text-xs">· {places.length} bonne{places.length > 1 ? 's' : ''} adresse{places.length > 1 ? 's' : ''} recommandée{places.length > 1 ? 's' : ''} par la communauté</span></>
           )} {activeSub && subcategoryById.get(activeSub) && <span>en <span className="font-bold text-ink-base">{subcategoryById.get(activeSub)!.label}</span></span>}
           {activeCity && <span> à <span className="font-bold text-ink-base">{activeCity.label}</span></span>}
         </p>

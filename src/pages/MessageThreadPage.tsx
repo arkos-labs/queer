@@ -235,7 +235,7 @@ function LiveMessageThread({ id }: { id: string }) {
   const isProvider = connection.user_b === user.id;
   const isAdmin = !!profile?.is_admin;
   const isSupport = connection.service_label === 'Support Queer Service';
-  const conversationName = isSupport ? 'Admin' : (other?.display_name ?? 'Membre');
+  const conversationName = isSupport ? '🏳️‍🌈 Équipe Queer Services' : (other?.display_name ?? 'Membre');
   const statusMeta = STATUS_META[connection.status];
 
   type TimelineItem = { kind: 'message'; data: Message; created_at: string };
@@ -348,7 +348,7 @@ function LiveMessageThread({ id }: { id: string }) {
         className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-5"
       >
         {timeline.length === 0 ? (
-          isSupport ? <div className="mx-auto mt-5 max-w-sm rounded-2xl border border-primary-100 bg-primary-50 p-4 text-center"><ShieldCheck size={22} className="mx-auto text-primary-600" /><p className="mt-2 text-sm font-semibold text-primary-900">Bonjour, comment pouvons-nous vous aider ?</p><p className="mt-1 text-xs leading-relaxed text-primary-700">Écrivez votre question à l’équipe. Nous vous répondrons ici.</p></div> : <p className="py-10 text-center text-sm text-ink-muted">Aucun message pour l'instant. Dites bonjour à {other?.display_name?.split(' ')[0] ?? 'ce membre'} !</p>
+          isSupport ? <div className="mx-auto mt-5 max-w-sm rounded-2xl border border-primary-100 bg-primary-50 p-4 text-center"><ShieldCheck size={22} className="mx-auto text-primary-600" /><p className="mt-2 text-sm font-semibold text-primary-900">Besoin d'aide ?</p><p className="mt-1 text-xs leading-relaxed text-primary-700">Écrivez-nous, notre équipe vous répondra dès que possible.</p></div> : <p className="py-10 text-center text-sm text-ink-muted">Aucun message pour l'instant. Dites bonjour à {other?.display_name?.split(' ')[0] ?? 'ce membre'} !</p>
         ) : (
           timeline.map((item, i) => {
             const prev = timeline[i - 1];

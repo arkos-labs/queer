@@ -164,7 +164,7 @@ export function MessagesPage() {
             {rows.map((r) => (
               (() => {
                 const isSupport = r.connection.service_label === 'Support Queer Service';
-                const name = isSupport ? 'Admin' : (r.other?.display_name ?? 'Membre');
+                const name = isSupport ? '🏳️‍🌈 Équipe Queer Services' : (r.other?.display_name ?? 'Membre');
                 return (
               <button
                 key={r.connection.id}

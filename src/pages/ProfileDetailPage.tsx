@@ -44,6 +44,7 @@ export function ProfileDetailPage({ id }: { id: string }) {
   const [loading, setLoading] = useState(true);
   const [contactOpen, setContactOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [verifiedInfoOpen, setVerifiedInfoOpen] = useState(false);
   const [contactMsg, setContactMsg] = useState('');
   const [reportReason, setReportReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
@@ -262,9 +263,14 @@ export function ProfileDetailPage({ id }: { id: string }) {
                 <Avatar name={target.display_name} src={target.photo_url} size={112} className="bg-paper-raised text-ink-muted border border-gold-hairline" />
               </div>
               {target.verification_status === 'verified' && (
-                <div className="absolute bottom-1 right-1/2 translate-x-12 translate-y-1 rounded-full bg-white p-0.5 shadow-sm border border-gold-hairline">
+                <button
+                  type="button"
+                  onClick={() => setVerifiedInfoOpen(true)}
+                  aria-label="Qu'est-ce que le badge vérifié ?"
+                  className="absolute bottom-1 right-1/2 translate-x-12 translate-y-1 rounded-full bg-white p-0.5 shadow-sm border border-gold-hairline active:scale-90 transition-transform"
+                >
                   <ShieldCheck size={20} className="text-patina-deep" />
-                </div>
+                </button>
               )}
             </div>
             
@@ -276,9 +282,13 @@ export function ProfileDetailPage({ id }: { id: string }) {
                 </span>
               )}
               {target.verification_status === 'verified' && (
-                <span className="mt-2 ml-2 inline-flex items-center gap-1 rounded-full border border-success-200 bg-success-100 px-3 py-1 text-xs font-bold text-success-700 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setVerifiedInfoOpen(true)}
+                  className="mt-2 ml-2 inline-flex items-center gap-1 rounded-full border border-success-200 bg-success-100 px-3 py-1 text-xs font-bold text-success-700 shadow-sm active:scale-95 transition-transform"
+                >
                   <ShieldCheck size={13} /> Compte vérifié
-                </span>
+                </button>
               )}
 
               <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-ink-muted">
@@ -447,6 +457,23 @@ export function ProfileDetailPage({ id }: { id: string }) {
             <button onClick={sendReport} disabled={actionLoading || !reportReason.trim()} className="btn-secondary">
               {actionLoading ? 'Envoi…' : 'Signaler'} <Flag size={14} />
             </button>
+          </div>
+        </Modal>
+      )}
+
+      {verifiedInfoOpen && (
+        <Modal onClose={() => setVerifiedInfoOpen(false)} title="Identité vérifiée">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success-100 text-success-700">
+              <ShieldCheck size={18} />
+            </span>
+            <p className="text-sm leading-relaxed text-neutral-600">
+              Ce badge signifie que l'identité de cette personne a été vérifiée par Queer Services.
+              Il ne constitue pas une certification professionnelle ni une garantie sur les services proposés.
+            </p>
+          </div>
+          <div className="mt-5 flex justify-end">
+            <button onClick={() => setVerifiedInfoOpen(false)} className="btn-primary">J'ai compris</button>
           </div>
         </Modal>
       )}
