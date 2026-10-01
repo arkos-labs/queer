@@ -131,7 +131,7 @@ export function LandingPage() {
             {/* Titre */}
             <h1 className="font-display font-extrabold text-neutral-900 mb-6"
                 style={{ fontSize: 'clamp(2.75rem, 6.5vw, 4.5rem)', lineHeight: 1.0, letterSpacing: '-0.035em' }}>
-              Fait par nous,<br />
+              Fait pour nous,<br />
               <span
                 className="bg-rainbow animate-gradient-x bg-clip-text text-transparent inline-block"
                 style={{
@@ -140,7 +140,7 @@ export function LandingPage() {
                   color: 'transparent',
                 }}
               >
-                pour nous.
+                par nous.
               </span>
             </h1>
 
