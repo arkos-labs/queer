@@ -1,4 +1,12 @@
 {
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "queer-kappa.vercel.app" }],
+      "destination": "https://www.queerservices.fr/$1",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
