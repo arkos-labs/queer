@@ -96,3 +96,10 @@ export function useRealtimeTick(tables: string[]): number {
 
   return tick;
 }
+
+/** Same as useRealtimeTick, but takes the table names directly as arguments
+ *  instead of an array (used by components watching a fixed, short list of
+ *  tables). */
+export function useRealtimeRevision(...tables: string[]): number {
+  return useRealtimeTick(tables);
+}
