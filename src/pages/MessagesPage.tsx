@@ -8,7 +8,6 @@ import { timeAgo } from '@/lib/utils';
 import { censorInsults } from '@/lib/profanity';
 import { maskContactInfo } from '@/lib/contactMask';
 import { MessageCircle, ArrowRight, ShieldCheck } from 'lucide-react';
-import { SCREENSHOT_DEMO_PROFILES } from '@/lib/screenshotDemo';
 
 interface ConversationRow {
   connection: Connection;
@@ -84,14 +83,7 @@ export function MessagesPage() {
           };
         });
 
-        const hugo = SCREENSHOT_DEMO_PROFILES.find((profile) => profile.id === 'demo-eden');
-        const demoConversation: ConversationRow = {
-          connection: { id: 'demo-connection-hugo', user_a: user.id, user_b: 'demo-eden', service_label: 'Aide pour un déménagement', status: 'accepted', mission_request_id: null, is_paid: false, created_at: '2026-09-28T15:00:00Z', updated_at: '2026-09-28T16:20:00Z' },
-          other: hugo,
-          lastMessage: { id: 'demo-message-hugo-last', connection_id: 'demo-connection-hugo', sender_id: 'demo-eden', body: 'Parfait, à samedi !', created_at: '2026-09-28T16:20:00Z', read_at: null },
-          unreadCount: 1,
-        };
-        setRows([demoConversation, ...built]);
+        setRows(built);
         setLoading(false);
       } catch (e) {
         if (cancelled) return;

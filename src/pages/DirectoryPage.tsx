@@ -11,7 +11,6 @@ import { useDirectoryCategorySEO } from '@/lib/useSEO';
 import { useRealtimeTick } from '@/lib/realtime';
 import { CATEGORY_ICONS, CATEGORY_ICON_FALLBACK } from '@/lib/categoryIcons';
 import { TARGET_CITIES, cityMatches } from '@/lib/cities';
-import { SCREENSHOT_DEMO_PROFILES } from '@/lib/screenshotDemo';
 import {
   Compass,
   Search,
@@ -130,7 +129,7 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
 
         const blockedIds = new Set((blocksRes.data ?? []).map((block) => block.blocker_id === user.id ? block.blocked_id : block.blocker_id));
         const realProfiles = ((profRes.data ?? []) as PublicProfile[]).filter((member) => !blockedIds.has(member.id));
-        const allProfiles = [...SCREENSHOT_DEMO_PROFILES, ...realProfiles];
+        const allProfiles = realProfiles;
         const ids = allProfiles.map((p) => p.id);
 
         const [pscRes, revRes] = await Promise.all([
