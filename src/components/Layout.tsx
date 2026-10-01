@@ -8,6 +8,9 @@ import type { Notification } from '@/lib/types';
 import { cn, timeAgo } from '@/lib/utils';
 import { MissionsWidget } from '@/components/MissionsWidget';
 import { CommunityConfirmationModal } from '@/components/CommunityConfirmationModal';
+import { useKeyboardOpen } from '@/lib/useKeyboardOpen';
+import { registerPush } from '@/lib/push';
+import { useRealtimeTick } from '@/lib/realtime';
 
 export function Layout({ children }: { children: ReactNode }) {
   const { path, navigate } = useRouter();
@@ -16,9 +19,17 @@ export function Layout({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const keyboardOpen = useKeyboardOpen();
+  const rtTick = useRealtimeTick(['messages', 'notifications', 'connections']);
   const unreadNotifsCount = notifications.filter(n => !n.read_at).length;
 
   const go = (to: string) => navigate(to);
+
+  // Native push notifications (phone locked / app closed).
+  useEffect(() => {
+    if (user) void registerPush(user.id, (url) => navigate(url));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -93,7 +104,7 @@ export function Layout({ children }: { children: ReactNode }) {
       supabase.removeChannel(channel);
     };
     // Re-check whenever the route changes (e.g. after reading a thread).
-  }, [user, path]);
+  }, [user, path, rtTick]);
 
   const markNotifRead = async (n: Notification) => {
     if (!n.read_at) {
@@ -218,7 +229,7 @@ export function Layout({ children }: { children: ReactNode }) {
         </main>
 
         {/* Bottom tab bar */}
-        {user && profile && !isOnboarding && !isMessageThread && tabs.length > 0 && (
+        {user && profile && !isOnboarding && !keyboardOpen && tabs.length > 0 && (
           <nav className="mobile-tabbar" aria-label="Navigation principale">
             {tabs.map((t) => {
               const Icon = t.icon;

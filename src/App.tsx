@@ -1,7 +1,10 @@
+import { useEffect } from 'react';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { RouterProvider, useRouter, parseRoute } from '@/lib/router';
 import { useSEO } from '@/lib/useSEO';
 import { Layout } from '@/components/Layout';
+import { SplashScreen } from '@/components/SplashScreen';
+import { RealtimeProvider } from '@/lib/realtime';
 import { LandingPage } from '@/pages/LandingPage';
 import { AuthPage } from '@/pages/AuthPage';
 import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
@@ -31,21 +34,18 @@ function Routes() {
   const { user, profile, loading, isPasswordRecovery } = useAuth();
   const { name, params } = parseRoute(path);
 
+  // Belt and braces: a signed-in user must never stay on the presentation page.
+  useEffect(() => {
+    if (!loading && user && name === 'home') {
+      navigate(profile && profile.display_name ? '/annuaire' : '/onboarding');
+    }
+  }, [loading, user, profile, name]);
+
   useSEO(name, { skip: name === 'directory' && !!params.category });
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-hero-radial">
-        <img src="/logo.png" alt="Queer Service" className="h-16 w-16 animate-float object-contain" />
-        <div className="h-1.5 w-40 overflow-hidden rounded-full bg-gold-hairline">
-          <div className="h-full w-1/3 animate-gradient-x rounded-full bg-kinpaku-gold" />
-        </div>
-        <p className="text-sm font-medium text-text-light-faint">Chargement…</p>
-      </div>
-    );
-  }
+  if (loading) return <SplashScreen />;
 
-  if (isPasswordRecovery) return <ResetPasswordPage />;
+  if (isPasswordRecovery || name === 'reset-password') return <ResetPasswordPage />;
 
   // Protect authenticated routes — 'directory' is deliberately not here: it
   // renders an anonymized public preview when logged out (see the
@@ -62,17 +62,23 @@ function Routes() {
     return null;
   }
 
+  // Already signed in: never show the presentation page.
+  if (user && name === 'home') {
+    navigate(profile && profile.display_name ? '/annuaire' : '/onboarding');
+    return null;
+  }
+
   // Redirect to directory if user already has a complete profile
-  // (inclut l'accueil et « mot de passe oublié » : une personne déjà connectée
-  // ne revoit plus jamais Connexion / Inscription)
-  if (user && profile && profile.display_name && (name === 'home' || name === 'onboarding' || name === 'signin' || name === 'signup' || name === 'forgot-password')) {
+  if (user && profile && profile.display_name && (name === 'onboarding' || name === 'signin' || name === 'signup')) {
     navigate('/annuaire');
     return null;
   }
 
   switch (name) {
     case 'home':
-      return <LandingPage />;
+      return user
+        ? <DirectoryPage categorySlug={undefined} citySlug={undefined} />
+        : <LandingPage />;
     case 'signin':
       return <AuthPage mode="signin" />;
     case 'forgot-password':
@@ -122,9 +128,11 @@ export default function App() {
   return (
     <AuthProvider>
       <RouterProvider>
-        <Layout>
-          <Routes />
-        </Layout>
+        <RealtimeProvider>
+          <Layout>
+            <Routes />
+          </Layout>
+        </RealtimeProvider>
         {!isNativeApp && <InstallPWABanner />}
         {!isNativeApp && <CookieBanner />}
       </RouterProvider>

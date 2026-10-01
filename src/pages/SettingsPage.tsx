@@ -1,8 +1,8 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import { Trash2, AlertTriangle, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight, LifeBuoy, CheckCircle2, Clock, LogOut, UserCheck, Upload, XCircle, MessageCircle } from 'lucide-react';
+import { Trash2, AlertTriangle, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight, LifeBuoy, CheckCircle2, Clock, LogOut, UserCheck, MessageCircle } from 'lucide-react';
 
 export function SettingsPage() {
   const { user, profile, signOut, refreshProfile } = useAuth();
@@ -11,8 +11,12 @@ export function SettingsPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
-  const [uploadingId, setUploadingId] = useState(false);
-  const [idError, setIdError] = useState<string | null>(null);
+  const [checkingVerif, setCheckingVerif] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
+  const [code, setCode] = useState('');
+  const [codeBusy, setCodeBusy] = useState(false);
+  const [codeOk, setCodeOk] = useState(false);
+  const [codeError, setCodeError] = useState<string | null>(null);
   const [contactingSupport, setContactingSupport] = useState(false);
 
   const contactSupport = async () => {
@@ -77,38 +81,53 @@ export function SettingsPage() {
 
 
 
-  const uploadIdentityDocument = async (file: File) => {
-    if (!user) return;
-    const okType = file.type.startsWith('image/') || file.type === 'application/pdf';
-    if (!okType) {
-      setIdError('Le fichier doit être une image (JPG, PNG, WebP) ou un PDF.');
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      setIdError('Fichier trop lourd (10 Mo maximum).');
-      return;
-    }
-    setUploadingId(true);
-    setIdError(null);
-    const ext = file.name.split('.').pop() || 'jpg';
-    const path = `${user.id}/${Date.now()}.${ext}`;
-    const { error: upErr } = await supabase.storage.from('identity-documents').upload(path, file, { upsert: true });
-    if (upErr) {
-      setUploadingId(false);
-      setIdError(upErr.message);
-      return;
-    }
-    const { error: patchErr } = await supabase
-      .from('profiles')
-      .update({ identity_document_path: path, verification_status: 'pending' })
-      .eq('id', user.id);
-    setUploadingId(false);
-    if (patchErr) {
-      setIdError(patchErr.message);
-      return;
-    }
+  const emailDone = codeOk || profile?.verification_status === 'verified';
+
+  const checkVerification = async () => {
+    setCheckingVerif(true);
+    await supabase.rpc('refresh_my_verification');
     await refreshProfile();
+    setCheckingVerif(false);
   };
+
+  // Sends a one-time code by e-mail (free, no SMS).
+  const sendCode = async () => {
+    if (!user?.email) return;
+    setCodeBusy(true);
+    setCodeError(null);
+    const { error: otpErr } = await supabase.auth.signInWithOtp({
+      email: user.email,
+      options: { shouldCreateUser: false },
+    });
+    setCodeBusy(false);
+    if (otpErr) {
+      setCodeError(otpErr.message.toLowerCase().includes('rate') ? 'Trop de demandes. Réessayez dans quelques minutes.' : otpErr.message);
+      return;
+    }
+    setCodeSent(true);
+  };
+
+  const confirmCode = async () => {
+    if (!user?.email || code.trim().length < 6) return;
+    setCodeBusy(true);
+    setCodeError(null);
+    const { error: verifyErr } = await supabase.auth.verifyOtp({ email: user.email, token: code.trim(), type: 'email' });
+    if (verifyErr) {
+      setCodeBusy(false);
+      setCodeError('Code incorrect ou expiré.');
+      return;
+    }
+    setCodeOk(true);
+    setCode('');
+    await supabase.rpc('mark_email_code_verified');
+    await checkVerification();
+    setCodeBusy(false);
+  };
+
+  useEffect(() => {
+    if (user) void checkVerification();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -179,7 +198,7 @@ export function SettingsPage() {
         </div>
         </section>
 
-        {/* Identity verification */}
+        {/* Account verification: e-mail code */}
         <div className="rounded-3xl border border-white bg-white p-5 shadow-soft">
           <div className="flex items-start gap-4">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
@@ -187,49 +206,58 @@ export function SettingsPage() {
             </div>
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="font-display text-lg font-semibold text-neutral-900">Vérification d'identité</h2>
+                <h2 className="font-display text-lg font-semibold text-neutral-900">Compte vérifié</h2>
                 {profile?.verification_status === 'verified' && (
                   <span className="badge-chip bg-success-100 text-success-700">
                     <CheckCircle2 size={12} /> Vérifié·e
                   </span>
                 )}
-                {profile?.verification_status === 'pending' && (
-                  <span className="badge-chip bg-warning-100 text-warning-700">
-                    <Clock size={12} /> En cours de vérification
-                  </span>
-                )}
-                {profile?.verification_status === 'rejected' && (
-                  <span className="badge-chip bg-error-100 text-error-700">
-                    <XCircle size={12} /> Document refusé
-                  </span>
-                )}
               </div>
-              <p className="mt-1 text-sm text-neutral-500">Obtenez le badge vérifié·e. Votre document reste privé et est examiné par la modération.</p>
-              {profile?.verification_status !== 'verified' && (
-                <div className="mt-4">
-                  <label className="btn-outline w-full cursor-pointer justify-center">
-                    <Upload size={16} />
-                    {uploadingId ? 'Envoi…' : profile?.identity_document_path ? 'Envoyer un nouveau document' : 'Envoyer ma pièce d\'identité'}
-                    <input
-                      type="file"
-                      accept="image/*,application/pdf"
-                      className="hidden"
-                      disabled={uploadingId}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) uploadIdentityDocument(file);
-                        e.target.value = '';
-                      }}
-                    />
-                  </label>
+              <p className="mt-1 text-sm text-neutral-500">
+                Aucune pièce d'identité demandée : un code reçu par e-mail suffit.
+              </p>
+              <ul className="mt-3 space-y-2 text-sm">
+                <li className="flex items-center gap-2">
+                  {emailDone ? <CheckCircle2 size={16} className="text-success-600" /> : <Clock size={16} className="text-warning-600" />}
+                  <span className="text-neutral-800">{emailDone ? 'E-mail confirmé par code' : 'E-mail à confirmer avec un code'}</span>
+                </li>
+              </ul>
+              {profile?.verification_status !== 'verified' && !emailDone && (
+                <div className="mt-4 space-y-2">
+                  {!codeSent ? (
+                    <button onClick={sendCode} disabled={codeBusy} className="btn-primary w-full justify-center">
+                      {codeBusy ? 'Envoi…' : 'Recevoir mon code par e-mail'}
+                    </button>
+                  ) : (
+                    <>
+                      <p className="text-xs text-neutral-500">Code envoyé à {user.email}. Pensez à regarder les indésirables.</p>
+                      <input
+                        value={code}
+                        onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        placeholder="Code à 6 chiffres"
+                        className="input text-center tracking-[0.3em]"
+                      />
+                      <button onClick={confirmCode} disabled={codeBusy || code.length < 6} className="btn-primary w-full justify-center">
+                        {codeBusy ? 'Vérification…' : 'Valider le code'}
+                      </button>
+                      <button onClick={sendCode} disabled={codeBusy} className="btn-ghost w-full justify-center text-xs">Renvoyer un code</button>
+                    </>
+                  )}
+                  {codeError && <p className="text-sm text-error-600">{codeError}</p>}
                 </div>
               )}
-              {idError && <p className="mt-3 text-sm text-error-600">{idError}</p>}
+              {profile?.verification_status !== 'verified' && (
+                <div className="mt-4 flex flex-col gap-2">
+                  <button onClick={checkVerification} disabled={checkingVerif} className="btn-outline w-full justify-center">
+                    {checkingVerif ? 'Vérification…' : 'Actualiser ma vérification'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
-
-
 
         {/* Delete */}
         <div className="rounded-3xl border border-error-100 bg-white p-5 shadow-soft">

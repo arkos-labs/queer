@@ -141,6 +141,11 @@ export function MyProfilePage() {
                     {typeMeta.label}
                   </span>
                 )}
+                {profile.verification_status === 'verified' && (
+                  <span className="mt-2 ml-2 inline-flex items-center gap-1 rounded-full border border-success-200 bg-success-100 px-3 py-1 text-xs font-bold text-success-700 shadow-sm">
+                    <ShieldCheck size={13} /> Compte vérifié
+                  </span>
+                )}
 
               <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-ink-muted">
                 {profile.city && (
@@ -245,7 +250,7 @@ export function MyProfilePage() {
                     <Avatar name={c.other?.display_name ?? 'Inconnu'} src={c.other?.photo_url} size={44} className="border border-gold-hairline bg-paper-base text-ink-muted" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between">
-                        <p className="truncate text-[15px] font-semibold text-ink-base">{c.other?.display_name ?? 'Membre'}</p>
+                        <p className="break-words text-[15px] font-semibold leading-tight text-ink-base">{c.other?.display_name ?? 'Membre'}</p>
                         <p className="mt-0.5 text-xs font-medium text-patina-deep shrink-0">{timeAgo(c.created_at)}</p>
                       </div>
                       {c.service_label && <p className="truncate text-[13px] text-ink-muted mt-1">{c.service_label}</p>}
@@ -270,7 +275,7 @@ export function MyProfilePage() {
                       <Avatar name={r.author?.display_name ?? 'Anonyme'} src={r.author?.photo_url} size={44} className="border border-gold-hairline bg-paper-base text-ink-muted" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <p className="text-[15px] font-bold text-ink-base truncate pr-2">{r.author?.display_name ?? 'Anonyme'}</p>
+                          <p className="text-[15px] font-bold text-ink-base break-words pr-2">{r.author?.display_name ?? 'Anonyme'}</p>
                           <p className="text-[13px] font-medium text-patina-deep shrink-0">{timeAgo(r.created_at)}</p>
                         </div>
                         <div className="mt-0.5 text-[#D4AF37]">

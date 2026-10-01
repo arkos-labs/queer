@@ -1,10 +1,40 @@
 import { createClient, FunctionsHttpError } from '@supabase/supabase-js';
+import { Capacitor } from '@capacitor/core';
 
 const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string) || 'https://dummy.supabase.co';
 const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string) || 'dummy-key';
 
+// On iOS the WebView's localStorage can be wiped when the app is closed, which
+// silently logs people out. In the native app the session is stored with
+// Capacitor Preferences (UserDefaults) instead, which survives restarts.
+const nativeStorage = {
+  async getItem(key: string): Promise<string | null> {
+    try {
+      const { Preferences } = await import('@capacitor/preferences');
+      const { value } = await Preferences.get({ key });
+      if (value !== null) return value;
+    } catch { /* fall through to localStorage */ }
+    try { return window.localStorage.getItem(key); } catch { return null; }
+  },
+  async setItem(key: string, value: string): Promise<void> {
+    try {
+      const { Preferences } = await import('@capacitor/preferences');
+      await Preferences.set({ key, value });
+    } catch { /* ignore */ }
+    try { window.localStorage.setItem(key, value); } catch { /* ignore */ }
+  },
+  async removeItem(key: string): Promise<void> {
+    try {
+      const { Preferences } = await import('@capacitor/preferences');
+      await Preferences.remove({ key });
+    } catch { /* ignore */ }
+    try { window.localStorage.removeItem(key); } catch { /* ignore */ }
+  },
+};
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
+    storage: Capacitor.isNativePlatform() ? nativeStorage : undefined,
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,

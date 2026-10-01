@@ -14,12 +14,33 @@ export function ForgotPasswordPage() {
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    if (loading) return;
     setLoading(true);
     setError(null);
-    const result = await requestPasswordReset(email.trim());
-    setLoading(false);
-    if (result.error) setError(result.error);
-    else setSent(true);
+    setSent(false);
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const result = await Promise.race([
+        requestPasswordReset(email.trim()),
+        new Promise<never>((_, reject) => {
+          timeout = setTimeout(() => reject(new Error('timeout')), 15000);
+        }),
+      ]);
+      if (result.error) {
+        setError(/sending.*(?:recovery|email)/i.test(result.error)
+          ? 'Le service d’envoi est indisponible. Veuillez réessayer plus tard.'
+          : result.error);
+      } else {
+        setSent(true);
+      }
+    } catch (cause) {
+      setError(cause instanceof Error && cause.message === 'timeout'
+        ? 'L’envoi prend trop de temps. Vérifiez votre boîte mail avant de réessayer dans une minute.'
+        : 'Impossible de confirmer l’envoi. Vérifiez votre connexion et réessayez.');
+    } finally {
+      clearTimeout(timeout);
+      setLoading(false);
+    }
   };
 
   return (

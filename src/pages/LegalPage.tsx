@@ -81,7 +81,6 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
           `• d'entrer en contact avec d'autres utilisateurs ;`,
           `• de proposer ou demander un échange de services ;`,
           `• de réserver certaines prestations ;`,
-          `• de payer certaines prestations directement depuis la plateforme ;`,
           `• de prendre rendez-vous avec certains professionnels ;`,
           `• de laisser ou consulter des évaluations lorsque cette fonctionnalité est disponible.`,
           `Les services peuvent notamment concerner le pet sitting, le bricolage, l'informatique, la coiffure, la cuisine, les cours, la photographie, l'aide administrative, l'accompagnement du quotidien ou tout autre service autorisé sur la plateforme.`,
@@ -125,20 +124,15 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
       {
         heading: '6. Les différents modes d\'échange',
         body: [
-          `Queer Services peut permettre trois formes principales d'échange.`,
+          `Queer Services peut permettre deux formes principales d'échange.`,
           `6.1. Échange gratuit : Un utilisateur peut proposer un service gratuitement à un autre utilisateur.`,
           `6.2. Échange réciproque : Deux utilisateurs peuvent convenir d'un échange de services. Par exemple : une personne propose deux heures de bricolage ; une autre propose en contrepartie deux heures de cours de langue. Les utilisateurs déterminent librement les modalités de leur échange.`,
-          `6.3. Échange rémunéré : Un utilisateur ou un professionnel peut proposer une prestation contre rémunération. Lorsque le paiement est effectué par l'intermédiaire de Queer Services, les modalités tarifaires sont présentées avant la validation de la transaction. Le prestataire demeure responsable de la prestation proposée et du respect des obligations légales applicables à son activité.`,
         ],
       },
       {
-        heading: '7. Paiement et commission de Queer Services',
+        heading: '7. Accès aux fonctionnalités',
         body: [
-          `Lorsque le paiement d'une prestation est effectué directement sur Queer Services, celui-ci peut être réalisé par l'intermédiaire d'un prestataire de paiement partenaire.`,
-          `Queer Services prélève une commission de 5 % sur le montant de la transaction, sauf indication contraire affichée avant la validation du paiement.`,
-          `Le montant total facturé à l'utilisateur ainsi que, lorsque cela est pertinent, le montant revenant au prestataire sont présentés avant la confirmation de la transaction.`,
-          `Les frais éventuellement applicables sont indiqués de manière transparente avant le paiement.`,
-          `Les coordonnées bancaires peuvent être traitées directement par le prestataire de paiement. Queer Services ne demande jamais à un utilisateur de communiquer son numéro complet de carte bancaire dans la messagerie.`,
+          `La mise en relation, la messagerie et la proposition d’événements sont accessibles sans achat dans l’Application.`,
         ],
       },
       {
@@ -146,7 +140,7 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
         body: [
           `Certaines prestations peuvent être réservées directement depuis l'Application. L'utilisateur peut notamment sélectionner : un professionnel ; un service ; une date ; un créneau horaire ; et, lorsque cela est applicable, un lieu.`,
           `La réservation devient effective selon les modalités indiquées lors de la confirmation.`,
-          `Les conditions d'annulation, de modification et de remboursement sont présentées avant la validation de la réservation lorsqu'elles sont applicables.`,
+          `Les conditions d'annulation, de modification sont présentées avant la validation de la réservation lorsqu'elles sont applicables.`,
           `Lorsqu'une prestation est fournie par un professionnel, celui-ci demeure responsable de son exécution.`,
         ],
       },
@@ -167,7 +161,7 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
       {
         heading: '10. Professionnels de santé',
         body: [
-          `Queer Services peut permettre à certains professionnels de santé de présenter leur activité, de proposer des créneaux de rendez-vous et, lorsque la fonctionnalité est disponible, de recevoir le paiement d'une consultation ou d'une prestation.`,
+          `Queer Services peut permettre à certains professionnels de santé de présenter leur activité, de proposer des créneaux de rendez-vous et de communiquer avec les membres.`,
           `Les professionnels de santé demeurent entièrement responsables de l'exercice de leur profession. Queer Services : ne réalise aucun acte médical ; ne pose aucun diagnostic ; ne délivre aucun conseil médical ; ne prescrit aucun traitement ; ne se substitue pas au professionnel de santé. La prise de rendez-vous via Queer Services ne constitue pas une consultation médicale.`,
           `Urgence médicale : Queer Services n'est pas un service d'urgence. En cas d'urgence médicale, l'utilisateur doit contacter immédiatement les services d'urgence compétents.`,
           `Données médicales : L'utilisateur ne doit pas utiliser la messagerie générale de Queer Services pour transmettre des informations médicales qui ne sont pas nécessaires à la prise de rendez-vous.`,
@@ -178,7 +172,7 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
         heading: '11. Messagerie',
         body: [
           `Queer Services met à disposition une messagerie destinée à faciliter les échanges entre utilisateurs et, lorsque cela est prévu, entre utilisateurs et professionnels. La messagerie doit être utilisée dans le respect des autres utilisateurs.`,
-          `Sont notamment interdits : les menaces ; le harcèlement ; les insultes ; les propos haineux ; les comportements LGBTQIAphobes ; les propos racistes ou discriminatoires ; les contenus sexuels non sollicités ; les tentatives d'escroquerie ; l'usurpation d'identité ; la diffusion non autorisée de données personnelles ; les sollicitations frauduleuses ; les tentatives de contournement du système de paiement ; tout contenu ou comportement contraire à la loi.`,
+          `Sont notamment interdits : les menaces ; le harcèlement ; les insultes ; les propos haineux ; les comportements LGBTQIAphobes ; les propos racistes ou discriminatoires ; les contenus sexuels non sollicités ; les tentatives d'escroquerie ; l'usurpation d'identité ; la diffusion non autorisée de données personnelles ; les sollicitations frauduleuses  ; tout contenu ou comportement contraire à la loi.`,
           `Queer Services peut mettre en place des dispositifs de détection, de signalement et de modération afin de préserver la sécurité de ses utilisateurs. Les données de messagerie peuvent être conservées pendant une durée proportionnée aux finalités de sécurité, de prévention des abus, de gestion des litiges et de respect des obligations légales. Les modalités précises sont définies dans la Politique de confidentialité.`,
         ],
       },
@@ -247,7 +241,7 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
       {
         heading: '20. Données personnelles',
         body: [
-          `Queer Services traite des données personnelles nécessaires à la création des comptes, au fonctionnement de la mise en relation, à la réservation, au paiement, à la messagerie, à la sécurité et à l'amélioration du service.`,
+          `Queer Services traite des données personnelles nécessaires à la création des comptes, au fonctionnement de la mise en relation, à la réservation, à la messagerie, à la sécurité et à l'amélioration du service.`,
           `Certaines données susceptibles d'être renseignées volontairement par les utilisateurs peuvent constituer des données sensibles, notamment lorsqu'elles révèlent l'orientation sexuelle ou concernent la santé. La collecte de telles données doit être strictement encadrée et limitée à ce qui est nécessaire aux finalités poursuivies.`,
           `Les modalités précises des traitements sont détaillées dans la Politique de confidentialité de Queer Services.`,
         ],
@@ -264,21 +258,21 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
         body: [
           `Lorsque l'utilisateur contracte avec un professionnel à distance, les dispositions du Code de la consommation relatives au droit de rétractation peuvent être applicables, sous réserve des exceptions prévues par la loi. Les conditions peuvent notamment différer selon la nature du service et la date à laquelle celui-ci doit être exécuté.`,
           `Lorsque le droit de rétractation est applicable, l'utilisateur reçoit les informations nécessaires avant la conclusion du contrat. Le droit de rétractation peut notamment être soumis à des exceptions prévues par le Code de la consommation pour certaines prestations.`,
-          `Les conditions particulières d'annulation et de remboursement sont présentées avant la validation d'une réservation lorsqu'elles sont applicables.`,
+          `Les conditions particulières d'annulation sont présentées avant la validation d'une réservation lorsqu'elles sont applicables.`,
         ],
       },
       {
         heading: '23. Suppression et suspension du compte',
         body: [
           `L'utilisateur peut demander la suppression de son compte selon les fonctionnalités disponibles.`,
-          `Queer Services peut suspendre ou résilier un compte notamment en cas : de violation des présentes CGU ; de fraude ; de comportement dangereux ; de harcèlement ; de discrimination ; de contournement des paiements ; d'utilisation illicite de la plateforme ; d'atteinte à la sécurité du service.`,
+          `Queer Services peut suspendre ou résilier un compte notamment en cas : de violation des présentes CGU ; de fraude ; de comportement dangereux ; de harcèlement ; de discrimination  ; d'utilisation illicite de la plateforme ; d'atteinte à la sécurité du service.`,
           `Lorsque les circonstances le permettent, l'utilisateur est informé des motifs de la mesure prise.`,
         ],
       },
       {
         heading: '24. Modification des CGU',
         body: [
-          `Queer Services peut modifier les présentes CGU afin de tenir compte de l'évolution : de la réglementation ; des fonctionnalités ; des modalités de paiement ; des mécanismes de sécurité ; des services proposés.`,
+          `Queer Services peut modifier les présentes CGU afin de tenir compte de l'évolution : de la réglementation ; des fonctionnalités  ; des mécanismes de sécurité ; des services proposés.`,
           `Les utilisateurs sont informés des modifications dans des conditions adaptées à leur importance. Lorsque cela est requis, une nouvelle acceptation des CGU pourra être demandée.`,
         ],
       },
@@ -338,7 +332,7 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
           `• Les informations d’identification et de contact : nom, prénom, pseudonyme, photographie, adresse électronique et téléphone.`,
           `• Les informations de profil : compétences, services proposés ou recherchés, disponibilités et zone géographique.`,
           `• Les informations liées à la vie associative : adhésion, fonctions, participation aux activités et cotisations éventuelles.`,
-          `• Les informations liées aux prestations : messages, réservations, rendez-vous, paiements et évaluations.`,
+          `• Les informations liées aux prestations : messages, réservations, rendez-vous et évaluations.`,
           `• Les données techniques et de sécurité : adresse IP, journaux de connexion, signalements et informations relatives aux appareils utilisés.`,
           `Une attention particulière est portée aux informations susceptibles de révéler l’orientation sexuelle, l’état de santé ou d’autres données sensibles.`,
           `L’inscription sur Queer Services ne constitue pas une déclaration d’appartenance à la communauté LGBTQIA+. Aucune personne n’est tenue de révéler son orientation sexuelle ou son identité de genre pour accéder aux fonctionnalités générales.`,
@@ -348,7 +342,7 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
       {
         heading: 'Article 4 — Finalités et bases légales',
         body: [
-          `Queer Services utilise les données personnelles pour gérer les comptes et les adhésions, permettre la mise en relation, faciliter les échanges et les réservations, gérer les paiements, assurer l’assistance, prévenir les abus et respecter ses obligations légales.`,
+          `Queer Services utilise les données personnelles pour gérer les comptes et les adhésions, permettre la mise en relation, faciliter les échanges et les réservations, assurer l’assistance, prévenir les abus et respecter ses obligations légales.`,
           `Selon les traitements concernés, les bases légales sont l’exécution des CGU ou de l’adhésion, le respect d’une obligation légale, l’intérêt légitime ou le consentement.`,
           `Les communications facultatives et les traceurs non essentiels reposent sur le consentement lorsque celui-ci est requis.`,
           `Les informations obligatoires sont signalées lors de leur collecte. Leur absence peut empêcher l’utilisation de certaines fonctionnalités. Les informations facultatives peuvent être omises.`
@@ -358,7 +352,7 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
         heading: 'Article 5 — Destinataires et confidentialité des données',
         body: [
           `Les données personnelles sont accessibles uniquement aux personnes habilitées, dans la limite des informations nécessaires à leurs missions.`,
-          `Elles peuvent être communiquées aux membres et bénévoles autorisés, aux utilisateurs concernés par une prestation, aux prestataires techniques et de paiement ou aux autorités compétentes lorsque la loi le prévoit.`,
+          `Elles peuvent être communiquées aux membres et bénévoles autorisés, aux utilisateurs concernés par une prestation, aux prestataires techniques ou aux autorités compétentes lorsque la loi le prévoit.`,
           `Queer Services ne vend pas les données personnelles de ses utilisateurs, membres ou adhérent·es.`,
           `Les personnes ayant accès à des informations confidentielles s’engagent à ne pas les divulguer ni les utiliser à des fins personnelles. Cette obligation demeure applicable après la fin de leur adhésion ou de leurs fonctions, tant que les informations conservent leur caractère confidentiel.`
         ]
@@ -431,7 +425,7 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
         body: [
           `Queer Services peut utiliser des cookies nécessaires au fonctionnement de son site et, lorsque les utilisateurs y consentent si cela est requis, des traceurs facultatifs.`,
           `Les utilisateurs doivent pouvoir gérer leurs préférences et retirer leur consentement.`,
-          `Certaines données peuvent également être obtenues indirectement, notamment lorsqu’une personne est mentionnée dans un message, un avis, une réservation ou un signalement, ou lorsqu’un prestataire de paiement transmet le statut d’une transaction.`,
+          `Certaines données peuvent également être obtenues indirectement, notamment lorsqu’une personne est mentionnée dans un message, un avis, une réservation ou un signalement.`,
           `Les personnes concernées sont informées de ces traitements conformément au RGPD, sous réserve des exceptions légales applicables.`
         ]
       },

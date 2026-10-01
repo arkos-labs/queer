@@ -6,7 +6,6 @@ import type { AccountType, Category, Civilite, Profile, Subcategory } from '@/li
 import { FALLBACK_CATEGORIES, FALLBACK_SUBCATEGORIES } from '@/lib/taxonomy';
 import { Heart, ShieldCheck, ArrowRight, ArrowLeft, CheckCircle2, UserRound, Search, HandHeart, Plus, X, Compass } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PriceInput } from '@/components/PriceInput';
 import { BrandHeader } from '@/components/BrandHeader';
 
 type Intent = 'seeking' | 'offering';
@@ -113,10 +112,6 @@ export function OnboardingPage() {
   const [selectedSubIds, setSelectedSubIds] = useState<Set<string>>(new Set());
   const [skills, setSkills] = useState<string[]>([]);
   const [needs, setNeeds] = useState<string[]>([]);
-  const [rateAmount, setRateAmount] = useState('');
-  const [rateUnit, setRateUnit] = useState('/ heure');
-  const [budgetAmount, setBudgetAmount] = useState('');
-  const [budgetUnit, setBudgetUnit] = useState('/ prestation');
   const [skillInput, setSkillInput] = useState('');
   const [needInput, setNeedInput] = useState('');
   const [charteAccepted, setCharteAccepted] = useState(false);
@@ -179,8 +174,8 @@ export function OnboardingPage() {
   const finishOnboarding = async () => {
     setLoading(true);
     setError(null);
-    const finalRates = rateAmount.trim() ? `${rateAmount.trim()}€ ${rateUnit}` : null;
-    const finalBudget = budgetAmount.trim() ? `${budgetAmount.trim()}€ ${budgetUnit}` : null;
+    const finalRates = null;
+    const finalBudget = null;
 
     // Use the row the upsert itself returns (same request, so guaranteed
     // fresh and correct) and push it straight into the auth context. Doing
@@ -226,6 +221,8 @@ export function OnboardingPage() {
         return;
       }
     }
+    // Keeps the proof that the e-mail code was entered (signup session).
+    await supabase.rpc('mark_email_code_verified');
     setAuthProfile(data as Profile);
     navigate('/annuaire');
   };
@@ -501,30 +498,7 @@ export function OnboardingPage() {
                       ))}
                     </div>
                   )}
-                  <div className="mt-4">
-                    <label className="label">Tes tarifs (optionnel)</label>
-                    <div className="flex gap-2 mt-1.5">
-                      <PriceInput
-                        value={rateAmount}
-                        onChange={setRateAmount}
-                        placeholder="Ex. 30, ou entre 20 et 40"
-                        className="flex-1"
-                      />
-                      <select
-                        value={rateUnit}
-                        onChange={(e) => setRateUnit(e.target.value)}
-                        className="input w-auto shrink-0 bg-paper-base"
-                      >
-                        <option value="/ heure">/ heure</option>
-                        <option value="/ jour">/ jour</option>
-                        <option value="/ mois">/ mois</option>
-                        <option value="/ prestation">/ prestation</option>
-                      </select>
-                    </div>
-                    <p className="mt-1.5 text-xs text-patina-deep/70">
-                      Ça donne aux client·es une idée du prix avant qu'iels ne demandent un devis.
-                    </p>
-                  </div>
+                  
                 </div>
               )}
 
@@ -562,31 +536,7 @@ export function OnboardingPage() {
                       ))}
                     </div>
                   )}
-                  <div className="mt-4">
-                    <label className="label">Budget indicatif (optionnel)</label>
-                    <div className="flex gap-2 mt-1.5">
-                      <PriceInput
-                        value={budgetAmount}
-                        onChange={setBudgetAmount}
-                        placeholder="Ex. 40"
-                        className="flex-1"
-                      />
-                      <select
-                        value={budgetUnit}
-                        onChange={(e) => setBudgetUnit(e.target.value)}
-                        className="input w-auto shrink-0 bg-paper-base"
-                      >
-                        <option value="/ heure">/ heure</option>
-                        <option value="/ jour">/ jour</option>
-                        <option value="/ mois">/ mois</option>
-                        <option value="/ prestation">/ prestation</option>
-                      </select>
-                    </div>
-                    <p className="mt-1.5 text-xs text-patina-deep/70">
-                      Indique à quel prix tu recherches ce service — ça aide les prestataires à savoir si leur tarif
-                      correspond.
-                    </p>
-                  </div>
+                  
                 </div>
               )}
             </div>

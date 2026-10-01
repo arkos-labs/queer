@@ -1,3 +1,4 @@
+import { useRealtimeRevision } from '@/lib/realtime';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
@@ -8,6 +9,7 @@ import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 
 export function ResourcesPage() {
+  const liveRevision = useRealtimeRevision('resources');
   const { navigate } = useRouter();
   const { user } = useAuth();
   const [resources, setResources] = useState<Resource[]>(FALLBACK_RESOURCES);
@@ -92,7 +94,7 @@ export function ResourcesPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [liveRevision]);
 
   const hotlines = resources.filter((r) => r.type === 'numero_utile').sort((a, b) => a.sort_order - b.sort_order);
   const guides = resources.filter((r) => r.type === 'guide').sort((a, b) => a.sort_order - b.sort_order);

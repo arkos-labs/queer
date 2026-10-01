@@ -37,6 +37,13 @@
   @apply flex-1 overflow-x-hidden pb-32 sm:pb-20;
 }
 
+:root {
+  --tabbar-h: calc(56px + max(6px, calc(env(safe-area-inset-bottom, 0px) - 16px)));
+}
+/* Full-screen conversation that leaves room for the bottom tab bar. */
+.thread-shell { position: fixed; inset: 0 0 var(--tabbar-h) 0; }
+.thread-shell.kb-open { bottom: 0; }
+
 /* Bottom navigation: full-width bar with room for the home indicator. */
 .mobile-tabbar {
   position: fixed;
@@ -271,3 +278,24 @@ body { overscroll-behavior-y: none; }
 .animate-float      { animation: float 3.5s ease-in-out infinite; }
 .animate-gradient-x { animation: gradient-x 3s ease infinite; }
 .animate-pulse-ring { animation: pulse-ring 2s ease-out infinite; }
+
+/* ── Launch splash ── */
+@keyframes splash-pop {
+  0%   { opacity: 0; transform: scale(0.82); }
+  60%  { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes splash-breathe {
+  0%,100% { transform: scale(1); }
+  50%     { transform: scale(1.06); }
+}
+@keyframes splash-slide {
+  0%   { transform: translateX(-110%); }
+  100% { transform: translateX(210%); }
+}
+.splash-logo { animation: splash-pop 0.7s ease-out both, splash-breathe 2.4s ease-in-out 0.7s infinite; }
+.splash-glow { animation: splash-breathe 3s ease-in-out infinite; }
+.splash-bar  { animation: splash-slide 1.3s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .splash-logo, .splash-glow, .splash-bar { animation: none; }
+}

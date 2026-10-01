@@ -1,3 +1,4 @@
+import { useRealtimeRevision } from '@/lib/realtime';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
@@ -13,6 +14,7 @@ interface PlaceReviewWithAuthor extends PlaceReview {
 }
 
 export function PlaceDetailPage({ id }: { id: string }) {
+  const liveRevision = useRealtimeRevision('places', 'place_reviews');
   const { navigate } = useRouter();
   const { user, profile } = useAuth();
   const [place, setPlace] = useState<Place | null>(null);
@@ -48,7 +50,7 @@ export function PlaceDetailPage({ id }: { id: string }) {
     return () => {
       cancelled = true;
     };
-  }, [id, user, navigate]);
+  }, [id, user?.id, navigate, liveRevision]);
 
   const approvedReviews = reviews.filter((r) => r.status === 'approved');
   const myReview = reviews.find((r) => r.author_id === user?.id);

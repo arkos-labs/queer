@@ -19,12 +19,11 @@ import {
   Plus,
   MapPin,
   AlertTriangle,
-  Eye,
-  Ban,
   MessageCircle,
+  Calendar,
 } from 'lucide-react';
 
-type Tab = 'profiles' | 'reports' | 'categories' | 'places' | 'messages';
+type Tab = 'profiles' | 'reports' | 'categories' | 'places' | 'messages' | 'events';
 
 export function AdminPage() {
   const { user, profile } = useAuth();
@@ -69,6 +68,7 @@ export function AdminPage() {
               { id: 'reports' as Tab, label: 'Signalements', icon: Flag },
               { id: 'categories' as Tab, label: 'Catégories', icon: LayoutGrid },
               { id: 'messages' as Tab, label: 'Messages', icon: MessageCircle },
+              { id: 'events' as Tab, label: 'Événements', icon: Calendar },
             ]).map((t) => (
               <button
                 key={t.id}
@@ -93,6 +93,7 @@ export function AdminPage() {
         {tab === 'reports' && <ReportsTab />}
         {tab === 'categories' && <CategoriesTab />}
         {tab === 'messages' && <MessagesTab />}
+        {tab === 'events' && <EventSubmissionsTab />}
       </div>
     </div>
   );
@@ -165,18 +166,6 @@ function ProfilesTab() {
     if (!error) setProfiles((prev) => prev.map((x) => (x.id === p.id ? { ...x, ...patch } : x)));
   };
 
-  const rejectVerification = async (p: Profile) => {
-    const patch = { verification_status: 'rejected' as const, verified_at: null };
-    const { error } = await supabase.from('profiles').update(patch).eq('id', p.id);
-    if (!error) setProfiles((prev) => prev.map((x) => (x.id === p.id ? { ...x, ...patch } : x)));
-  };
-
-  const viewIdentityDocument = async (p: Profile) => {
-    if (!p.identity_document_path) return;
-    const { data, error } = await supabase.storage.from('identity-documents').createSignedUrl(p.identity_document_path, 120);
-    if (!error && data?.signedUrl) window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
-  };
-
   const filtered = filter === 'all' ? profiles : profiles.filter((p) => p.profile_status === filter);
 
   return (
@@ -217,11 +206,6 @@ function ProfilesTab() {
                     <ShieldCheck size={12} /> Vérifié
                   </span>
                 )}
-                {p.verification_status === 'pending' && (
-                  <span className="hidden items-center gap-1 rounded-full bg-warning-100 px-2.5 py-1 text-xs font-medium text-warning-700 sm:inline-flex">
-                    <Clock size={12} /> Pièce à vérifier
-                  </span>
-                )}
                 <span className={cn(
                   'hidden rounded-full px-2.5 py-1 text-xs font-medium sm:inline-block',
                   p.profile_status === 'active' && 'bg-success-100 text-success-700',
@@ -232,37 +216,17 @@ function ProfilesTab() {
                   {p.profile_status}
                 </span>
                 <div className="flex gap-1">
-                  {p.identity_document_path && (
-                    <button
-                      onClick={() => viewIdentityDocument(p)}
-                      className="btn-ghost btn-sm text-neutral-500 hover:bg-neutral-100"
-                      title="Voir la pièce d'identité envoyée"
-                      aria-label={`Voir la pièce d'identité de ${p.display_name}`}
-                    >
-                      <Eye size={16} />
-                    </button>
-                  )}
                   <button
                     onClick={() => toggleVerification(p)}
                     className={cn(
                       'btn-ghost btn-sm',
                       p.verification_status === 'verified' ? 'text-primary-600 hover:bg-primary-50' : 'text-neutral-400 hover:bg-neutral-100',
                     )}
-                    title={p.verification_status === 'verified' ? "Retirer la vérification d'identité" : "Vérifier l'identité"}
-                    aria-label={p.verification_status === 'verified' ? `Retirer la vérification d'identité de ${p.display_name}` : `Vérifier l'identité de ${p.display_name}`}
+                    title={p.verification_status === 'verified' ? "Retirer le badge vérifié" : "Donner le badge vérifié"}
+                    aria-label={p.verification_status === 'verified' ? `Retirer le badge vérifié de ${p.display_name}` : `Donner le badge vérifié à ${p.display_name}`}
                   >
                     <ShieldCheck size={16} />
                   </button>
-                  {p.verification_status === 'pending' && (
-                    <button
-                      onClick={() => rejectVerification(p)}
-                      className="btn-ghost btn-sm text-error-600 hover:bg-error-50"
-                      title="Refuser la pièce d'identité"
-                      aria-label={`Refuser la pièce d'identité de ${p.display_name}`}
-                    >
-                      <Ban size={16} />
-                    </button>
-                  )}
                   {p.profile_status !== 'active' && (
                     <button onClick={() => updateStatus(p.id, 'active')} className="btn-ghost btn-sm text-success-600 hover:bg-success-50" title="Activer" aria-label={`Activer le profil de ${p.display_name}`}>
                       <CheckCircle2 size={16} />
@@ -715,6 +679,89 @@ function MessagesTab() {
           </div>
         ))
       )}
+    </div>
+  );
+}
+
+interface EventSubmission {
+  id: string;
+  submitted_by: string;
+  kind: 'suggestion' | 'pro_paid';
+  status: 'pending' | 'awaiting_payment' | 'paid' | 'approved' | 'rejected';
+  name: string;
+  description: string | null;
+  city: string;
+  address: string | null;
+  event_date: string;
+  website_url: string | null;
+  created_at: string;
+  author?: { display_name: string } | null;
+}
+
+function EventSubmissionsTab() {
+  const [items, setItems] = useState<EventSubmission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error: err } = await supabase
+      .from('event_submissions')
+      .select('*, author:profiles!event_submissions_submitted_by_fkey(display_name)')
+      .in('status', ['pending', 'awaiting_payment', 'paid'])
+      .order('created_at', { ascending: false });
+    if (err) setError(err.message);
+    setItems((data ?? []) as EventSubmission[]);
+    setLoading(false);
+  };
+
+  useEffect(() => { void load(); }, []);
+
+  const setStatus = async (id: string, status: EventSubmission['status']) => {
+    const { error: err } = await supabase.from('event_submissions').update({ status }).eq('id', id);
+    if (err) setError(err.message);
+    else setItems((prev) => prev.filter((i) => i.id !== id || status === 'paid').map((i) => (i.id === id ? { ...i, status } : i)));
+  };
+
+  const publish = async (item: EventSubmission) => {
+    const { error: insErr } = await supabase.from('events').insert({
+      name: item.name,
+      description: item.description,
+      city: item.city,
+      address: item.address,
+      event_date: item.event_date,
+      website_url: item.website_url,
+      status: 'published',
+    });
+    if (insErr) {
+      setError(insErr.message);
+      return;
+    }
+    await setStatus(item.id, 'approved');
+  };
+
+  if (loading) return <div className="card h-64 animate-pulse bg-neutral-100" />;
+
+  return (
+    <div className="space-y-3">
+      {error && <div className="rounded-xl bg-error-50 p-3 text-sm text-error-700">{error}</div>}
+      {items.length === 0 ? (
+        <div className="card p-10 text-center text-sm text-neutral-500">Aucune proposition d'événement en attente.</div>
+      ) : items.map((i) => (
+        <div key={i.id} className="card p-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-warning-100 px-2.5 py-1 text-xs font-medium text-warning-700">À valider</span>
+            <span className="text-xs text-neutral-400">par {i.author?.display_name ?? 'Inconnu'} · {timeAgo(i.created_at)}</span>
+          </div>
+          <p className="mt-2 break-words font-semibold text-neutral-900">{i.name}</p>
+          <p className="text-sm text-neutral-500">{i.event_date} · {i.city}{i.address ? ` · ${i.address}` : ''}</p>
+          {i.description && <p className="mt-2 whitespace-pre-wrap break-words text-sm text-neutral-700">{i.description}</p>}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button onClick={() => publish(i)} className="btn-primary btn-sm"><CheckCircle2 size={14} /> Publier</button>
+            <button onClick={() => setStatus(i.id, 'rejected')} className="btn-ghost btn-sm text-error-600 hover:bg-error-50"><XCircle size={14} /> Refuser</button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

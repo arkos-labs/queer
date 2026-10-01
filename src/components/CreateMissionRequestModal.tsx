@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
-import { PriceInput } from '@/components/PriceInput';
 import { X, Send, AlertTriangle } from 'lucide-react';
 
 interface CreateMissionRequestModalProps {
@@ -13,8 +12,6 @@ export function CreateMissionRequestModal({ onClose, onSuccess }: CreateMissionR
   const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [budgetAmount, setBudgetAmount] = useState('');
-  const [budgetUnit, setBudgetUnit] = useState('/ prestation');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,7 +27,7 @@ export function CreateMissionRequestModal({ onClose, onSuccess }: CreateMissionR
     setLoading(true);
     setError(null);
 
-    const finalBudget = budgetAmount.trim() ? `${budgetAmount.trim()}€ ${budgetUnit}` : null;
+    const finalBudget = null;
 
     const { error: insertErr } = await supabase.from('mission_requests').insert({
       created_by: user.id,
@@ -95,30 +92,7 @@ export function CreateMissionRequestModal({ onClose, onSuccess }: CreateMissionR
               />
             </div>
             
-            <div>
-              <label htmlFor="budgetAmount" className="mb-1.5 block text-sm font-medium text-neutral-900">
-                Budget proposé <span className="text-neutral-400 font-normal">(optionnel)</span>
-              </label>
-              <div className="flex gap-2">
-                <PriceInput
-                  id="budgetAmount"
-                  value={budgetAmount}
-                  onChange={setBudgetAmount}
-                  placeholder="Ex: 50, entre 20 et 40…"
-                  className="flex-1"
-                />
-                <select
-                  value={budgetUnit}
-                  onChange={(e) => setBudgetUnit(e.target.value)}
-                  className="input w-auto shrink-0 bg-neutral-100"
-                >
-                  <option value="/ heure">/ heure</option>
-                  <option value="/ jour">/ jour</option>
-                  <option value="/ mois">/ mois</option>
-                  <option value="/ prestation">/ prestation</option>
-                </select>
-              </div>
-            </div>
+            
           </div>
 
           {error && (

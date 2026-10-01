@@ -51,15 +51,11 @@ export function TrustPanel({ profile, badges, reviewCount, avgRating }: TrustPan
         <Row
           icon={<CheckCircle2 size={18} />}
           color="bg-success-50 text-success-600"
-          label="Identité vérifiée"
+          label="Compte vérifié"
           detail={
             isVerified
-              ? 'Identité vérifiée par notre équipe'
-              : profile.verification_status === 'pending'
-                ? 'Vérification en cours'
-                : profile.verification_status === 'rejected'
-                  ? 'Vérification refusée'
-                  : 'Pas encore vérifiée'
+              ? 'E-mail confirmé par code'
+              : 'Pas encore vérifié'
           }
         />
 
@@ -102,7 +98,7 @@ export function TrustPanel({ profile, badges, reviewCount, avgRating }: TrustPan
         )}
       </div>
 
-      {(profile.linkedin_url || profile.external_reviews_url) && (
+      {profile.linkedin_url && (
         <div className="mt-5 grid gap-2 border-t border-neutral-200 pt-5 sm:grid-cols-2">
           {profile.linkedin_url && (
             <a
@@ -112,16 +108,6 @@ export function TrustPanel({ profile, badges, reviewCount, avgRating }: TrustPan
               className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 text-sm font-bold text-blue-700 active:scale-[0.98]"
             >
               <Linkedin size={18} /> LinkedIn <ExternalLink size={14} />
-            </a>
-          )}
-          {profile.external_reviews_url && (
-            <a
-              href={profile.external_reviews_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-3 text-sm font-bold text-violet-700 active:scale-[0.98]"
-            >
-              <Star size={18} /> Vérifier les avis <ExternalLink size={14} />
             </a>
           )}
         </div>

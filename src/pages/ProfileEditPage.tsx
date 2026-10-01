@@ -7,15 +7,6 @@ import { cn } from '@/lib/utils';
 import { FALLBACK_CATEGORIES, FALLBACK_SUBCATEGORIES } from '@/lib/taxonomy';
 import { ArrowLeft, Save, X, Plus, CheckCircle2, Upload } from 'lucide-react';
 import { Avatar } from '@/components/Avatar';
-import { PriceInput } from '@/components/PriceInput';
-
-const RATE_UNITS = ['/ heure', '/ jour', '/ prestation', '/ mois'];
-
-// PriceInput already renders a fixed € sign, so when splitting a stored
-// "30€ / heure"-style string back into amount + unit for editing, strip
-// any trailing € the amount portion might still carry (old data, or a
-// value with no unit at all) — otherwise saving again would double it up.
-const stripEuro = (s: string) => s.replace(/€\s*$/, '').trim();
 
 const normalizeHttpsUrl = (value: string) => {
   const trimmed = value.trim();
@@ -46,20 +37,16 @@ export function ProfileEditPage() {
     city: '',
     civilite: '' as Civilite | '',
     pronouns: '',
+    phone: '',
     account_type: 'particulier' as AccountType,
     intervention_zone: '',
     indicative_rates: '',
     budget_indicatif: '',
     linkedin_url: '',
-    external_reviews_url: '',
     skills: [] as string[],
     needs: [] as string[],
   });
 
-  const [rateAmount, setRateAmount] = useState('');
-  const [rateUnit, setRateUnit] = useState('/ heure');
-  const [budgetAmount, setBudgetAmount] = useState('');
-  const [budgetUnit, setBudgetUnit] = useState('/ heure');
 
   const [skillInput, setSkillInput] = useState('');
   const [needInput, setNeedInput] = useState('');
@@ -99,35 +86,16 @@ export function ProfileEditPage() {
           city: profile.city ?? '',
           civilite: profile.civilite ?? '',
           pronouns: profile.pronouns ?? '',
+          phone: profile.phone ?? '',
           account_type: profile.account_type,
           intervention_zone: profile.intervention_zone ?? '',
           indicative_rates: profile.indicative_rates ?? '',
           budget_indicatif: profile.budget_indicatif ?? '',
           linkedin_url: profile.linkedin_url ?? '',
-          external_reviews_url: profile.external_reviews_url ?? '',
           skills: profile.skills,
           needs: profile.needs,
         });
 
-        // naive split for rates
-        if (profile.indicative_rates) {
-          const unitMatch = RATE_UNITS.find(u => profile.indicative_rates!.endsWith(u));
-          if (unitMatch) {
-            setRateUnit(unitMatch);
-            setRateAmount(stripEuro(profile.indicative_rates.slice(0, -unitMatch.length)));
-          } else {
-            setRateAmount(stripEuro(profile.indicative_rates));
-          }
-        }
-        if (profile.budget_indicatif) {
-          const unitMatch = RATE_UNITS.find(u => profile.budget_indicatif!.endsWith(u));
-          if (unitMatch) {
-            setBudgetUnit(unitMatch);
-            setBudgetAmount(stripEuro(profile.budget_indicatif.slice(0, -unitMatch.length)));
-          } else {
-            setBudgetAmount(stripEuro(profile.budget_indicatif));
-          }
-        }
       }
       setLoading(false);
     };
@@ -196,10 +164,8 @@ export function ProfileEditPage() {
     setSaved(false);
 
     let linkedinUrl: string | null;
-    let externalReviewsUrl: string | null;
     try {
       linkedinUrl = normalizeHttpsUrl(form.linkedin_url);
-      externalReviewsUrl = normalizeHttpsUrl(form.external_reviews_url);
       if (linkedinUrl && !/(^|\.)linkedin\.com$/i.test(new URL(linkedinUrl).hostname)) {
         throw new Error('Le lien LinkedIn doit pointer vers linkedin.com.');
       }
@@ -218,12 +184,10 @@ export function ProfileEditPage() {
       city: form.city || null,
       civilite: form.civilite || null,
       pronouns: form.pronouns || null,
+      phone: form.phone.trim() || null,
       account_type: form.account_type,
       intervention_zone: form.intervention_zone || null,
-      indicative_rates: rateAmount.trim() ? `${rateAmount.trim()}€ ${rateUnit}` : null,
-      budget_indicatif: budgetAmount.trim() ? `${budgetAmount.trim()}€ ${budgetUnit}` : null,
       linkedin_url: linkedinUrl,
-      external_reviews_url: externalReviewsUrl,
       skills: form.skills,
       needs: form.needs,
       charte_accepted: profile?.charte_accepted ?? true,
@@ -254,10 +218,13 @@ export function ProfileEditPage() {
         return;
       }
     }
+    await supabase.rpc('refresh_my_verification');
     await refreshProfile();
     setSaving(false);
     setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Return to the profile so the person sees the saved result.
+    setTimeout(() => navigate('/profil'), 700);
   };
 
   if (loading) {
@@ -305,6 +272,21 @@ export function ProfileEditPage() {
                 <input value={form.pronouns} onChange={(e) => setForm({ ...form, pronouns: e.target.value })} className="input" placeholder="iel / elle / il…" />
               </div>
               <div className="sm:col-span-2">
+                <label className="label">Téléphone</label>
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  className="input"
+                  placeholder="06 12 34 56 78"
+                />
+                <p className="mt-1.5 text-xs text-neutral-400">
+                  Jamais affiché sur votre profil. Il n'est envoyé qu'au client, quand vous acceptez une mission et que vous choisissez de le partager.
+                </p>
+              </div>
+              <div className="sm:col-span-2">
                 <label className="label">Photo de profil</label>
                 <div className="flex items-center gap-4">
                   <Avatar name={form.display_name || 'Membre'} src={form.photo_url} size={64} />
@@ -336,7 +318,7 @@ export function ProfileEditPage() {
           <section className="mt-8">
             <h2 className="font-display text-lg font-semibold text-neutral-900">Liens de confiance</h2>
             <p className="mt-1 text-sm text-neutral-500">
-              Ajoutez des sources externes que les membres pourront consulter pour vérifier votre activité.
+              Ajoutez votre profil LinkedIn pour rassurer les membres.
             </p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div>
@@ -347,17 +329,6 @@ export function ProfileEditPage() {
                   onChange={(e) => setForm({ ...form, linkedin_url: e.target.value })}
                   className="input"
                   placeholder="https://linkedin.com/in/..."
-                  inputMode="url"
-                />
-              </div>
-              <div>
-                <label className="label">Page contenant vos avis</label>
-                <input
-                  type="url"
-                  value={form.external_reviews_url}
-                  onChange={(e) => setForm({ ...form, external_reviews_url: e.target.value })}
-                  className="input"
-                  placeholder="Google, Trustpilot, votre site…"
                   inputMode="url"
                 />
               </div>
@@ -456,30 +427,7 @@ export function ProfileEditPage() {
                 ))}
               </div>
             )}
-            <div className="mt-4">
-              <label className="label">Tarifs indicatifs</label>
-              <div className="flex gap-2 mt-1.5">
-                <PriceInput
-                  value={rateAmount}
-                  onChange={setRateAmount}
-                  placeholder="Ex. 30, ou 50"
-                  className="flex-1"
-                />
-                <select
-                  value={rateUnit}
-                  onChange={(e) => setRateUnit(e.target.value)}
-                  className="input w-auto shrink-0 bg-neutral-100"
-                >
-                  <option value="/ heure">/ heure</option>
-                  <option value="/ jour">/ jour</option>
-                  <option value="/ mois">/ mois</option>
-                  <option value="/ prestation">/ prestation</option>
-                </select>
-              </div>
-              <p className="mt-1.5 text-xs text-neutral-400">
-                Visible sur votre profil pour que les client·es sachent à quel prix s'attendre avant de demander un devis.
-              </p>
-            </div>
+            
           </section>
 
           {/* Needs */}
@@ -510,30 +458,7 @@ export function ProfileEditPage() {
                 ))}
               </div>
             )}
-            <div className="mt-4">
-              <label className="label">Budget indicatif</label>
-              <div className="flex gap-2 mt-1.5">
-                <PriceInput
-                  value={budgetAmount}
-                  onChange={setBudgetAmount}
-                  placeholder="Ex. 40"
-                  className="flex-1"
-                />
-                <select
-                  value={budgetUnit}
-                  onChange={(e) => setBudgetUnit(e.target.value)}
-                  className="input w-auto shrink-0 bg-neutral-100"
-                >
-                  <option value="/ heure">/ heure</option>
-                  <option value="/ jour">/ jour</option>
-                  <option value="/ mois">/ mois</option>
-                  <option value="/ prestation">/ prestation</option>
-                </select>
-              </div>
-              <p className="mt-1.5 text-xs text-neutral-400">
-                Indique à quel prix tu recherches ce service — ça aide les prestataires à savoir si leur tarif te correspond.
-              </p>
-            </div>
+            
           </section>
 
           {error && <div className="mt-6 rounded-xl bg-error-50 p-3 text-sm text-error-700">{error}</div>}

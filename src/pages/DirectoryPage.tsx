@@ -8,6 +8,7 @@ import { FALLBACK_CATEGORIES, FALLBACK_SUBCATEGORIES } from '@/lib/taxonomy';
 import { AddPlaceModal } from '@/components/AddPlaceModal';
 import { Breadcrumbs, type BreadcrumbItem } from '@/components/Breadcrumbs';
 import { useDirectoryCategorySEO } from '@/lib/useSEO';
+import { useRealtimeTick } from '@/lib/realtime';
 import { CATEGORY_ICONS, CATEGORY_ICON_FALLBACK } from '@/lib/categoryIcons';
 import { TARGET_CITIES, cityMatches } from '@/lib/cities';
 import { SCREENSHOT_DEMO_PROFILES } from '@/lib/screenshotDemo';
@@ -20,6 +21,7 @@ import {
   ShieldCheck,
   LifeBuoy,
   Plus,
+  Bell,
 } from 'lucide-react';
 
 interface ProfileWithStats extends PublicProfile {
@@ -45,6 +47,39 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
   const [places, setPlaces] = useState<Place[]>([]);
   const [placesLoading, setPlacesLoading] = useState(false);
   const [addPlaceOpen, setAddPlaceOpen] = useState(false);
+  const rtTick = useRealtimeTick(['profile_subcategories', 'reviews']);
+  const [alertSet, setAlertSet] = useState(false);
+  const [alertBusy, setAlertBusy] = useState(false);
+
+  // "Notify me when someone joins" for an empty subcategory.
+  useEffect(() => {
+    setAlertSet(false);
+    if (!user || !activeSub) return;
+    let cancelled = false;
+    supabase
+      .from('search_alerts')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('subcategory_id', activeSub)
+      .maybeSingle()
+      .then(({ data }) => { if (!cancelled) setAlertSet(!!data); });
+    return () => { cancelled = true; };
+  }, [user, activeSub]);
+
+  const toggleAlert = async () => {
+    if (!user || !activeSub || alertBusy) return;
+    setAlertBusy(true);
+    if (alertSet) {
+      await supabase.from('search_alerts').delete().eq('user_id', user.id).eq('subcategory_id', activeSub);
+      setAlertSet(false);
+    } else {
+      const { error: alertErr } = await supabase
+        .from('search_alerts')
+        .upsert({ user_id: user.id, subcategory_id: activeSub }, { onConflict: 'user_id,subcategory_id' });
+      if (!alertErr) setAlertSet(true);
+    }
+    setAlertBusy(false);
+  };
 
   useEffect(() => {
     if (!user) {
@@ -53,7 +88,7 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
     }
     let cancelled = false;
     const load = async () => {
-      setLoading(true);
+      if (rtTick === 0) setLoading(true);
       setError(null);
 
       // Categories/subcategories are static reference data: if the request
@@ -144,7 +179,7 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
     return () => {
       cancelled = true;
     };
-  }, [user, navigate]);
+  }, [user, navigate, rtTick]);
 
   // The URL is the source of truth for which category is active (so
   // /annuaire/bricolage is bookmarkable/crawlable) — resolve it against the
@@ -418,6 +453,18 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
             <p className="mt-3 text-[13px] text-ink-muted mx-auto max-w-[280px] leading-relaxed">
               Essayez un autre mot-clé ou parcourez une différente catégorie pour trouver ce que vous cherchez.
             </p>
+            {user && activeSub && subcategoryById.get(activeSub) && (
+              <button
+                onClick={toggleAlert}
+                disabled={alertBusy}
+                className={`mx-auto mt-5 flex max-w-[300px] items-center justify-center gap-2 rounded-2xl px-5 py-3 text-[13px] font-semibold shadow-soft transition-all active:scale-[0.98] ${
+                  alertSet ? 'border border-primary-200 bg-primary-50 text-primary-700' : 'btn-primary'
+                }`}
+              >
+                <Bell size={16} />
+                {alertSet ? 'Alerte activée · Annuler' : `Me prévenir dès qu'un·e membre propose « ${subcategoryById.get(activeSub)!.label} »`}
+              </button>
+            )}
           </div>
         ) : (
           filtered.map((p) => {
@@ -425,7 +472,7 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
               <article
                 key={p.id}
                 onClick={() => navigate(`/profil/${p.id}`)}
-                className="group relative flex h-60 cursor-pointer flex-col items-center rounded-[28px] border border-white bg-white p-4 text-center shadow-soft transition-all hover:-translate-y-1 hover:shadow-lift"
+                className="group relative flex min-h-[15rem] cursor-pointer flex-col items-center rounded-[28px] border border-white bg-white p-4 text-center shadow-soft transition-all hover:-translate-y-1 hover:shadow-lift"
               >
                 <div className="relative mb-2">
                   <div className="flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full bg-paper-base shadow-sm ring-2 ring-white text-lg font-bold uppercase text-ink-muted">
@@ -439,12 +486,12 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
                   {p.verification_status === 'verified' && (
                     <div className="absolute -bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center whitespace-nowrap rounded-full border border-gold-hairline bg-white px-1.5 py-0.5 shadow-sm">
                       <ShieldCheck size={9} className="mr-0.5 text-patina-deep" />
-                      <span className="text-[8px] font-bold uppercase tracking-wider text-patina-deep">Vérifié</span>
+                      <span className="text-[8px] font-bold uppercase tracking-wider text-patina-deep">Compte vérifié</span>
                     </div>
                   )}
                 </div>
 
-                <h3 className="w-full truncate px-0.5 font-display text-[17px] font-bold text-ink-base">{p.display_name}</h3>
+                <h3 className="w-full break-words px-0.5 font-display text-[15px] font-bold leading-tight text-ink-base">{p.display_name}</h3>
 
                 {p.account_type === 'pro' && (
                   <span className="mt-1 rounded-full bg-primary-50 px-2 py-0.5 text-[9px] font-bold text-primary-700">Association / structure</span>

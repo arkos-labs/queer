@@ -2,8 +2,9 @@ import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
 import { supabase } from '@/lib/supabase';
+import { useRealtimeTick } from '@/lib/realtime';
 import type { Event } from '@/lib/types';
-import { Calendar, MapPin, ExternalLink, Search } from 'lucide-react';
+import { Calendar, MapPin, ExternalLink, Search, X, Plus, CheckCircle2 } from 'lucide-react';
 
 const CITIES = ['Toutes', 'Paris', 'Marseille', 'Lyon', 'Bordeaux', 'Toulouse', 'Nice', 'Nantes', 'Montpellier'];
 
@@ -22,6 +23,9 @@ function isToday(dateStr: string): boolean {
 export function EventsPage() {
   const { user } = useAuth();
   const { navigate } = useRouter();
+  const rtTick = useRealtimeTick(['events']);
+  const [selected, setSelected] = useState<Event | null>(null);
+  const [suggestOpen, setSuggestOpen] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [city, setCity] = useState('Toutes');
@@ -30,7 +34,7 @@ export function EventsPage() {
   useEffect(() => {
     if (!user) { navigate('/connexion'); return; }
     const load = async () => {
-      setLoading(true);
+      if (rtTick === 0) setLoading(true);
       const { data } = await supabase
         .from('events')
         .select('*')
@@ -42,7 +46,7 @@ export function EventsPage() {
       setLoading(false);
     };
     load();
-  }, [user, navigate]);
+  }, [user, navigate, rtTick]);
 
   const filtered = useMemo(() => {
     let list = events;
@@ -84,6 +88,15 @@ export function EventsPage() {
           <Search size={16} className="shrink-0 text-primary-600" />
           <input id="event-search" type="search" placeholder="Rechercher un événement…" value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-transparent text-sm text-ink-base placeholder-text-muted outline-none" />
         </div>
+      </div>
+
+      <div className="px-5 pt-1">
+        <button
+          onClick={() => setSuggestOpen(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-primary-200 bg-primary-50 px-4 py-3 text-sm font-semibold text-primary-700 active:scale-[0.99]"
+        >
+          <Plus size={16} /> Proposer un événement
+        </button>
       </div>
 
       {/* City tabs */}
@@ -128,7 +141,7 @@ export function EventsPage() {
                   {theme} · {themeEvents.length} événement{themeEvents.length > 1 ? 's' : ''}
                 </h2>
                 <div className="space-y-3">
-                  {themeEvents.map(e => <EventCard key={e.id} event={e} />)}
+                  {themeEvents.map(e => <EventCard key={e.id} event={e} onOpen={() => setSelected(e)} />)}
                 </div>
               </section>
             ))}
@@ -136,21 +149,35 @@ export function EventsPage() {
         )}
       </div>
 
+      {selected && <EventDetailModal event={selected} onClose={() => setSelected(null)} />}
+      {suggestOpen && user && (
+        <SuggestEventModal
+          userId={user.id}
+          onClose={() => setSuggestOpen(false)}
+        />
+      )}
+
       <style>{`.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}`}</style>
     </div>
   );
 }
 
-function EventCard({ event: e, highlight }: { event: Event; highlight?: boolean }) {
+function EventCard({ event: e, highlight, onOpen }: { event: Event; highlight?: boolean; onOpen: () => void }) {
   return (
     <article className={`overflow-hidden rounded-[28px] border border-white transition-shadow hover:shadow-lift ${highlight ? 'bg-primary-50/30' : 'bg-white shadow-soft'}`}>
-      <div className="flex gap-4 p-4">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onOpen}
+        onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); onOpen(); } }}
+        className="flex cursor-pointer gap-4 p-4"
+      >
         {/* Photo ou placeholder */}
         <div className={`flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl ${highlight ? 'bg-primary-100' : 'bg-[#f1eff7]'}`}>
           {e.photo_url ? (
-            <img src={e.photo_url} alt={e.name} className="h-full w-full object-cover" loading="lazy" />
+            <img src={e.photo_url} alt={e.name} className="h-full w-full object-cover" loading="lazy" onError={(ev) => { ev.currentTarget.style.display = 'none'; }} />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-3xl">🏳️‍🌈</div>
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-100 to-primary-200 text-primary-600"><Calendar size={30} /></div>
           )}
         </div>
 
@@ -160,7 +187,7 @@ function EventCard({ event: e, highlight }: { event: Event; highlight?: boolean 
               Aujourd'hui
             </span>
           )}
-          <p className="truncate font-display text-lg font-bold leading-tight text-ink-base">{e.name}</p>
+          <p className="break-words font-display text-lg font-bold leading-tight text-ink-base">{e.name}</p>
 
           <p className="mt-2 flex items-center gap-1.5 text-[13px] font-semibold text-primary-700">
             <Calendar size={14} />
@@ -186,6 +213,7 @@ function EventCard({ event: e, highlight }: { event: Event; highlight?: boolean 
             href={e.website_url}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(ev) => ev.stopPropagation()}
             className="flex items-center gap-1.5 text-sm font-semibold text-primary-700 hover:text-primary-800"
           >
             <ExternalLink size={12} />
@@ -194,5 +222,171 @@ function EventCard({ event: e, highlight }: { event: Event; highlight?: boolean 
         </div>
       )}
     </article>
+  );
+}
+
+function EventDetailModal({ event: e, onClose }: { event: Event; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/40 sm:items-center" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={e.name}
+        onClick={(ev) => ev.stopPropagation()}
+        className="relative max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-t-[28px] bg-white pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] shadow-lift animate-slide-up sm:rounded-[28px]"
+      >
+        <button
+          onClick={onClose}
+          aria-label="Fermer"
+          className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-ink-base shadow-soft"
+        >
+          <X size={20} />
+        </button>
+
+        {e.photo_url ? (
+          <img src={e.photo_url} alt={e.name} className="h-52 w-full object-cover" />
+        ) : (
+          <div className="flex h-40 w-full items-center justify-center bg-gradient-to-br from-primary-100 to-primary-200 text-primary-600"><Calendar size={48} /></div>
+        )}
+
+        <div className="space-y-3 px-5 pt-5">
+          {e.theme && (
+            <span className="inline-block rounded-full bg-primary-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-primary-700">
+              {e.theme}
+            </span>
+          )}
+          <h2 className="break-words font-display text-2xl font-bold leading-tight text-ink-base">{e.name}</h2>
+
+          <p className="flex items-start gap-2 text-sm font-semibold text-primary-700">
+            <Calendar size={16} className="mt-0.5 shrink-0" />
+            {formatDate(e.event_date, e.event_end_date)}
+          </p>
+          {(e.address || e.city) && (
+            <p className="flex items-start gap-2 text-sm text-ink-muted">
+              <MapPin size={16} className="mt-0.5 shrink-0" />
+              <span className="break-words">{[e.address, e.city].filter(Boolean).join(', ')}</span>
+            </p>
+          )}
+
+          <div className="border-t border-gold-hairline pt-3">
+            <h3 className="text-[12px] font-bold uppercase tracking-wider text-ink-muted">Description</h3>
+            <p className="mt-1.5 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-ink-base">
+              {e.description?.trim() || "Pas de description pour l'instant."}
+            </p>
+          </div>
+
+          {e.website_url && (
+            <a
+              href={e.website_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary mt-2 flex w-full items-center justify-center gap-2"
+            >
+              <ExternalLink size={16} /> Voir l'événement
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const SUGGEST_CITIES = CITIES.filter((c) => c !== 'Toutes');
+
+function SuggestEventModal({ userId, onClose }: { userId: string; onClose: () => void }) {
+  const [form, setForm] = useState({ name: '', city: 'Paris', address: '', event_date: '', description: '', website_url: '' });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+
+  const submit = async () => {
+    if (!form.name.trim() || !form.event_date || !form.description.trim()) {
+      setError('Renseignez le nom, la date et une description.');
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    const { error: err } = await supabase.from('event_submissions').insert({
+      submitted_by: userId,
+      kind: 'suggestion',
+      status: 'pending',
+      name: form.name.trim(),
+      city: form.city,
+      address: form.address.trim() || null,
+      event_date: form.event_date,
+      description: form.description.trim(),
+      website_url: form.website_url.trim() || null,
+    });
+    setSaving(false);
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    setDone(true);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/40 sm:items-center" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Proposer un événement"
+        onClick={(ev) => ev.stopPropagation()}
+        className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-[28px] bg-white px-5 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] pt-5 shadow-lift animate-slide-up sm:rounded-[28px]"
+      >
+        <button onClick={onClose} aria-label="Fermer" className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-ink-base">
+          <X size={20} />
+        </button>
+        <h2 className="pr-10 font-display text-xl font-bold text-ink-base">Proposer un événement</h2>
+
+        {done ? (
+          <div className="py-8 text-center">
+            <CheckCircle2 size={40} className="mx-auto text-success-600" />
+            <p className="mt-3 font-semibold text-ink-base">Merci, votre proposition est envoyée !</p>
+            <p className="mt-1 text-sm text-ink-muted">
+              Notre équipe la vérifie avant de la publier dans l'agenda.
+            </p>
+            <button onClick={onClose} className="btn-primary mt-5">Fermer</button>
+          </div>
+        ) : (
+          <div className="mt-4 space-y-3">
+            <div>
+              <label className="label" htmlFor="ev-name">Nom de l'événement</label>
+              <input id="ev-name" className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label" htmlFor="ev-city">Ville</label>
+                <select id="ev-city" className="input" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}>
+                  {SUGGEST_CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="label" htmlFor="ev-date">Date</label>
+                <input id="ev-date" type="date" className="input" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} />
+              </div>
+            </div>
+            <div>
+              <label className="label" htmlFor="ev-address">Adresse (facultatif)</label>
+              <input id="ev-address" className="input" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+            </div>
+            <div>
+              <label className="label" htmlFor="ev-desc">Description</label>
+              <textarea id="ev-desc" rows={4} className="input" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            </div>
+            <div>
+              <label className="label" htmlFor="ev-url">Lien (facultatif)</label>
+              <input id="ev-url" type="url" inputMode="url" className="input" placeholder="https://…" value={form.website_url} onChange={(e) => setForm({ ...form, website_url: e.target.value })} />
+            </div>
+
+            {error && <p className="rounded-xl bg-error-50 p-3 text-sm text-error-700">{error}</p>}
+
+            <button onClick={submit} disabled={saving} className="btn-primary w-full">
+              {saving ? 'Envoi…' : 'Envoyer ma proposition'}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

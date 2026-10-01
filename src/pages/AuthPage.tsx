@@ -1,7 +1,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
-import { AlertCircle, ArrowLeft, ArrowRight, Check, Eye, EyeOff, LockKeyhole, Mail, MailCheck, ShieldCheck } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, Check, Eye, EyeOff, LockKeyhole, Mail, MailCheck, ShieldCheck, Sparkles } from 'lucide-react';
 import { BrandHeader } from '@/components/BrandHeader';
 import { supabase } from '@/lib/supabase';
 
@@ -78,6 +78,10 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
       return;
     }
 
+    // Rafraîchir la session après vérification du code
+    // (verifyOtp ne met pas à jour automatiquement la session)
+    await supabase.auth.getSession();
+
     setAccountCreated(true);
   };
 
@@ -99,8 +103,7 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
     if (resendErr) {
       const wait = resendErr.message.match(/after (\d+) seconds/i);
       setCodeError(wait ? `Pour votre sécurité, patientez ${wait[1]} secondes avant de redemander un code.` : resendErr.message);
-    }
-    else setCodeResent(true);
+    } else setCodeResent(true);
   };
 
   if (accountCreated) {

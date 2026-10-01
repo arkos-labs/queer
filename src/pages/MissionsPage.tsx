@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useRealtimeTick } from '@/lib/realtime';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
@@ -37,8 +38,10 @@ export function MissionsPage() {
   const [detailTarget, setDetailTarget] = useState<MissionRequest | null>(null);
   const [applyTarget, setApplyTarget] = useState<MissionRequest | null>(null);
 
-  const fetchRequests = async () => {
-    setLoading(true);
+  const rtTick = useRealtimeTick(['mission_requests', 'mission_applications']);
+
+  const fetchRequests = async (silent = false) => {
+    if (!silent) setLoading(true);
     setError(null);
     const { data, error: fetchErr } = await supabase
       .from('mission_requests')
@@ -55,8 +58,8 @@ export function MissionsPage() {
   };
 
   useEffect(() => {
-    fetchRequests();
-  }, []);
+    fetchRequests(rtTick > 0);
+  }, [rtTick]);
 
   const handleSuccess = () => {
     setShowModal(false);

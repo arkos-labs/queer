@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
-import { PriceInput } from '@/components/PriceInput';
 import { X, Send, AlertTriangle, Sparkles } from 'lucide-react';
 
 
@@ -28,8 +27,6 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
   const { user, profile } = useAuth();
   const { navigate } = useRouter();
   const [pitch, setPitch] = useState('');
-  const [rateAmount, setRateAmount] = useState('');
-  const [rateUnit, setRateUnit] = useState('/ prestation');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -86,11 +83,10 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
       connId = created.id as string;
     }
 
-    const rateLine = rateAmount.trim() ? `\n\nTarif proposé : ${rateAmount.trim()}€ ${rateUnit}` : '';
     const { error: msgErr } = await supabase.from('messages').insert({
       connection_id: connId,
       sender_id: user.id,
-      body: `Candidature pour « ${mission.title} » :\n${pitch.trim()}${rateLine}`,
+      body: `Candidature pour « ${mission.title} » :\n${pitch.trim()}`,
     });
     if (msgErr) {
       setLoading(false);
@@ -132,25 +128,7 @@ export function ApplyToMissionModal({ mission, onClose }: { mission: MissionForM
               autoFocus
             />
           </div>
-            <div>
-              <label className="label">Proposer un tarif (optionnel)</label>
-              <div className="grid grid-cols-2 gap-2 mt-1">
-                <PriceInput value={rateAmount} onChange={setRateAmount} placeholder="50" />
-                <select
-                  value={rateUnit}
-                  onChange={(e) => setRateUnit(e.target.value)}
-                  className="input bg-neutral-100"
-                >
-                  <option value="/ heure">/ heure</option>
-                  <option value="/ jour">/ jour</option>
-                  <option value="/ mois">/ mois</option>
-                  <option value="/ prestation">/ prestation</option>
-                </select>
-              </div>
-              <p className="mt-1.5 text-xs text-neutral-400">
-                L'auteur·e de la mission pourra lire votre proposition dans la conversation pour en discuter.
-              </p>
-            </div>
+            
         </div>
         {error && (
           <div className="mt-4 flex items-start gap-2 rounded-xl bg-warning-50 p-3 text-sm text-warning-800">

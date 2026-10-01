@@ -1,8 +1,8 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
 
 interface RouterContextValue {
   path: string;
-  navigate: (to: string) => void;
+  navigate: (to: string, options?: { replace?: boolean }) => void;
 }
 
 const RouterContext = createContext<RouterContextValue | undefined>(undefined);
@@ -23,11 +23,12 @@ export function RouterProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('popstate', onPop);
   }, []);
 
-  const navigate = (to: string) => {
-    window.history.pushState({}, '', to);
+  const navigate = useCallback((to: string, options?: { replace?: boolean }) => {
+    if (options?.replace) window.history.replaceState({}, '', to);
+    else window.history.pushState({}, '', to);
     setPath(to);
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
-  };
+  }, []);
 
   return (
     <RouterContext.Provider value={{ path, navigate }}>

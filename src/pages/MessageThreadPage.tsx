@@ -10,6 +10,9 @@ import { formatDate, timeAgo } from '@/lib/utils';
 import { ArrowLeft, Send, CheckCircle2, XCircle, Clock, Flag, AlertTriangle, Phone, ShieldCheck } from 'lucide-react';
 import { SCREENSHOT_DEMO_PROFILES } from '@/lib/screenshotDemo';
 import { BrandHeader } from '@/components/BrandHeader';
+import { censorInsults } from '@/lib/profanity';
+import { maskContactInfo } from '@/lib/contactMask';
+import { useKeyboardOpen } from '@/lib/useKeyboardOpen';
 
 const STATUS_META: Record<Connection['status'], { label: string; cls: string; icon: typeof Clock }> = {
   pending: { label: 'En attente', cls: 'bg-warning-100 text-warning-700', icon: Clock },
@@ -38,6 +41,7 @@ function LiveMessageThread({ id }: { id: string }) {
   const [sending, setSending] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+  const keyboardOpen = useKeyboardOpen();
   const bottomRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
 
@@ -80,11 +84,6 @@ function LiveMessageThread({ id }: { id: string }) {
         setAlreadyReviewed(!!reviewRes.data);
         setLoading(false);
 
-        if (conn.is_paid) {
-          const { data } = await supabase.rpc('get_contact_phone', { target_profile_id: otherId });
-          if (data) setContactPhone(data as string);
-        }
-
         const unreadIds = msgs.filter((m) => m.sender_id !== user.id && !m.read_at).map((m) => m.id);
         if (unreadIds.length) {
           await supabase.from('messages').update({ read_at: new Date().toISOString() }).in('id', unreadIds);
@@ -118,6 +117,16 @@ function LiveMessageThread({ id }: { id: string }) {
           }
         }
       )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'connections', filter: `id=eq.${id}` },
+        (payload) => {
+          const next = payload.new as Connection;
+          setConnection(next);
+          // Once the job is over, the phone number must disappear.
+          if (next.status !== 'accepted') setContactPhone(null);
+        },
+      )
       .subscribe();
 
     return () => {
@@ -125,6 +134,20 @@ function LiveMessageThread({ id }: { id: string }) {
       supabase.removeChannel(channel);
     };
   }, [id, user, navigate]);
+
+  // The client sees the provider's number once the provider sent it
+  // (and only while the mission is accepted).
+  const otherId = other?.id;
+  useEffect(() => {
+    if (!user || !connection || !otherId) return;
+    const iAmProvider = connection.user_b === user.id;
+    if (iAmProvider || connection.status !== 'accepted' || !connection.phone_shared) return;
+    let cancelled = false;
+    supabase.rpc('get_contact_phone', { target_profile_id: otherId }).then(({ data }) => {
+      if (!cancelled && data) setContactPhone(data as string);
+    });
+    return () => { cancelled = true; };
+  }, [user, connection?.status, connection?.phone_shared, connection?.user_b, otherId]);
 
   useEffect(() => {
     const list = messagesRef.current;
@@ -137,7 +160,9 @@ function LiveMessageThread({ id }: { id: string }) {
     if (!user || !connection || !body.trim() || sending) return;
     setSending(true);
     setError(null);
-    const text = body.trim();
+    const hideContacts = connection.status === 'pending' && connection.service_label !== 'Support Queer Service';
+    const cleaned = censorInsults(body.trim());
+    const text = hideContacts ? maskContactInfo(cleaned) : cleaned;
     const { data, error: sendErr } = await supabase
       .from('messages')
       .insert({ connection_id: connection.id, sender_id: user.id, body: text })
@@ -167,23 +192,26 @@ function LiveMessageThread({ id }: { id: string }) {
       .eq('id', connection.id);
       
     setStatusLoading(false);
-    if (!upErr) setConnection({ ...connection, status });
+    if (upErr) {
+      setError(upErr.message);
+      return;
+    }
+    setConnection({ ...connection, status });
+    if (status !== 'accepted') setContactPhone(null);
   };
 
-  const handlePayment = async () => {
+  // The provider (who accepted) is the only one who can send the number.
+  const sharePhone = async () => {
     if (!connection || !user) return;
+    setError(null);
     setStatusLoading(true);
-    const { error: upErr } = await supabase
-      .from('connections')
-      .update({ is_paid: true, updated_at: new Date().toISOString() })
-      .eq('id', connection.id);
-      
+    const { error: rpcErr } = await supabase.rpc('share_my_phone', { conn_id: connection.id });
     setStatusLoading(false);
-    if (!upErr) {
-      setConnection({ ...connection, is_paid: true });
-      const { data } = await supabase.rpc('get_contact_phone', { target_profile_id: other?.id });
-      if (data) setContactPhone(data as string);
+    if (rpcErr) {
+      setError(rpcErr.message.includes('téléphone') ? rpcErr.message : "Impossible d'envoyer votre numéro. Vérifiez qu'il est renseigné dans votre profil.");
+      return;
     }
+    setConnection({ ...connection, phone_shared: true });
   };
 
   if (!user) return null;
@@ -203,6 +231,9 @@ function LiveMessageThread({ id }: { id: string }) {
   }
 
   const isInitiator = connection.user_a === user.id;
+  const isParticipant = connection.user_a === user.id || connection.user_b === user.id;
+  const isProvider = connection.user_b === user.id;
+  const isAdmin = !!profile?.is_admin;
   const isSupport = connection.service_label === 'Support Queer Service';
   const conversationName = isSupport ? 'Admin' : (other?.display_name ?? 'Membre');
   const statusMeta = STATUS_META[connection.status];
@@ -213,7 +244,7 @@ function LiveMessageThread({ id }: { id: string }) {
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-paper-base">
+    <div className={`thread-shell ${keyboardOpen ? 'kb-open' : ''} z-40 flex flex-col overflow-hidden bg-paper-base`}>
       {reviewOpen && other && (
         <ReviewModal
           targetId={other.id}
@@ -235,13 +266,26 @@ function LiveMessageThread({ id }: { id: string }) {
           <button onClick={() => !isSupport && other && navigate(`/profil/${other.id}`)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
             {isSupport ? <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-100 text-primary-700"><ShieldCheck size={18} /></span> : <Avatar name={other?.display_name ?? 'Membre'} src={other?.photo_url} size={36} className="bg-paper-raised text-ink-muted border border-gold-hairline" />}
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-ink-base">{conversationName}</p>
+              <p className="break-words text-sm font-semibold leading-tight text-ink-base">{conversationName}</p>
               {isSupport ? <span className="text-[11px] font-medium text-primary-700">Équipe Queer Services</span> : <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${statusMeta.cls}`}><statusMeta.icon size={10} /> {statusMeta.label}</span>}
             </div>
           </button>
         </div>
 
-        {!isSupport && connection.status !== 'cancelled' && connection.status !== 'completed' && (
+        {isSupport && isAdmin && connection.status !== 'completed' && connection.status !== 'cancelled' && (
+          <div className="flex items-center gap-2 border-t border-gold-hairline bg-white/40 px-4 py-2">
+            <button onClick={() => updateStatus('completed')} disabled={statusLoading} className="btn-primary btn-sm">
+              <CheckCircle2 size={14} /> {statusLoading ? 'Traitement…' : 'Clôturer la demande'}
+            </button>
+          </div>
+        )}
+        {isSupport && (connection.status === 'completed' || connection.status === 'cancelled') && (
+          <div className="border-t border-gold-hairline bg-success-50 px-4 py-2 text-center text-xs font-medium text-success-700">
+            Cette demande est clôturée.
+          </div>
+        )}
+
+        {!isSupport && isParticipant && connection.status !== 'cancelled' && connection.status !== 'completed' && (
           <div className="flex flex-col border-t border-gold-hairline bg-white/40">
             <div className="flex flex-wrap items-center gap-2 px-4 py-2">
               {connection.status === 'pending' && !isInitiator && (
@@ -253,26 +297,43 @@ function LiveMessageThread({ id }: { id: string }) {
                   <CheckCircle2 size={14} /> {statusLoading ? 'Traitement…' : 'Accepter'}
                 </button>
               )}
+              {connection.status === 'pending' && isInitiator && (
+                <span className="text-xs font-medium text-ink-muted">En attente de la réponse du prestataire…</span>
+              )}
               {connection.status === 'accepted' && (
                   <button onClick={() => updateStatus('completed')} disabled={statusLoading} className="btn-outline btn-sm">
                     <CheckCircle2 size={14} /> {statusLoading ? 'Traitement…' : 'Marquer terminée'}
                   </button>
               )}
               <button onClick={() => updateStatus('cancelled')} disabled={statusLoading} className="btn-ghost btn-sm text-error-600 hover:bg-error-50">
-                <XCircle size={14} /> Annuler
+                <XCircle size={14} /> {connection.status === 'pending' && !isInitiator ? 'Refuser' : 'Annuler'}
               </button>
             </div>
-            
+
             {connection.status === 'accepted' && (
               <div className="flex items-center px-4 py-2 bg-primary-50 border-t border-gold-hairline">
-                {contactPhone ? (
+                {isProvider ? (
+                  connection.phone_shared ? (
+                    <p className="text-xs font-medium text-primary-700 flex items-center gap-1.5">
+                      <Phone size={14} /> Votre numéro a été envoyé. Il disparaîtra à la fin de la prestation.
+                    </p>
+                  ) : (
+                    <button onClick={sharePhone} disabled={statusLoading} className="btn-primary btn-sm flex items-center gap-1.5">
+                      <Phone size={14} /> Envoyer mon numéro
+                    </button>
+                  )
+                ) : !connection.phone_shared ? (
+                  <p className="text-xs font-medium text-primary-700 flex items-center gap-1.5">
+                    <Phone size={14} /> Le prestataire peut vous envoyer son numéro maintenant que la mission est acceptée.
+                  </p>
+                ) : contactPhone ? (
                   <p className="text-sm font-medium text-primary-700 flex items-center gap-1.5">
                     <Phone size={14} /> Téléphone : <a href={`tel:${contactPhone.replace(/\s/g, '')}`} className="underline">{contactPhone}</a>
                   </p>
                 ) : (
-                  <button onClick={handlePayment} disabled={statusLoading} className="btn-primary btn-sm flex items-center gap-1.5">
-                    <Phone size={14} /> Payer en ligne pour voir le téléphone
-                  </button>
+                  <p className="text-xs font-medium text-primary-700 flex items-center gap-1.5">
+                    <Phone size={14} /> Récupération du numéro…
+                  </p>
                 )}
               </div>
             )}
@@ -309,7 +370,7 @@ function LiveMessageThread({ id }: { id: string }) {
                             : 'rounded-bl-sm bg-white text-ink-base'
                         }`}
                       >
-                        <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                        <p className="whitespace-pre-wrap break-words">{connection.status === 'pending' && !isSupport ? maskContactInfo(censorInsults(m.body)) : censorInsults(m.body)}</p>
                         <p className={`mt-1 text-[10px] ${mine ? 'text-white/80' : 'text-patina-deep'}`}>{timeAgo(m.created_at)}</p>
                       </div>
                     </div>
@@ -319,7 +380,7 @@ function LiveMessageThread({ id }: { id: string }) {
             );
           })
         )}
-        {connection.status === 'completed' && (
+        {!isSupport && connection.status === 'completed' && (
           <ReviewOfferCard
             otherName={other?.display_name?.split(' ')[0] ?? 'l\'autre membre'}
             alreadyReviewed={alreadyReviewed}
@@ -338,8 +399,10 @@ function LiveMessageThread({ id }: { id: string }) {
       )}
 
       {/* Composer */}
-      <div className="z-10 w-full shrink-0 bg-white" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-        {!profile?.charte_accepted ? (
+      <div className="z-10 w-full shrink-0 bg-white">
+        {isSupport && (connection.status === 'completed' || connection.status === 'cancelled') && !isAdmin ? (
+          <div className="border-t border-gold-hairline bg-neutral-50 px-4 py-3 text-center text-xs text-ink-muted">Demande clôturée. Ouvrez une nouvelle demande si besoin.</div>
+        ) : !profile?.charte_accepted ? (
           <div className="flex items-center gap-2 border-t border-gold-hairline bg-warning-50 px-4 py-3 text-xs text-warning-800">
             <Flag size={14} /> Acceptez la charte de respect depuis votre profil pour pouvoir écrire.
           </div>
@@ -376,6 +439,7 @@ function LiveMessageThread({ id }: { id: string }) {
 
 function DemoHugoThread() {
   const { navigate } = useRouter();
+  const keyboardOpen = useKeyboardOpen();
   const hugo = SCREENSHOT_DEMO_PROFILES.find((profile) => profile.id === 'demo-eden')!;
   const messages = [
     { mine: true, body: 'Bonjour Hugo, je cherche de l’aide samedi pour quelques cartons.', time: '15:42' },
@@ -385,7 +449,7 @@ function DemoHugoThread() {
   ];
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-paper-base">
+    <div className={`thread-shell ${keyboardOpen ? 'kb-open' : ''} z-40 flex flex-col overflow-hidden bg-paper-base`}>
       <div className="z-10 w-full shrink-0 border-b border-gold-hairline bg-[#ede9fe]">
         <BrandHeader onBack={() => navigate('/messages')} />
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
@@ -400,7 +464,7 @@ function DemoHugoThread() {
         <p className="my-3 text-center text-xs font-medium text-patina-deep">Aujourd’hui</p>
         {messages.map((message, index) => <div key={index} className={`flex ${message.mine ? 'justify-end' : 'justify-start'}`}><div className={`max-w-[78%] rounded-2xl border border-gold-hairline px-4 py-2.5 text-sm shadow-sm ${message.mine ? 'rounded-br-sm bg-patina-deep text-white' : 'rounded-bl-sm bg-white text-ink-base'}`}><p>{message.body}</p><p className={`mt-1 text-[10px] ${message.mine ? 'text-white/80' : 'text-patina-deep'}`}>{message.time}</p></div></div>)}
       </div>
-      <div className="z-10 flex w-full shrink-0 items-center gap-2 border-t border-gold-hairline bg-white px-4 py-3" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}>
+      <div className="z-10 flex w-full shrink-0 items-center gap-2 border-t border-gold-hairline bg-white px-4 py-3" >
         <div className="flex-1 rounded-xl border border-gold-hairline bg-white px-4 py-3 text-[15px] text-ink-muted">Écrire un message…</div><button aria-label="Envoyer" className="rounded-xl bg-ink-base p-3 text-white"><Send size={16} /></button>
       </div>
     </div>

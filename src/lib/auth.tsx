@@ -192,7 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const requestPasswordReset = async (email: string) => {
-    const resetUrl = `${window.location.origin}/connexion?recovery=1`;
+    const resetUrl = 'https://www.queerservices.fr/reset-password';
     const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: resetUrl });
     return { error: error?.message ?? null };
   };

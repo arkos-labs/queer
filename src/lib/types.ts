@@ -107,6 +107,7 @@ export interface Connection {
   service_label: string | null;
   status: ConnectionStatus;
   mission_request_id: string | null;
+  phone_shared: boolean;
   is_paid: boolean;
   created_at: string;
   updated_at: string;
@@ -198,7 +199,7 @@ export interface Notification {
   body: string;
   action_url: string | null;
   reference_id: string | null;
-  read_at: string | null;
+  is_read: boolean;
   created_at: string;
 }
 

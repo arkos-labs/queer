@@ -65,7 +65,7 @@ export function MissionDetailModal({ mission, onClose, onApply, onDelete }: Miss
                 <Avatar name={mission.profiles?.display_name ?? '?'} src={mission.profiles?.photo_url} size={48} />
               </button>
               <div className="flex-1 min-w-0">
-                <button onClick={() => { onClose(); navigate(`/profil/${mission.created_by}`); }} className="font-semibold text-neutral-900 hover:text-primary-600 transition-colors text-left truncate block w-full">
+                <button onClick={() => { onClose(); navigate(`/profil/${mission.created_by}`); }} className="font-semibold text-neutral-900 hover:text-primary-600 transition-colors text-left break-words block w-full">
                   {mission.profiles?.display_name ?? 'Membre'}
                 </button>
                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-neutral-500">
@@ -77,12 +77,7 @@ export function MissionDetailModal({ mission, onClose, onApply, onDelete }: Miss
 
           <div>
             <h2 className="font-display text-2xl font-bold text-neutral-900 mb-4">{mission.title}</h2>
-            {mission.budget && (
-              <div className="mb-6 inline-flex items-center gap-2 rounded-xl bg-primary-50 px-4 py-2 text-primary-600 font-medium">
-                <span className="text-xs uppercase tracking-wider text-primary-600/70 font-semibold">Budget indicatif :</span>
-                <span className="text-sm font-bold">{mission.budget}</span>
-              </div>
-            )}
+            
             
             <div className="prose prose-sm max-w-none text-neutral-900 whitespace-pre-line leading-relaxed">
               {mission.description}
@@ -93,7 +88,7 @@ export function MissionDetailModal({ mission, onClose, onApply, onDelete }: Miss
         <div className="p-4 md:p-6 border-t border-neutral-200 bg-neutral-100/50 mt-auto">
           {user && user.id !== mission.created_by ? (
             <button onClick={onApply} className="btn-primary w-full py-3 text-[15px]">
-              <Send size={18} /> Contacter & proposer un tarif
+              <Send size={18} /> Contacter
             </button>
           ) : user && user.id === mission.created_by ? (
             <button 

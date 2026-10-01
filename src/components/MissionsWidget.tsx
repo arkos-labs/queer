@@ -1,3 +1,4 @@
+import { useRealtimeRevision } from '@/lib/realtime';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
@@ -17,6 +18,7 @@ interface OpenMission {
 // AnnouncementsBanner, which only ever rendered on DirectoryPage, so open
 // mission requests were invisible anywhere else in the app.
 export function MissionsWidget() {
+  const liveRevision = useRealtimeRevision('mission_requests');
   const { user } = useAuth();
   const { navigate } = useRouter();
   const [missions, setMissions] = useState<OpenMission[]>([]);
@@ -49,7 +51,7 @@ export function MissionsWidget() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user?.id, liveRevision]);
 
   if (!user) return null;
 
@@ -104,7 +106,7 @@ export function MissionsWidget() {
                   >
                     <p className="text-sm font-semibold text-neutral-900 truncate">{m.title}</p>
                     <div className="mt-0.5 flex items-center gap-2">
-                      {m.budget && <span className="text-[11px] font-medium text-secondary-700">{m.budget}</span>}
+                      
                       <span className="text-[10px] font-medium text-text-faint ml-auto">{timeAgo(m.created_at)}</span>
                     </div>
                   </button>

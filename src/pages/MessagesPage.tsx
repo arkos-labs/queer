@@ -5,6 +5,8 @@ import { useAuth } from '@/lib/auth';
 import type { Connection, Message, PublicProfile } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
 import { timeAgo } from '@/lib/utils';
+import { censorInsults } from '@/lib/profanity';
+import { maskContactInfo } from '@/lib/contactMask';
 import { MessageCircle, ArrowRight, ShieldCheck } from 'lucide-react';
 import { SCREENSHOT_DEMO_PROFILES } from '@/lib/screenshotDemo';
 
@@ -172,14 +174,14 @@ export function MessagesPage() {
                 {isSupport ? <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-100 text-primary-700"><ShieldCheck size={23} /></span> : <Avatar name={r.other?.display_name ?? 'Membre'} src={r.other?.photo_url} size={48} className="bg-paper-raised text-ink-muted border border-gold-hairline" />}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate font-bold text-ink-base">{name}</p>
+                    <p className="break-words font-bold leading-tight text-ink-base">{name}</p>
                     {r.lastMessage && (
                       <span className="shrink-0 text-xs font-medium text-patina-deep">{timeAgo(r.lastMessage.created_at)}</span>
                     )}
                   </div>
                   <p className={`mt-0.5 truncate text-sm ${r.unreadCount > 0 ? 'font-bold text-ink-base' : 'text-ink-muted'}`}>
                     {r.lastMessage
-                      ? `${r.lastMessage.sender_id === user.id ? 'Vous : ' : ''}${r.lastMessage.body}`
+                      ? `${r.lastMessage.sender_id === user.id ? 'Vous : ' : ''}${r.connection.status === 'pending' && !isSupport ? maskContactInfo(censorInsults(r.lastMessage.body)) : censorInsults(r.lastMessage.body)}`
                       : isSupport ? 'Équipe Queer Services' : (r.connection.service_label ?? 'Nouvelle mise en relation')}
                   </p>
                 </div>
