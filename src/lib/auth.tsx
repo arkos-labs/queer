@@ -126,7 +126,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(newSession);
           return;
         }
-        setLoading(true);
+        // Pas de setLoading(true) ici : ça ferait remonter le SplashScreen
+        // en plein écran, qui démonte la page en cours (ex: l'écran "Code
+        // de vérification" / "Bienvenue" de l'inscription juste après
+        // verifyOtp()) et lui fait perdre tout son état local — l'appli
+        // retombait alors sur le formulaire e-mail / mot de passe comme si
+        // de rien n'était. Les pages qui ont besoin d'un indicateur de
+        // chargement pendant la connexion (signIn, devLogin) gèrent déjà
+        // leur propre `loading` indépendamment.
         currentUid.current = newSession?.user?.id ?? null;
         setSession(newSession);
         setUser(newSession?.user ?? null);
@@ -135,7 +142,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           setProfile(null);
         }
-        setLoading(false);
       })();
     });
 
