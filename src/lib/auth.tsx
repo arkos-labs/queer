@@ -38,9 +38,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const currentUid = useRef<string | null>(null);
-  const [isPasswordRecovery, setIsPasswordRecovery] = useState(
-    () => new URLSearchParams(window.location.search).get('recovery') === '1',
-  );
+  // Le lien de l'e-mail « mot de passe oublié » arrive sur /reset-password
+  // (avec ?code=… en PKCE, ou #access_token=…&type=recovery en implicite).
+  // Avec PKCE, Supabase n'émet PAS l'événement PASSWORD_RECOVERY : il faut donc
+  // détecter le mode récupération dès le chargement, sinon la session créée par
+  // le lien fait rediriger la personne vers l'accueil / l'annuaire.
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(() => {
+    const path = window.location.pathname;
+    return (
+      path.startsWith('/reset-password') ||
+      path.startsWith('/nouveau-mot-de-passe') ||
+      new URLSearchParams(window.location.search).get('recovery') === '1' ||
+      /(?:^|[#&])type=recovery(?:&|$)/.test(window.location.hash)
+    );
+  });
+  const recoveryAtLoad = useRef(isPasswordRecovery);
 
   const loadProfile = async (uid: string): Promise<Profile | null> => {
     try {
@@ -72,6 +84,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     //  - compte vérifié mais sans profil (onboarding non terminé) → on se
     //    déconnecte et on revient à l'accueil (Connexion / Inscription).
     const resetToHome = async () => {
+      // Jamais pendant une réinitialisation de mot de passe : la personne doit
+      // pouvoir choisir son nouveau mot de passe même sans profil complet.
+      if (recoveryAtLoad.current) return;
       await supabase.auth.signOut({ scope: 'local' });
       if (window.location.pathname !== '/') window.location.replace('/');
     };
@@ -92,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .select('id')
           .eq('id', uid)
           .maybeSingle();
-        if (!rowErr && !row) {
+        if (!rowErr && !row && !recoveryAtLoad.current) {
           await resetToHome();
           setSession(null);
           setUser(null);
@@ -208,7 +223,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null };
   };
 
-  const finishPasswordRecovery = () => setIsPasswordRecovery(false);
+  const finishPasswordRecovery = () => {
+    recoveryAtLoad.current = false;
+    setIsPasswordRecovery(false);
+  };
 
   const signOut = async () => {
     await supabase.auth.signOut();

@@ -36,10 +36,11 @@ function Routes() {
 
   // Belt and braces: a signed-in user must never stay on the presentation page.
   useEffect(() => {
+    if (isPasswordRecovery || name === 'reset-password') return;
     if (!loading && user && name === 'home') {
       navigate(profile && profile.display_name ? '/annuaire' : '/onboarding');
     }
-  }, [loading, user, profile, name]);
+  }, [loading, user, profile, name, isPasswordRecovery]);
 
   useSEO(name, { skip: name === 'directory' && !!params.category });
 
