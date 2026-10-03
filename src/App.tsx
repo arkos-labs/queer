@@ -25,7 +25,6 @@ import { PlaceDetailPage } from '@/pages/PlaceDetailPage';
 import { EventsPage } from '@/pages/EventsPage';
 import { LegalPage, type LegalSlug } from '@/pages/LegalPage';
 import { InstallGuidePage } from '@/pages/InstallGuidePage';
-import { CookieBanner } from '@/components/CookieBanner';
 import { InstallPWABanner } from '@/components/InstallPWABanner';
 import { Capacitor } from '@capacitor/core';
 
@@ -135,7 +134,6 @@ export default function App() {
           </Layout>
         </RealtimeProvider>
         {!isNativeApp && <InstallPWABanner />}
-        {!isNativeApp && <CookieBanner />}
       </RouterProvider>
     </AuthProvider>
   );
