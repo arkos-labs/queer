@@ -1,3 +1,4 @@
+import { AvatarBadges, BadgeLegend } from '@/components/IdentityBadges';
 import { useRealtimeRevision } from '@/lib/realtime';
 import { useEffect, useState } from 'react';
 import { supabase, PUBLIC_PROFILE_COLUMNS } from '@/lib/supabase';
@@ -5,8 +6,6 @@ import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import type { PublicProfile, Badge, Review } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
-import { BadgeList } from '@/components/BadgeChip';
-import { TrustPanel } from '@/components/TrustPanel';
 import { SCREENSHOT_DEMO_PROFILES } from '@/lib/screenshotDemo';
 import { StarRating } from '@/components/StarRating';
 import { avg, timeAgo } from '@/lib/utils';
@@ -19,6 +18,8 @@ import {
   Send,
   X,
   ShieldCheck,
+  Star,
+  Linkedin,
   MessageSquare,
   Settings,
   UserMinus,
@@ -44,7 +45,6 @@ export function ProfileDetailPage({ id }: { id: string }) {
   const [loading, setLoading] = useState(true);
   const [contactOpen, setContactOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
-  const [verifiedInfoOpen, setVerifiedInfoOpen] = useState(false);
   const [contactMsg, setContactMsg] = useState('');
   const [reportReason, setReportReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
@@ -214,41 +214,11 @@ export function ProfileDetailPage({ id }: { id: string }) {
 
   const typeMeta = {
     particulier: { icon: Users, label: 'Particulier·e' },
-    pro: { icon: Building2, label: 'Professionnel·le / structure' },
+    pro: { icon: Building2, label: 'Professionnel·le / entreprise' },
   }[target.account_type];
 
   return (
-    <div className="animate-fade-in container-app py-6">
-      <div className="mb-6 flex items-center justify-between">
-        <button
-          onClick={() => navigate('/annuaire')}
-          aria-label="Retour à l'annuaire"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-paper-raised border border-gold-hairline text-ink-base shadow-card transition-all hover:scale-105 hover:border-patina-deep hover:text-patina-deep"
-        >
-          <ArrowLeft size={18} strokeWidth={1.5} />
-        </button>
-        <h1 className="font-display text-lg font-semibold text-ink-base">Profil</h1>
-        {isSelf ? (
-          <button
-            onClick={() => navigate('/parametres')}
-            aria-label="Réglages"
-            title="Réglages"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-paper-raised border border-gold-hairline text-ink-base shadow-card transition-all hover:scale-105"
-          >
-            <Settings size={18} strokeWidth={1.5} />
-          </button>
-        ) : (
-          <div className="flex gap-2">
-            <button onClick={toggleBlock} disabled={actionLoading} aria-label={isBlocked ? 'Débloquer ce profil' : 'Bloquer ce profil'} title={isBlocked ? 'Débloquer' : 'Bloquer'} className="flex h-10 w-10 items-center justify-center rounded-full border border-gold-hairline bg-paper-raised text-ink-muted shadow-card transition-all hover:scale-105">
-              <UserMinus size={18} strokeWidth={1.5} />
-            </button>
-            <button onClick={() => setReportOpen(true)} aria-label="Signaler ce profil" title="Signaler ce profil" className="flex h-10 w-10 items-center justify-center rounded-full bg-paper-raised border border-error-200 text-error-600 shadow-card transition-all hover:scale-105 hover:bg-error-50">
-              <Flag size={18} strokeWidth={1.5} />
-            </button>
-          </div>
-        )}
-      </div>
-
+    <div className="animate-fade-in container-app pb-6 pt-0">
       <div className="flex flex-col gap-6">
           {/* Main Card */}
           <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft overflow-hidden pb-8 relative">
@@ -262,34 +232,15 @@ export function ProfileDetailPage({ id }: { id: string }) {
               <div className="rounded-full bg-white p-1.5 shadow-sm">
                 <Avatar name={target.display_name} src={target.photo_url} size={112} className="bg-paper-raised text-ink-muted border border-gold-hairline" />
               </div>
-              {target.verification_status === 'verified' && (
-                <button
-                  type="button"
-                  onClick={() => setVerifiedInfoOpen(true)}
-                  aria-label="Qu'est-ce que le badge vérifié ?"
-                  className="absolute bottom-1 right-1/2 translate-x-12 translate-y-1 rounded-full bg-white p-0.5 shadow-sm border border-gold-hairline active:scale-90 transition-transform"
-                >
-                  <ShieldCheck size={20} className="text-patina-deep" />
-                </button>
-              )}
+              <AvatarBadges accountType={target.account_type} isCommunityMember={target.is_community_member} isAlly={target.is_ally} verified={target.verification_status === 'verified'} />
             </div>
             
             <div className="px-6 mt-6 text-center">
-              <h1 className="font-display text-3xl font-bold text-ink-base">{target.display_name}</h1>
-              {typeMeta && (
-                <span className="mt-2 inline-flex items-center rounded-full bg-paper-base border border-gold-hairline px-3 py-1 text-xs font-semibold text-ink-base shadow-sm">
-                  {typeMeta.label}
-                </span>
+              <h1 className="font-display text-3xl font-bold text-ink-base">{target.account_type === 'pro' && target.company_name ? target.company_name : target.display_name}</h1>
+              {target.account_type === 'pro' && target.company_name && target.company_name !== target.display_name && (
+                <p className="mt-1 text-sm text-ink-muted">Représenté·e par {target.display_name}</p>
               )}
-              {target.verification_status === 'verified' && (
-                <button
-                  type="button"
-                  onClick={() => setVerifiedInfoOpen(true)}
-                  className="mt-2 ml-2 inline-flex items-center gap-1 rounded-full border border-success-200 bg-success-100 px-3 py-1 text-xs font-bold text-success-700 shadow-sm active:scale-95 transition-transform"
-                >
-                  <ShieldCheck size={13} /> Compte vérifié
-                </button>
-              )}
+              <BadgeLegend accountType={target.account_type} isCommunityMember={target.is_community_member} isAlly={target.is_ally} verified={target.verification_status === 'verified'} className="mt-2" />
 
               <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-ink-muted">
                 {target.city && (
@@ -297,10 +248,35 @@ export function ProfileDetailPage({ id }: { id: string }) {
                 )}
               </div>
 
+              {reviews.length > 0 && (
+                <p className="mt-3 flex items-center justify-center gap-1.5 text-sm font-bold text-ink-base">
+                  <Star size={15} className="fill-[#D4AF37] text-[#D4AF37]" /> {avgRating.toFixed(1)}
+                  <span className="font-normal text-ink-muted">· {reviews.length} avis</span>
+                </p>
+              )}
+              {target.linkedin_url && (
+                <a href={target.linkedin_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
+                  <Linkedin size={13} /> LinkedIn
+                </a>
+              )}
+
               {target.bio && (
                 <p className="mt-6 text-[15px] italic text-ink-muted leading-relaxed whitespace-pre-line px-2">
                   "{target.bio}"
                 </p>
+              )}
+
+              {target.account_type === 'pro' && (target.company_description || target.website_url || target.opening_hours || target.siret || target.intervention_zone) && (
+                <div className="mt-6 rounded-2xl border border-gold-hairline bg-white p-4 text-left text-sm text-ink-base">
+                  <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted"><Building2 size={14} /> L'entreprise</h3>
+                  {target.company_description && <p className="whitespace-pre-line leading-relaxed">{target.company_description}</p>}
+                  <dl className="mt-3 space-y-1.5 text-[13px]">
+                    {target.intervention_zone && <div><dt className="inline font-semibold">Zone d'intervention : </dt><dd className="inline">{target.intervention_zone}</dd></div>}
+                    {target.opening_hours && <div><dt className="inline font-semibold">Horaires : </dt><dd className="inline">{target.opening_hours}</dd></div>}
+                    {target.siret && <div><dt className="inline font-semibold">SIRET : </dt><dd className="inline">{target.siret}</dd></div>}
+                    {target.website_url && <div><dt className="inline font-semibold">Site web : </dt><dd className="inline"><a href={target.website_url} target="_blank" rel="noopener noreferrer" className="text-patina-deep underline">{target.website_url.replace(/^https?:\/\//, '')}</a></dd></div>}
+                  </dl>
+                </div>
               )}
 
               <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -319,7 +295,21 @@ export function ProfileDetailPage({ id }: { id: string }) {
 
               
 
-              {target.skills.length > 0 && (
+              {target.account_type === 'pro' && (target.pro_services?.length ?? 0) > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3">Services proposés</h3>
+                  <ul className="space-y-2 text-left">
+                    {target.pro_services!.map((svc, i) => (
+                      <li key={i} className="flex items-center justify-between gap-3 rounded-xl border border-gold-hairline bg-white px-4 py-2.5 text-sm shadow-sm">
+                        <span className="font-semibold text-ink-base">{svc.label}</span>
+                        {svc.price && <span className="shrink-0 text-ink-muted">{svc.price}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {target.skills.length > 0 && !(target.account_type === 'pro' && (target.pro_services?.length ?? 0) > 0) && (
                 <div className="mt-8">
                   <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3">Compétences proposées</h3>
                   <div className="flex flex-wrap justify-center gap-2">
@@ -363,8 +353,6 @@ export function ProfileDetailPage({ id }: { id: string }) {
             </div>
           )}
 
-          <TrustPanel profile={target} badges={badges} reviewCount={reviews.length} avgRating={avgRating} />
-
           {/* Avis de la communauté */}
           <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft p-6">
             <h2 className="mb-4 font-display text-lg font-bold text-ink-base">Avis de la communauté</h2>
@@ -404,15 +392,16 @@ export function ProfileDetailPage({ id }: { id: string }) {
             )}
           </div>
 
-          {/* Badges obtenus */}
-          <div className="rounded-3xl border border-gold-hairline bg-white/60 backdrop-blur-sm shadow-soft p-6">
-            <h2 className="mb-4 font-display text-lg font-bold text-ink-base">Badges obtenus</h2>
-            {badges.length === 0 ? (
-              <p className="text-sm text-ink-muted">Aucun badge pour le moment.</p>
-            ) : (
-              <BadgeList badges={badges} className="gap-2" />
-            )}
-          </div>
+          {!isSelf && (
+            <div className="flex items-center justify-center gap-6 pb-2 text-sm">
+              <button onClick={toggleBlock} disabled={actionLoading} className="inline-flex items-center gap-1.5 font-medium text-ink-muted hover:text-ink-base">
+                <UserMinus size={15} strokeWidth={1.5} /> {isBlocked ? 'Débloquer ce membre' : 'Bloquer ce membre'}
+              </button>
+              <button onClick={() => setReportOpen(true)} className="inline-flex items-center gap-1.5 font-medium text-error-600 hover:text-error-700">
+                <Flag size={15} strokeWidth={1.5} /> Signaler
+              </button>
+            </div>
+          )}
         </div>
 
       {/* Contact modal */}
@@ -461,22 +450,6 @@ export function ProfileDetailPage({ id }: { id: string }) {
         </Modal>
       )}
 
-      {verifiedInfoOpen && (
-        <Modal onClose={() => setVerifiedInfoOpen(false)} title="Identité vérifiée">
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success-100 text-success-700">
-              <ShieldCheck size={18} />
-            </span>
-            <p className="text-sm leading-relaxed text-neutral-600">
-              Ce badge signifie que l'identité de cette personne a été vérifiée par Queer Services.
-              Il ne constitue pas une certification professionnelle ni une garantie sur les services proposés.
-            </p>
-          </div>
-          <div className="mt-5 flex justify-end">
-            <button onClick={() => setVerifiedInfoOpen(false)} className="btn-primary">J'ai compris</button>
-          </div>
-        </Modal>
-      )}
     </div>
   );
 }
@@ -522,7 +495,6 @@ function DemoInesProfile() {
 
         <section className="rounded-[28px] border border-gold-hairline bg-white p-5 shadow-soft"><div className="flex items-center justify-between"><h2 className="font-display text-lg font-bold text-ink-base">Avis de la communauté</h2><span className="text-sm font-bold text-primary-700">4,8 ★ · 12 avis</span></div><p className="mt-3 text-sm leading-relaxed text-ink-muted">« Très ponctuelle et méticuleuse, le meuble est parfaitement monté. »</p><p className="mt-2 text-xs font-semibold text-ink-base">Camille R. · il y a 2 semaines</p></section>
 
-        <section className="rounded-[28px] border border-gold-hairline bg-white p-5 shadow-soft"><h2 className="font-display text-lg font-bold text-ink-base">Badges obtenus</h2><div className="mt-3 flex flex-wrap gap-2">{['Membre bienveillant·e','Ponctualité exemplaire','Éco-responsable'].map((badge) => <span key={badge} className="rounded-full border border-gold-hairline bg-paper-base px-3 py-1.5 text-xs font-semibold text-ink-base">{badge}</span>)}</div></section>
       </main>
       <div className="fixed bottom-[calc(61px+env(safe-area-inset-bottom))] z-30 w-full border-t border-gold-hairline bg-white/95 px-4 py-3 backdrop-blur-xl"><div className="mx-auto flex max-w-6xl items-center gap-3"><div className="flex-1"><p className="text-xs text-ink-muted">Disponible ce samedi</p><p className="font-bold text-ink-base">Échanger avec ce membre</p></div><button onClick={() => navigate('/messages/demo-connection-hugo')} className="flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 font-semibold text-white shadow-soft"><Calendar size={17} /> Réserver</button></div></div>
     </div>

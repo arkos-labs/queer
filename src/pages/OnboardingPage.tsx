@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
 import { supabase } from '@/lib/supabase';
-import type { AccountType, Category, Civilite, Profile, Subcategory } from '@/lib/types';
+import { ProServicesEditor } from '@/components/ProServicesEditor';
+import type { ProService, AccountType, Category, Civilite, Profile, Subcategory } from '@/lib/types';
 import { FALLBACK_CATEGORIES, FALLBACK_SUBCATEGORIES } from '@/lib/taxonomy';
-import { Heart, ShieldCheck, ArrowRight, ArrowLeft, CheckCircle2, UserRound, Search, HandHeart, Plus, X, Compass } from 'lucide-react';
+import { Heart, ShieldCheck, ArrowRight, ArrowLeft, CheckCircle2, UserRound, Search, HandHeart, Plus, X, Compass, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BrandHeader } from '@/components/BrandHeader';
 
@@ -25,7 +26,7 @@ const civilites: { value: Civilite; label: string }[] = [
 
 const accountTypes: { value: AccountType; label: string; desc: string; icon: string }[] = [
   { value: 'particulier', label: 'Particulier·e', desc: 'Je propose et/ou je cherche des services entre membres.', icon: '🤝' },
-  { value: 'pro', label: 'Professionnel·le', desc: 'Structure partenaire, professionnel·le ou centre de santé.', icon: '💼' },
+  { value: 'pro', label: 'Professionnel·le', desc: 'Entreprise, professionnel·le ou centre de santé.', icon: '💼' },
 ];
 
 const chartePoints = [
@@ -114,6 +115,13 @@ export function OnboardingPage() {
   const [needs, setNeeds] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState('');
   const [needInput, setNeedInput] = useState('');
+  const [proServices, setProServices] = useState<ProService[]>([{ subcategory_id: null, label: '', price: '' }]);
+  const [companyName, setCompanyName] = useState('');
+  const [companyDescription, setCompanyDescription] = useState('');
+  const [siret, setSiret] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [openingHours, setOpeningHours] = useState('');
+  const [interventionZone, setInterventionZone] = useState('');
   const [charteAccepted, setCharteAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -174,6 +182,23 @@ export function OnboardingPage() {
   const finishOnboarding = async () => {
     setLoading(true);
     setError(null);
+    const isPro = accountType === 'pro';
+    let finalWebsite: string | null = null;
+    if (isPro && websiteUrl.trim()) {
+      try {
+        const candidate = /^https?:\/\//i.test(websiteUrl.trim()) ? websiteUrl.trim() : `https://${websiteUrl.trim()}`;
+        const parsed = new URL(candidate);
+        if (parsed.protocol !== 'https:') throw new Error();
+        finalWebsite = parsed.toString();
+      } catch {
+        setLoading(false);
+        setError('Le site web doit être un lien HTTPS valide.');
+        return;
+      }
+    }
+    const cleanedServices = proServices
+      .filter((x) => x.label.trim())
+      .map((x) => ({ subcategory_id: x.subcategory_id, label: x.label.trim(), price: x.price.trim() }));
     const finalRates = null;
     const finalBudget = null;
 
@@ -189,14 +214,21 @@ export function OnboardingPage() {
       .from('profiles')
       .upsert({
         id: user.id,
-        display_name: displayName,
+        display_name: isPro ? companyName.trim() : displayName,
         email: user.email,
-        civilite,
+        civilite: isPro ? null : civilite,
         city: city.trim() || null,
         pronouns: null,
         account_type: accountType ?? 'particulier',
-        skills,
-        needs,
+        company_name: isPro ? companyName.trim() || null : null,
+        company_description: isPro ? companyDescription.trim() || null : null,
+        siret: isPro ? siret.replace(/\s/g, '') || null : null,
+        website_url: finalWebsite,
+        opening_hours: isPro ? openingHours.trim() || null : null,
+        intervention_zone: isPro ? interventionZone.trim() || null : null,
+        skills: isPro ? Array.from(new Set(cleanedServices.map((x) => x.label))) : skills,
+        needs: isPro ? [] : needs,
+        pro_services: isPro ? cleanedServices : [],
         indicative_rates: finalRates,
         budget_indicatif: finalBudget,
         is_community_member: isCommunityMember,
@@ -212,10 +244,13 @@ export function OnboardingPage() {
       setError(error.message);
       return;
     }
-    if (selectedSubIds.size > 0) {
+    const subIdsToSave = isPro
+      ? new Set(cleanedServices.map((x) => x.subcategory_id).filter((x): x is string => !!x))
+      : selectedSubIds;
+    if (subIdsToSave.size > 0) {
       const { error: servicesError } = await supabase
         .from('profile_subcategories')
-        .insert(Array.from(selectedSubIds).map((subcategory_id) => ({ profile_id: user.id, subcategory_id })));
+        .insert(Array.from(subIdsToSave).map((subcategory_id) => ({ profile_id: user.id, subcategory_id })));
       if (servicesError) {
         setError(servicesError.message);
         return;
@@ -227,19 +262,29 @@ export function OnboardingPage() {
     navigate('/annuaire');
   };
 
+  // Le choix Particulier / Professionnel passe en premier ; les pros ont une
+  // étape « structure » en plus.
+  const stepKeys = accountType === 'pro'
+    ? ['role', 'structure', 'community', 'charte']
+    : ['role', 'community', 'identity', 'services', 'charte'];
+  const stepKey = stepKeys[step];
+  const lastStep = stepKeys.length - 1;
+
   const next = () => setStep((s) => s + 1);
   const back = () => setStep((s) => Math.max(0, s - 1));
 
-  const canProceed = 
-    step === 0 ? (isCommunityMember === true || isAlly) : 
-    step === 1 ? displayName.trim().length > 0 && city.trim().length > 0 && civilite !== null : 
-    step === 2 ? accountType !== null :
-    step === 3 ? (noneSelected || (
+  const siretClean = siret.replace(/\s/g, '');
+  const canProceed =
+    stepKey === 'role' ? accountType !== null :
+    stepKey === 'community' ? (isCommunityMember === true || isAlly) :
+    stepKey === 'structure' ? companyName.trim().length > 0 && city.trim().length > 0 && proServices.some((x) => x.label.trim()) && (!siretClean || /^[0-9]{14}$/.test(siretClean)) :
+    stepKey === 'identity' ? displayName.trim().length > 0 && city.trim().length > 0 && civilite !== null :
+    stepKey === 'services' ? (accountType === 'pro' ? skills.length > 0 : noneSelected || (
       selectedIntents.size > 0 &&
       (!selectedIntents.has('offering') || skills.length > 0) &&
       (!selectedIntents.has('seeking') || needs.length > 0)
     )) :
-    step === 4 ? charteAccepted : true;
+    stepKey === 'charte' ? charteAccepted : true;
 
   return (
     <div className="relative min-h-full overflow-hidden bg-paper-base px-5 pb-10 pt-3">
@@ -253,7 +298,7 @@ export function OnboardingPage() {
         </div>
         {/* Progress */}
         <div className="mb-5 flex items-center justify-center gap-2">
-          {[0, 1, 2, 3, 4].map((i) => (
+          {stepKeys.map((_, i) => (
             <div
               key={i}
               className={cn(
@@ -274,7 +319,7 @@ export function OnboardingPage() {
           >
             <ArrowLeft size={16} /> Retour
           </button>
-          {step === 0 && (
+          {stepKey === 'community' && (
             <div>
               <div className="mb-6 text-center">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-paper-base border border-gold-hairline shadow-sm text-patina-deep">
@@ -305,13 +350,13 @@ export function OnboardingPage() {
             </div>
           )}
 
-          {step === 1 && (
+          {stepKey === 'identity' && (
             <div>
               <div className="mb-6 text-center">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-paper-base border border-gold-hairline shadow-sm text-patina-deep">
                   <UserRound size={22} />
                 </div>
-                <h2 className="font-display text-2xl font-semibold text-ink-base">Bienvenue, qui es-tu ?</h2>
+                <h2 className="font-display text-2xl font-semibold text-ink-base">{accountType === 'pro' ? "Qui représente l'entreprise ?" : 'Bienvenue, qui es-tu ?'}</h2>
                 <p className="mt-2 text-sm text-ink-muted">Choisis ton nom d'affichage, ta civilité et tes pronoms.</p>
               </div>
 
@@ -362,13 +407,13 @@ export function OnboardingPage() {
             </div>
           )}
 
-          {step === 2 && (
+          {stepKey === 'role' && (
             <div>
               <div className="mb-6 text-center">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-paper-base border border-gold-hairline shadow-sm text-patina-deep">
                   <Heart size={22} fill="currentColor" />
                 </div>
-                <h2 className="font-display text-2xl font-semibold text-ink-base">Ton rôle dans la communauté</h2>
+                <h2 className="font-display text-2xl font-semibold text-ink-base">Vous êtes…</h2>
                 <p className="mt-2 text-sm text-ink-muted">Tu pourras toujours modifier cela plus tard.</p>
               </div>
 
@@ -396,19 +441,67 @@ export function OnboardingPage() {
                   </button>
                 ))}
               </div>
+
             </div>
           )}
 
-          {step === 3 && (
+          {stepKey === 'structure' && (
+            <div>
+              <div className="mb-6 text-center">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-paper-base border border-gold-hairline shadow-sm text-patina-deep">
+                  <Building2 size={22} />
+                </div>
+                <h2 className="font-display text-2xl font-semibold text-ink-base">Votre entreprise</h2>
+                <p className="mt-2 text-sm text-ink-muted">Le nom et la ville sont requis, le reste est facultatif et modifiable plus tard.</p>
+              </div>
+              <div className="space-y-4">
+                  <div>
+                    <label className="label">Nom de l'entreprise *</label>
+                    <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="input" maxLength={120} />
+                  </div>
+                  <div>
+                    <label className="label">Ville *</label>
+                    <input value={city} onChange={(e) => setCity(e.target.value)} className="input" maxLength={80} />
+                  </div>
+                  <div>
+                    <label className="label">Présentation de l'activité</label>
+                    <textarea value={companyDescription} onChange={(e) => setCompanyDescription(e.target.value)} className="input min-h-[96px]" maxLength={1000} />
+                  </div>
+                  <div>
+                    <label className="label">SIRET (14 chiffres, facultatif)</label>
+                    <input value={siret} onChange={(e) => setSiret(e.target.value)} className="input" inputMode="numeric" maxLength={17} />
+                  </div>
+                  <div>
+                    <label className="label">Site web</label>
+                    <input value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} className="input" placeholder="https://" />
+                  </div>
+                  <div>
+                    <label className="label">Horaires</label>
+                    <input value={openingHours} onChange={(e) => setOpeningHours(e.target.value)} className="input" placeholder="Ex. Lun–ven 9h–18h" maxLength={200} />
+                  </div>
+                  <div>
+                    <label className="label">Services proposés *</label>
+                    <ProServicesEditor categories={categories} subcategories={subcategories} value={proServices} onChange={setProServices} />
+                  </div>
+                  <div>
+                    <label className="label">Zone d'intervention</label>
+                    <input value={interventionZone} onChange={(e) => setInterventionZone(e.target.value)} className="input" />
+                  </div>
+                </div>
+            </div>
+          )}
+
+          {stepKey === 'services' && (
             <div>
               <div className="mb-6 text-center">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-paper-base border border-gold-hairline shadow-sm text-patina-deep">
                   <Search size={22} />
                 </div>
-                <h2 className="font-display text-2xl font-semibold text-ink-base">Que viens-tu faire ici ?</h2>
-                <p className="mt-2 text-sm text-ink-muted">Ça nous aide à personnaliser ton profil. Modifiable à tout moment. Plusieurs choix possibles.</p>
+                <h2 className="font-display text-2xl font-semibold text-ink-base">{accountType === 'pro' ? 'Les services de votre entreprise' : 'Que viens-tu faire ici ?'}</h2>
+                <p className="mt-2 text-sm text-ink-muted">{accountType === 'pro' ? 'Indiquez les services que propose votre entreprise. Modifiable à tout moment.' : 'Ça nous aide à personnaliser ton profil. Modifiable à tout moment. Plusieurs choix possibles.'}</p>
               </div>
 
+              {accountType !== 'pro' && (
               <div className="space-y-3">
                 {intents.map((t) => (
                   <button
@@ -463,17 +556,18 @@ export function OnboardingPage() {
                   </div>
                 </button>
               </div>
+              )}
 
-              {selectedIntents.has('offering') && (
+              {(accountType === 'pro' || selectedIntents.has('offering')) && (
                 <div className="mt-5 animate-slide-up">
                   <ServicePicker
-                    title="Prestations que tu proposes"
+                    title={accountType === 'pro' ? 'Services proposés par votre entreprise' : 'Prestations que tu proposes'}
                     categories={categories}
                     subcategories={subcategories}
                     selected={skills}
                     onToggle={(subcategory) => togglePreset(subcategory, 'offering')}
                   />
-                  <label className="label">Ce que tu proposes</label>
+                  <label className="label">{accountType === 'pro' ? 'Autres services (texte libre)' : 'Ce que tu proposes'}</label>
                   <div className="flex gap-2">
                     <input
                       value={skillInput}
@@ -502,7 +596,7 @@ export function OnboardingPage() {
                 </div>
               )}
 
-              {selectedIntents.has('seeking') && (
+              {accountType !== 'pro' && selectedIntents.has('seeking') && (
                 <div className="mt-5 animate-slide-up">
                   <ServicePicker
                     title="Prestations que tu recherches"
@@ -542,7 +636,7 @@ export function OnboardingPage() {
             </div>
           )}
 
-          {step === 4 && (
+          {stepKey === 'charte' && (
             <div>
               <div className="mb-6 text-center">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-paper-base border border-gold-hairline shadow-sm text-patina-deep">
@@ -589,7 +683,7 @@ export function OnboardingPage() {
           )}
 
           <div className="mt-8 flex items-center justify-end">
-            {step < 4 ? (
+            {step < lastStep ? (
               <button onClick={next} disabled={!canProceed} className="flex items-center justify-center gap-2 rounded-xl bg-ink-base px-6 py-2.5 font-semibold text-white shadow-soft transition-transform hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0">
                 Continuer <ArrowRight size={16} />
               </button>

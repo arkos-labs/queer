@@ -8,6 +8,7 @@ interface TrustPanelProps {
   badges: BadgeType[];
   reviewCount: number;
   avgRating: number;
+  embedded?: boolean;
 }
 
 function Row({
@@ -36,9 +37,47 @@ function Row({
   );
 }
 
-export function TrustPanel({ profile, badges, reviewCount, avgRating }: TrustPanelProps) {
+export function TrustPanel({ profile, badges, reviewCount, avgRating, embedded = false }: TrustPanelProps) {
   const hasSafeBadge = badges.some((b) => b.code === 'safe');
   const isVerified = profile.verification_status === 'verified';
+
+  if (embedded) {
+    const items = [
+      { icon: <CheckCircle2 size={15} />, color: 'bg-success-50 text-success-600', label: 'Compte vérifié', detail: isVerified ? 'E-mail confirmé par code' : 'Pas encore vérifié' },
+      { icon: <Handshake size={15} />, color: 'bg-yellow-50 text-yellow-600', label: "Charte d'inclusion", detail: profile.charte_accepted ? `Acceptée${profile.charte_accepted_at ? ' le ' + formatDate(profile.charte_accepted_at) : ''}` : 'Non acceptée' },
+      { icon: <Star size={15} />, color: 'bg-success-50 text-success-600', label: 'Note de la communauté', detail: reviewCount > 0 ? `${avgRating.toFixed(1)} / 5 · ${reviewCount} avis` : 'Aucun avis' },
+      { icon: <Clock size={15} />, color: 'bg-blue-50 text-blue-600', label: 'Dernière vérification', detail: profile.verified_at ? formatDate(profile.verified_at) : 'Jamais vérifiée' },
+    ];
+    return (
+      <div className="mt-5 text-left">
+        <p className="mb-2 flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-ink-muted">
+          <ShieldCheck size={14} className="text-primary-600" /> Confiance & sécurité
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {items.map((it) => (
+            <div key={it.label} className="flex items-start gap-2 rounded-xl border border-gold-hairline bg-white p-2.5 shadow-sm">
+              <span className={'flex h-7 w-7 shrink-0 items-center justify-center rounded-full ' + it.color}>{it.icon}</span>
+              <div className="min-w-0">
+                <p className="text-[12px] font-bold leading-tight text-neutral-900">{it.label}</p>
+                <p className="mt-0.5 text-[11px] leading-tight text-neutral-500">{it.detail}</p>
+              </div>
+            </div>
+          ))}
+          {hasSafeBadge && (
+            <div className="col-span-2 flex items-center gap-2 rounded-xl border border-gold-hairline bg-white p-2.5 shadow-sm">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600"><Heart size={15} /></span>
+              <p className="text-[12px] font-bold text-neutral-900">Badge "Safe" communautaire</p>
+            </div>
+          )}
+        </div>
+        {profile.linkedin_url && (
+          <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="mt-2 flex min-h-10 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 text-sm font-bold text-blue-700 active:scale-[0.98]">
+            <Linkedin size={16} /> LinkedIn <ExternalLink size={13} />
+          </a>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="card p-6">

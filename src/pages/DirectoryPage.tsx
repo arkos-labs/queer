@@ -1,3 +1,4 @@
+import { AvatarBadges, BadgeLegend } from '@/components/IdentityBadges';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
@@ -35,7 +36,6 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeSub, setActiveSub] = useState<string | null>(null);
-  const [profileKind, setProfileKind] = useState<'all' | 'member' | 'organization' | 'places'>('all');
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
@@ -115,7 +115,12 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
       // Real member data can't be faked — surface a real error if this fails.
       try {
         const [profRes, blocksRes] = await Promise.all([
-          supabase.from('profiles').select(PUBLIC_PROFILE_COLUMNS).eq('profile_status', 'active').order('created_at', { ascending: false }),
+          (() => {
+            let q = supabase.from('profiles').select(PUBLIC_PROFILE_COLUMNS).eq('profile_status', 'active').eq('is_admin', false).or('email.is.null,email.neq.contact@queerservices.fr');
+            // Les profils de démonstration ne sont visibles que par les comptes de démonstration.
+            if (!myProfile?.is_test_account) q = q.eq('is_test_account', false);
+            return q.order('created_at', { ascending: false });
+          })(),
           supabase.from('blocked_users').select('blocker_id, blocked_id').or(`blocker_id.eq.${user.id},blocked_id.eq.${user.id}`),
         ]);
         if (cancelled) return;
@@ -178,7 +183,7 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
     return () => {
       cancelled = true;
     };
-  }, [user, navigate, rtTick]);
+  }, [user, navigate, rtTick, myProfile?.is_test_account]);
 
   // The URL is the source of truth for which category is active (so
   // /annuaire/bricolage is bookmarkable/crawlable) — resolve it against the
@@ -235,15 +240,15 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
   const filtered = useMemo(() => {
     let list = profiles.filter((p) => p.id !== myProfile?.id);
 
-    if (profileKind === 'member') list = list.filter((p) => p.account_type === 'particulier');
-    if (profileKind === 'organization') list = list.filter((p) => p.account_type === 'pro');
-
     if (activeCategory) {
       const subsInCat = subcategories.filter((s) => s.category_id === activeCategory);
       const subIdsInCat = new Set(subsInCat.map((s) => s.id));
       const subLabelsInCat = new Set(subsInCat.map((s) => s.label.toLowerCase()));
 
+      // Tous les comptes pro apparaissent aussi dans « Professionnels & Administratif ».
+      const includesAllPros = activeCatDef?.slug === 'professionnels-administratif';
       list = list.filter((p) => 
+        (includesAllPros && p.account_type === 'pro') ||
         Array.from(p.subIds).some((id) => subIdsInCat.has(id)) ||
         p.skills.some((skill) => subLabelsInCat.has(skill.toLowerCase()))
       );
@@ -272,7 +277,7 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
     }
 
     return list;
-  }, [profiles, activeCategory, activeSub, activeCity, search, subcategories, subcategoryById, myProfile, profileKind]);
+  }, [profiles, activeCategory, activeCatDef, activeSub, activeCity, search, subcategories, subcategoryById, myProfile]);
 
   useDirectoryCategorySEO(activeCatDef, filtered.length, activeCity);
 
@@ -379,26 +384,6 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
         </div>
       )}
 
-      <div className="no-scrollbar flex gap-2 overflow-x-auto px-5 py-3">
-        {[
-          { id: 'all' as const, label: 'Tout voir' },
-          { id: 'member' as const, label: 'Membres' },
-          { id: 'organization' as const, label: 'Associations & structures' },
-        ].map((kind) => (
-          <button
-            key={kind.id}
-            onClick={() => setProfileKind(kind.id)}
-            className={`shrink-0 rounded-full px-4 py-2 text-[12px] font-semibold transition-all ${
-              profileKind === kind.id
-                ? 'bg-ink-base text-white shadow-soft'
-                : 'border border-gold-hairline bg-white text-ink-muted shadow-sm'
-            }`}
-          >
-            {kind.label}
-          </button>
-        ))}
-      </div>
-
       {/* Results count */}
       <div className="container-app mt-5 flex items-center justify-between py-2">
         <p className="text-[16px] font-medium text-ink-muted">
@@ -481,20 +466,14 @@ export function DirectoryPage({ categorySlug, citySlug }: { categorySlug?: strin
                       p.display_name.substring(0, 2).toUpperCase()
                     )}
                   </div>
+                  <AvatarBadges accountType={p.account_type} isCommunityMember={p.is_community_member} isAlly={p.is_ally} size="sm" />
 
-                  {p.verification_status === 'verified' && (
-                    <div className="absolute -bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center whitespace-nowrap rounded-full border border-gold-hairline bg-white px-1.5 py-0.5 shadow-sm">
-                      <ShieldCheck size={9} className="mr-0.5 text-patina-deep" />
-                      <span className="text-[8px] font-bold uppercase tracking-wider text-patina-deep">Compte vérifié</span>
-                    </div>
-                  )}
                 </div>
 
-                <h3 className="w-full break-words px-0.5 font-display text-[15px] font-bold leading-tight text-ink-base">{p.display_name}</h3>
+                <h3 className="w-full break-words px-0.5 font-display text-[15px] font-bold leading-tight text-ink-base">{p.account_type === 'pro' && p.company_name ? p.company_name : p.display_name}</h3>
 
-                {p.account_type === 'pro' && (
-                  <span className="mt-1 rounded-full bg-primary-50 px-2 py-0.5 text-[9px] font-bold text-primary-700">Association / structure</span>
-                )}
+                <BadgeLegend accountType={p.account_type} isCommunityMember={p.is_community_member} isAlly={p.is_ally} size="sm" className="mt-1" />
+
 
                 <div className="mt-1 flex items-center gap-0.5 text-[12px] font-bold text-ink-base">
                   {p.avgRating > 0 ? (

@@ -69,13 +69,7 @@ export function MissionsPage() {
     <div className="animate-fade-in">
       <div className="border-b border-neutral-200 bg-white">
         <div className="container-app py-6">
-          <button
-            onClick={() => navigate('/annuaire')}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-primary-600"
-          >
-            <ArrowLeft size={16} /> Annuaire
-          </button>
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h1 className="flex items-center gap-2 font-display text-3xl font-semibold text-neutral-900">
                 <Megaphone size={26} className="text-primary-600" /> Missions <span className="gradient-text">recherchées</span>

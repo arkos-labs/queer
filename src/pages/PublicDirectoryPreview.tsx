@@ -1,3 +1,4 @@
+import { AvatarBadges } from '@/components/IdentityBadges';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from '@/lib/router';
 import { supabase } from '@/lib/supabase';
@@ -101,7 +102,7 @@ export function PublicDirectoryPreview({ categorySlug, citySlug }: { categorySlu
             : "Annuaire d'entraide de la communauté LGBTQI+"}
         </h1>
         <p className="mt-1.5 text-sm text-ink-muted">
-          Des membres de la communauté qui proposent leurs services, en confiance. Connectez-vous pour voir les profils complets et les contacter.
+          Des membres de la communauté qui proposent leurs services, en confiance. Parcourez librement l'annuaire. Un compte gratuit n'est nécessaire que pour contacter un membre.
         </p>
       </div>
 
@@ -210,13 +211,13 @@ export function PublicDirectoryPreview({ categorySlug, citySlug }: { categorySlu
                 <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-paper-base shadow-sm ring-2 ring-white text-xl font-bold uppercase text-ink-muted">
                   {l.display_initial}
                 </div>
-                {l.verification_status === 'verified' && (
-                  <div className="absolute -bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center whitespace-nowrap rounded-full border border-gold-hairline bg-white px-1.5 py-0.5 shadow-sm">
-                    <ShieldCheck size={9} className="mr-0.5 text-patina-deep" />
-                    <span className="text-[7px] font-bold uppercase tracking-wider text-patina-deep">Vérifié</span>
-                  </div>
-                )}
+                <AvatarBadges accountType={l.account_type} size="sm" />
               </div>
+
+
+              {l.company_name && (
+                <h3 className="mt-0.5 w-full break-words px-0.5 font-display text-[14px] font-bold leading-tight text-ink-base">{l.company_name}</h3>
+              )}
 
               <div className="mt-0.5 flex items-center gap-1 text-[11px] font-bold text-ink-base">
                 <Star size={11} className="fill-[#D4AF37] text-[#D4AF37]" />
@@ -240,7 +241,7 @@ export function PublicDirectoryPreview({ categorySlug, citySlug }: { categorySlu
               </div>
 
               <span className="mt-3 text-[10px] font-semibold text-patina-deep opacity-0 transition-opacity group-hover:opacity-100">
-                Se connecter pour voir le profil
+                Voir le profil
               </span>
             </article>
           ))}
@@ -252,7 +253,7 @@ export function PublicDirectoryPreview({ categorySlug, citySlug }: { categorySlu
           onClick={() => navigate('/inscription')}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-patina-deep px-4 py-3 text-[15px] font-semibold text-white shadow-sm hover:brightness-110 transition-colors"
         >
-          <LogIn size={18} /> Rejoindre la communauté
+          <LogIn size={18} /> Créer un compte pour contacter les membres
         </button>
       </div>
     </div>

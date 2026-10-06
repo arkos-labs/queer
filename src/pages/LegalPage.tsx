@@ -525,13 +525,7 @@ export function LegalPage({ slug }: { slug: LegalSlug }) {
     <div className="animate-fade-in">
       <div className="border-b border-neutral-200 bg-white">
         <div className="container-app py-6">
-          <button
-            onClick={() => (window.history.length > 1 ? window.history.back() : navigate('/'))}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-primary-600"
-          >
-            <ArrowLeft size={16} /> Retour
-          </button>
-          <div className="mt-3 flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
               <page.icon size={20} />
             </div>

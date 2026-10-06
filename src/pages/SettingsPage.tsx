@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import { Trash2, AlertTriangle, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight, LifeBuoy, CheckCircle2, Clock, LogOut, UserCheck, MessageCircle } from 'lucide-react';
+import { Trash2, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight, LifeBuoy, LogOut, MessageCircle } from 'lucide-react';
 
 export function SettingsPage() {
   const { user, profile, signOut, refreshProfile } = useAuth();
@@ -11,13 +11,8 @@ export function SettingsPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
-  const [checkingVerif, setCheckingVerif] = useState(false);
-  const [codeSent, setCodeSent] = useState(false);
-  const [code, setCode] = useState('');
-  const [codeBusy, setCodeBusy] = useState(false);
-  const [codeOk, setCodeOk] = useState(false);
-  const [codeError, setCodeError] = useState<string | null>(null);
   const [contactingSupport, setContactingSupport] = useState(false);
+  const [showData, setShowData] = useState(false);
 
   const contactSupport = async () => {
     if (!user) return;
@@ -81,47 +76,9 @@ export function SettingsPage() {
 
 
 
-  const emailDone = codeOk || profile?.verification_status === 'verified';
-
   const checkVerification = async () => {
-    setCheckingVerif(true);
     await supabase.rpc('refresh_my_verification');
     await refreshProfile();
-    setCheckingVerif(false);
-  };
-
-  // Sends a one-time code by e-mail (free, no SMS).
-  const sendCode = async () => {
-    if (!user?.email) return;
-    setCodeBusy(true);
-    setCodeError(null);
-    const { error: otpErr } = await supabase.auth.signInWithOtp({
-      email: user.email,
-      options: { shouldCreateUser: false },
-    });
-    setCodeBusy(false);
-    if (otpErr) {
-      setCodeError(otpErr.message.toLowerCase().includes('rate') ? 'Trop de demandes. Réessayez dans quelques minutes.' : otpErr.message);
-      return;
-    }
-    setCodeSent(true);
-  };
-
-  const confirmCode = async () => {
-    if (!user?.email || code.trim().length < 6) return;
-    setCodeBusy(true);
-    setCodeError(null);
-    const { error: verifyErr } = await supabase.auth.verifyOtp({ email: user.email, token: code.trim(), type: 'email' });
-    if (verifyErr) {
-      setCodeBusy(false);
-      setCodeError('Code incorrect ou expiré.');
-      return;
-    }
-    setCodeOk(true);
-    setCode('');
-    await supabase.rpc('mark_email_code_verified');
-    await checkVerification();
-    setCodeBusy(false);
   };
 
   useEffect(() => {
@@ -153,209 +110,68 @@ export function SettingsPage() {
 
   return (
     <div className="animate-fade-in bg-paper-base pb-28">
-      <div className="container-app pt-4">
-        <div className="overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,#5221b8_0%,#7c3aed_52%,#d946a6_100%)] px-5 py-5 text-white shadow-lift">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-white/35 bg-white/20 text-lg font-bold">
-              {profile?.photo_url ? <img src={profile.photo_url} alt="" className="h-full w-full object-cover" /> : (profile?.display_name?.slice(0, 1).toUpperCase() ?? 'Q')}
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/70">Mon espace</p>
-              <h1 className="font-display text-2xl font-semibold">Réglages</h1>
-            </div>
-          </div>
-          <p className="mt-4 text-sm leading-relaxed text-white/85">Gérez votre compte et gardez le contrôle sur vos données.</p>
-        </div>
+      <div className="container-app max-w-xl pt-2">
+        <h1 className="font-display text-3xl font-bold text-ink-base">Réglages</h1>
+
+        {/* Compte */}
+        <button
+          onClick={() => navigate('/profil')}
+          className="mt-4 flex w-full items-center gap-3 rounded-3xl border border-white bg-white p-4 text-left shadow-soft active:scale-[0.99] transition-transform"
+        >
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100 text-lg font-bold text-primary-700">
+            {profile?.photo_url ? <img src={profile.photo_url} alt="" className="h-full w-full object-cover" /> : (profile?.display_name?.slice(0, 1).toUpperCase() ?? 'Q')}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[17px] font-bold text-ink-base">{profile?.display_name ?? 'Mon compte'}</span>
+            <span className="block truncate text-[13px] text-ink-muted">{user.email}</span>
+          </span>
+          <ChevronRight size={18} className="shrink-0 text-neutral-300" />
+        </button>
       </div>
 
-      <div className="container-app max-w-xl space-y-5 py-5">
-        <section>
-          <p className="mb-2 px-2 text-[11px] font-bold tracking-[0.12em] text-ink-muted">AIDE &amp; CONTACT</p>
-          <div className="overflow-hidden rounded-3xl border border-white bg-white shadow-soft">
-            <SettingsRow icon={<LifeBuoy size={20} />} iconClass="bg-secondary-50 text-secondary-600" label="Besoin d’aide ?" description="Guides et numéros d’écoute" onClick={() => navigate('/ressources')} />
-            <SettingsRow icon={<MessageCircle size={20} />} iconClass="bg-primary-50 text-primary-600" label="Contacter l’équipe" description={contactingSupport ? 'Ouverture de la messagerie…' : 'Assistance directe dans l’application'} onClick={contactSupport} disabled={contactingSupport} />
-          </div>
-        </section>
+      <div className="container-app max-w-xl space-y-6 py-5">
+        <Group title="Aide & contact">
+          <SettingsRow icon={<LifeBuoy size={18} />} iconClass="bg-secondary-50 text-secondary-600" label="Infos pratiques" description="Guides et numéros d’écoute" onClick={() => navigate('/ressources')} />
+          <SettingsRow icon={<MessageCircle size={18} />} iconClass="bg-primary-50 text-primary-600" label="Contacter l’équipe" description={contactingSupport ? 'Ouverture de la messagerie…' : 'Nous répondons dès que possible'} onClick={contactSupport} disabled={contactingSupport} />
+        </Group>
 
-        {/* Privacy */}
-        <section>
-          <p className="mb-2 px-2 text-[11px] font-bold tracking-[0.12em] text-ink-muted">CONFIDENTIALITÉ &amp; RGPD</p>
-        <div className="rounded-3xl border border-white bg-white p-5 shadow-soft">
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
-              <ShieldCheck size={20} />
-            </div>
-            <div>
-              <h2 className="font-display text-lg font-semibold text-neutral-900">Données &amp; visibilité</h2>
-              <p className="mt-1 text-sm text-neutral-500">
-                Votre profil est visible par les membres. Vos coordonnées privées restent confidentielles.
-              </p>
-              <p className="mt-2 text-sm text-neutral-500">
-                <span className="rounded-full bg-success-50 px-2 py-1 text-xs font-medium text-success-700">● Hébergement UE · Chiffrement AES-256</span>
-              </p>
-
-              <div className="mt-4 rounded-2xl bg-paper-base/70 p-4">
-                <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">Vos données en bref</p>
-                <dl className="mt-2 space-y-2 text-sm text-neutral-700">
-                  <div>
-                    <dt className="font-semibold text-neutral-900">Qui peut voir mon profil ?</dt>
-                    <dd className="text-neutral-500">Les membres connectés de la communauté, pas les visiteurs anonymes ni les moteurs de recherche.</dd>
-                  </div>
-                  <div>
-                    <dt className="font-semibold text-neutral-900">Quelles données sont publiques ?</dt>
-                    <dd className="text-neutral-500">Votre nom affiché, bio, ville, services proposés et avis reçus.</dd>
-                  </div>
-                  <div>
-                    <dt className="font-semibold text-neutral-900">Quelles données restent privées ?</dt>
-                    <dd className="text-neutral-500">E-mail, téléphone et pièces d'identité ne sont jamais affichés publiquement.</dd>
-                  </div>
-                  <div>
-                    <dt className="font-semibold text-neutral-900">Comment supprimer mon compte ?</dt>
-                    <dd className="text-neutral-500">Depuis cette page, à tout moment — suppression immédiate et définitive.</dd>
-                  </div>
-                  <div>
-                    <dt className="font-semibold text-neutral-900">Comment demander mes données ?</dt>
-                    <dd className="text-neutral-500">Écrivez à l'équipe Queer Services via la messagerie ; vous recevez un export sous 30 jours.</dd>
-                  </div>
-                </dl>
-                <button
-                  onClick={() => navigate('/confidentialite')}
-                  className="mt-3 text-sm font-bold text-primary-700"
-                >
-                  Lire la politique complète →
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        </section>
-
-        {/* Account verification: e-mail code */}
-        <div className="rounded-3xl border border-white bg-white p-5 shadow-soft">
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
-              <UserCheck size={20} />
-            </div>
-            <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="font-display text-lg font-semibold text-neutral-900">Compte vérifié</h2>
-                {profile?.verification_status === 'verified' && (
-                  <span className="badge-chip bg-success-100 text-success-700">
-                    <CheckCircle2 size={12} /> Vérifié·e
-                  </span>
-                )}
-              </div>
-              <p className="mt-1 text-sm text-neutral-500">
-                Aucune pièce d'identité demandée : un code reçu par e-mail suffit.
-              </p>
-              <ul className="mt-3 space-y-2 text-sm">
-                <li className="flex items-center gap-2">
-                  {emailDone ? <CheckCircle2 size={16} className="text-success-600" /> : <Clock size={16} className="text-warning-600" />}
-                  <span className="text-neutral-800">{emailDone ? 'E-mail confirmé par code' : 'E-mail à confirmer avec un code'}</span>
-                </li>
-              </ul>
-              {profile?.verification_status !== 'verified' && !emailDone && (
-                <div className="mt-4 space-y-2">
-                  {!codeSent ? (
-                    <button onClick={sendCode} disabled={codeBusy} className="btn-primary w-full justify-center">
-                      {codeBusy ? 'Envoi…' : 'Recevoir mon code par e-mail'}
-                    </button>
-                  ) : (
-                    <>
-                      <p className="text-xs text-neutral-500">Code envoyé à {user.email}. Pensez à regarder les indésirables.</p>
-                      <input
-                        value={code}
-                        onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
-                        inputMode="numeric"
-                        autoComplete="one-time-code"
-                        placeholder="Code à 6 chiffres"
-                        className="input text-center tracking-[0.3em]"
-                      />
-                      <button onClick={confirmCode} disabled={codeBusy || code.length < 6} className="btn-primary w-full justify-center">
-                        {codeBusy ? 'Vérification…' : 'Valider le code'}
-                      </button>
-                      <button onClick={sendCode} disabled={codeBusy} className="btn-ghost w-full justify-center text-xs">Renvoyer un code</button>
-                    </>
-                  )}
-                  {codeError && <p className="text-sm text-error-600">{codeError}</p>}
+        <Group title="Confidentialité">
+          <SettingsRow
+            icon={<ShieldCheck size={18} />}
+            iconClass="bg-primary-50 text-primary-600"
+            label="Vos données en bref"
+            description="Visibilité, données privées, vos droits"
+            onClick={() => setShowData((v) => !v)}
+            chevronOpen={showData}
+          />
+          {showData && (
+            <div className="space-y-3 bg-paper-base/60 px-5 py-4 text-sm">
+              {[
+                ['Qui peut voir mon profil ?', 'Les membres connectés, pas les moteurs de recherche. Les visiteurs sans compte ne voient qu’un aperçu anonymisé.'],
+                ['Quelles données restent privées ?', 'E-mail, téléphone et pièces d’identité ne sont jamais affichés publiquement.'],
+                ['Comment demander mes données ?', 'Écrivez à l’équipe via la messagerie ; vous recevez un export sous 30 jours.'],
+              ].map(([q, a]) => (
+                <div key={q}>
+                  <p className="font-semibold text-neutral-900">{q}</p>
+                  <p className="text-neutral-500">{a}</p>
                 </div>
-              )}
-              {profile?.verification_status !== 'verified' && (
-                <div className="mt-4 flex flex-col gap-2">
-                  <button onClick={checkVerification} disabled={checkingVerif} className="btn-outline w-full justify-center">
-                    {checkingVerif ? 'Vérification…' : 'Actualiser ma vérification'}
-                  </button>
-                </div>
-              )}
+              ))}
+              <p className="text-xs text-neutral-400">Hébergement UE · Chiffrement AES-256</p>
             </div>
-          </div>
-        </div>
+          )}
+          <SettingsRow icon={<Scale size={18} />} iconClass="bg-neutral-100 text-neutral-500" label="Politique de confidentialité" onClick={() => navigate('/confidentialite')} />
+        </Group>
 
-        {/* Delete */}
-        <div className="rounded-3xl border border-error-100 bg-white p-5 shadow-soft">
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-error-50 text-error-600">
-              <AlertTriangle size={20} />
-            </div>
-            <div className="flex-1">
-              <h2 className="font-display text-lg font-semibold text-neutral-900">Droit à l'effacement</h2>
-              <p className="mt-1 text-sm text-neutral-500">
-                La suppression de votre compte est définitive. Toutes vos données (profil, avis, mises en relation,
-                badges) seront effacées. Cette action est irréversible.
-              </p>
-              <button onClick={() => setDeleteOpen(true)} className="btn mt-4 w-full justify-center border border-error-300 bg-white text-error-600 hover:bg-error-50">
-                <Trash2 size={16} /> Supprimer mon compte
-              </button>
-            </div>
-          </div>
-        </div>
+        <Group title="Informations légales">
+          <SettingsRow icon={<FileText size={18} />} iconClass="bg-neutral-100 text-neutral-500" label="Mentions légales" onClick={() => navigate('/mentions-legales')} />
+          <SettingsRow icon={<Scale size={18} />} iconClass="bg-neutral-100 text-neutral-500" label="Conditions d’utilisation" onClick={() => navigate('/cgu')} />
+          <SettingsRow icon={<Cookie size={18} />} iconClass="bg-neutral-100 text-neutral-500" label="Cookies" onClick={() => navigate('/cookies')} />
+        </Group>
 
-        {/* Legal */}
-        <div className="overflow-hidden rounded-3xl border border-white bg-white p-0 shadow-soft">
-          <div className="flex items-start gap-4 p-6 md:p-8 md:pb-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500">
-              <Scale size={20} />
-            </div>
-            <div>
-              <h2 className="font-display text-lg font-semibold text-neutral-900">Informations légales</h2>
-              <p className="mt-1 text-sm text-neutral-500">Mentions légales, conditions d'utilisation et politiques de la plateforme.</p>
-            </div>
-          </div>
-          <nav className="border-t border-neutral-200">
-            {([
-              { to: '/mentions-legales', label: 'Mentions légales', icon: FileText },
-              { to: '/cgu', label: "Conditions Générales d'Utilisation", icon: Scale },
-              { to: '/confidentialite', label: 'Politique de confidentialité', icon: ShieldCheck },
-              { to: '/cookies', label: 'Politique de cookies', icon: Cookie },
-            ] as const).map((l) => (
-              <button
-                key={l.to}
-                onClick={() => navigate(l.to)}
-                className="flex w-full items-center gap-3 border-b border-neutral-200 px-6 py-3.5 text-left text-sm text-neutral-900 last:border-0 hover:bg-neutral-100 md:px-8"
-              >
-                <l.icon size={16} className="shrink-0 text-neutral-400" />
-                <span className="flex-1">{l.label}</span>
-                <ChevronRight size={16} className="shrink-0 text-neutral-400" />
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        {/* Sign out */}
-        <div className="rounded-3xl border border-white bg-white p-5 shadow-soft">
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500">
-              <LogOut size={20} />
-            </div>
-            <div className="flex-1">
-              <h2 className="font-display text-lg font-semibold text-neutral-900">Se déconnecter</h2>
-              <p className="mt-1 text-sm text-neutral-500">Terminez votre session sur cet appareil.</p>
-              <button onClick={handleSignOut} disabled={signingOut} className="btn-outline mt-4 w-full justify-center text-error-600 hover:text-error-700 hover:bg-error-50 border-error-200">
-                <LogOut size={16} /> {signingOut ? 'Déconnexion…' : 'Se déconnecter'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <Group>
+          <SettingsRow icon={<LogOut size={18} />} iconClass="bg-neutral-100 text-neutral-600" label={signingOut ? 'Déconnexion…' : 'Se déconnecter'} onClick={handleSignOut} disabled={signingOut} noChevron />
+          <SettingsRow icon={<Trash2 size={18} />} iconClass="bg-error-50 text-error-600" label="Supprimer mon compte" description="Suppression définitive de vos données" onClick={() => setDeleteOpen(true)} danger noChevron />
+        </Group>
 
         {error && <div className="rounded-xl bg-error-50 p-3 text-sm text-error-700">{error}</div>}
       </div>
@@ -405,6 +221,15 @@ function ConfirmInput({ onConfirm, loading }: { onConfirm: () => void; loading: 
   );
 }
 
+function Group({ title, children }: { title?: string; children: ReactNode }) {
+  return (
+    <section>
+      {title && <p className="mb-2 px-3 text-[12px] font-bold uppercase tracking-[0.1em] text-ink-muted">{title}</p>}
+      <div className="overflow-hidden rounded-3xl border border-white bg-white shadow-soft">{children}</div>
+    </section>
+  );
+}
+
 function SettingsRow({
   icon,
   iconClass,
@@ -412,22 +237,28 @@ function SettingsRow({
   description,
   onClick,
   disabled = false,
+  danger = false,
+  noChevron = false,
+  chevronOpen = false,
 }: {
   icon: ReactNode;
   iconClass: string;
   label: string;
-  description: string;
+  description?: string;
   onClick: () => void;
   disabled?: boolean;
+  danger?: boolean;
+  noChevron?: boolean;
+  chevronOpen?: boolean;
 }) {
   return (
-    <button onClick={onClick} disabled={disabled} className="flex w-full items-center gap-3 border-b border-neutral-100 px-5 py-4 text-left last:border-0 disabled:opacity-60">
-      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${iconClass}`}>{icon}</span>
+    <button onClick={onClick} disabled={disabled} className="flex w-full items-center gap-3 border-b border-neutral-100 px-4 py-3.5 text-left last:border-0 active:bg-neutral-50 disabled:opacity-60">
+      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconClass}`}>{icon}</span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[16px] font-semibold text-neutral-900">{label}</span>
-        <span className="mt-0.5 block truncate text-[13px] text-neutral-500">{description}</span>
+        <span className={`block text-[16px] font-semibold ${danger ? 'text-error-600' : 'text-neutral-900'}`}>{label}</span>
+        {description && <span className="mt-0.5 block text-[13px] leading-snug text-neutral-500">{description}</span>}
       </span>
-      <ChevronRight size={18} className="shrink-0 text-neutral-300" />
+      {!noChevron && <ChevronRight size={18} className={`shrink-0 text-neutral-300 transition-transform ${chevronOpen ? 'rotate-90' : ''}`} />}
     </button>
   );
 }

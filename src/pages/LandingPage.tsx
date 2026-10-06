@@ -195,7 +195,7 @@ export function LandingPage() {
             }}>
               <div className="px-3 pt-4 pb-4 text-center">
                 <p className="text-[13px] text-neutral-500 mb-5 leading-relaxed">
-                  Rejoignez la communauté pour proposer vos services ou contacter des membres de confiance.
+                  Parcourez l'annuaire librement. Un compte gratuit n'est nécessaire que pour proposer vos services ou contacter des membres.
                 </p>
 
                 <button
@@ -223,15 +223,18 @@ export function LandingPage() {
                   <ArrowRight size={17} strokeWidth={2.2} />
                 </button>
 
-                <div className="mt-4 pt-4 text-center" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-                  <button
-                    onClick={() => navigate('/annuaire')}
-                    className="inline-flex items-center gap-2 text-[12px] font-semibold text-neutral-400 hover:text-primary-600 transition-colors"
-                  >
-                    <Search size={13} strokeWidth={2.2} />
-                    Explorer l'annuaire librement
-                  </button>
-                </div>
+                <button
+                  onClick={() => navigate('/annuaire')}
+                  className="mt-3 w-full flex items-center justify-center gap-2 font-bold text-[14px] py-3.5 rounded-2xl active:scale-[0.98] transition-all duration-150"
+                  style={{
+                    color: '#374151',
+                    background: '#ffffff',
+                    border: '1px solid rgba(0,0,0,0.12)',
+                  }}
+                >
+                  <Search size={16} strokeWidth={2.2} />
+                  Parcourir l'annuaire sans compte
+                </button>
               </div>
             </div>
           </div>

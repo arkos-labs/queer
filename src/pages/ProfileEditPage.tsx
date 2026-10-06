@@ -1,8 +1,9 @@
+import { ProServicesEditor } from '@/components/ProServicesEditor';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import type { Category, Subcategory, AccountType, Civilite } from '@/lib/types';
+import type { Category, Subcategory, AccountType, Civilite, ProService } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { FALLBACK_CATEGORIES, FALLBACK_SUBCATEGORIES } from '@/lib/taxonomy';
 import { ArrowLeft, Save, X, Plus, CheckCircle2, Upload } from 'lucide-react';
@@ -43,6 +44,12 @@ export function ProfileEditPage() {
     indicative_rates: '',
     budget_indicatif: '',
     linkedin_url: '',
+    pro_services: [] as ProService[],
+    company_name: '',
+    company_description: '',
+    website_url: '',
+    opening_hours: '',
+    siret: '',
     skills: [] as string[],
     needs: [] as string[],
   });
@@ -92,6 +99,12 @@ export function ProfileEditPage() {
           indicative_rates: profile.indicative_rates ?? '',
           budget_indicatif: profile.budget_indicatif ?? '',
           linkedin_url: profile.linkedin_url ?? '',
+          pro_services: (profile.pro_services ?? []) as ProService[],
+          company_name: profile.company_name ?? '',
+          company_description: profile.company_description ?? '',
+          website_url: profile.website_url ?? '',
+          opening_hours: profile.opening_hours ?? '',
+          siret: profile.siret ?? '',
           skills: profile.skills,
           needs: profile.needs,
         });
@@ -163,8 +176,25 @@ export function ProfileEditPage() {
     setError(null);
     setSaved(false);
 
+    const isPro = form.account_type === 'pro';
+    if (isPro && !form.company_name.trim()) {
+      setError("Le nom de l'entreprise est requis.");
+      setSaving(false);
+      return;
+    }
+    const cleanedServices = form.pro_services
+      .filter((x) => x.label.trim())
+      .map((x) => ({ subcategory_id: x.subcategory_id, label: x.label.trim(), price: x.price.trim() }));
+    const siret = form.siret.replace(/\s/g, '');
+    if (isPro && siret && !/^[0-9]{14}$/.test(siret)) {
+      setError('Le SIRET doit contenir 14 chiffres.');
+      setSaving(false);
+      return;
+    }
+    let websiteUrl: string | null = null;
     let linkedinUrl: string | null;
     try {
+      websiteUrl = isPro ? normalizeHttpsUrl(form.website_url) : null;
       linkedinUrl = normalizeHttpsUrl(form.linkedin_url);
       if (linkedinUrl && !/(^|\.)linkedin\.com$/i.test(new URL(linkedinUrl).hostname)) {
         throw new Error('Le lien LinkedIn doit pointer vers linkedin.com.');
@@ -177,19 +207,25 @@ export function ProfileEditPage() {
 
     const { error: upErr } = await supabase.from('profiles').upsert({
       id: user.id,
-      display_name: form.display_name,
+      display_name: isPro ? form.company_name.trim() : form.display_name,
       email: user.email,
       bio: form.bio || null,
       photo_url: form.photo_url || null,
       city: form.city || null,
-      civilite: form.civilite || null,
-      pronouns: form.pronouns || null,
+      civilite: isPro ? null : form.civilite || null,
+      pronouns: isPro ? null : form.pronouns || null,
       phone: form.phone.trim() || null,
       account_type: form.account_type,
       intervention_zone: form.intervention_zone || null,
       linkedin_url: linkedinUrl,
-      skills: form.skills,
-      needs: form.needs,
+      company_name: isPro ? form.company_name.trim() || null : null,
+      company_description: isPro ? form.company_description.trim() || null : null,
+      website_url: websiteUrl,
+      opening_hours: isPro ? form.opening_hours.trim() || null : null,
+      siret: isPro ? siret || null : null,
+      skills: isPro ? Array.from(new Set(cleanedServices.map((x) => x.label))) : form.skills,
+      needs: isPro ? [] : form.needs,
+      pro_services: isPro ? cleanedServices : [],
       charte_accepted: profile?.charte_accepted ?? true,
       charte_accepted_at: profile?.charte_accepted_at ?? new Date().toISOString(),
       profile_status: profile?.profile_status ?? 'active',
@@ -203,7 +239,10 @@ export function ProfileEditPage() {
     }
 
     // Sync subcategories
-    const toAdd = Array.from(selectedSubs).map((sid) => ({ profile_id: user.id, subcategory_id: sid }));
+    const subIds = isPro
+      ? Array.from(new Set(cleanedServices.map((x) => x.subcategory_id).filter((x): x is string => !!x)))
+      : Array.from(selectedSubs);
+    const toAdd = subIds.map((sid) => ({ profile_id: user.id, subcategory_id: sid }));
     const { error: delErr } = await supabase.from('profile_subcategories').delete().eq('profile_id', user.id);
     if (delErr) {
       setError(delErr.message);
@@ -235,10 +274,7 @@ export function ProfileEditPage() {
     <div className="animate-fade-in">
       <div className="border-b border-neutral-200 bg-white">
         <div className="container-app py-6">
-          <button onClick={() => navigate('/profil')} className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-primary-600">
-            <ArrowLeft size={16} /> Mon profil
-          </button>
-          <h1 className="mt-3 font-display text-3xl font-semibold text-neutral-900">Modifier mon profil</h1>
+          <h1 className="font-display text-3xl font-semibold text-neutral-900">Modifier mon profil</h1>
         </div>
       </div>
 
@@ -248,14 +284,17 @@ export function ProfileEditPage() {
           <section>
             <h2 className="font-display text-lg font-semibold text-neutral-900">Identité</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {form.account_type !== 'pro' && (
               <div>
                 <label className="label">Nom affiché</label>
                 <input value={form.display_name} onChange={(e) => setForm({ ...form, display_name: e.target.value })} className="input" />
               </div>
+              )}
               <div>
                 <label className="label">Ville</label>
                 <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="input" placeholder="Ex. Paris" />
               </div>
+              {form.account_type !== 'pro' && (<>
               <div>
                 <label className="label">Civilité</label>
                 <select value={form.civilite} onChange={(e) => setForm({ ...form, civilite: e.target.value as Civilite | '' })} className="input">
@@ -271,6 +310,7 @@ export function ProfileEditPage() {
                 <label className="label">Pronoms</label>
                 <input value={form.pronouns} onChange={(e) => setForm({ ...form, pronouns: e.target.value })} className="input" placeholder="iel / elle / il…" />
               </div>
+              </>)}
               <div className="sm:col-span-2">
                 <label className="label">Téléphone</label>
                 <input
@@ -287,9 +327,9 @@ export function ProfileEditPage() {
                 </p>
               </div>
               <div className="sm:col-span-2">
-                <label className="label">Photo de profil</label>
+                <label className="label">{form.account_type === 'pro' ? 'Logo ou photo de l\'entreprise' : 'Photo de profil'}</label>
                 <div className="flex items-center gap-4">
-                  <Avatar name={form.display_name || 'Membre'} src={form.photo_url} size={64} />
+                  <Avatar name={(form.account_type === 'pro' ? form.company_name : form.display_name) || 'Membre'} src={form.photo_url} size={64} />
                   <label className="btn-outline cursor-pointer">
                     <Upload size={16} /> {uploadingPhoto ? 'Envoi…' : 'Choisir une photo'}
                     <input
@@ -308,17 +348,19 @@ export function ProfileEditPage() {
                 {photoError && <p className="mt-1.5 text-xs text-error-600">{photoError}</p>}
                 <p className="mt-1.5 text-xs text-neutral-400">JPG, PNG, WebP ou GIF, 5 Mo maximum.</p>
               </div>
+              {form.account_type !== 'pro' && (
               <div className="sm:col-span-2">
                 <label className="label">Bio</label>
                 <textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} rows={4} className="input" placeholder="Présentez-vous en quelques mots…" />
               </div>
+              )}
             </div>
           </section>
 
           <section className="mt-8">
             <h2 className="font-display text-lg font-semibold text-neutral-900">Liens de confiance</h2>
             <p className="mt-1 text-sm text-neutral-500">
-              Ajoutez votre profil LinkedIn pour rassurer les membres.
+              {form.account_type === 'pro' ? 'Ajoutez le profil LinkedIn de votre entreprise pour rassurer les membres.' : 'Ajoutez votre profil LinkedIn pour rassurer les membres.'}
             </p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div>
@@ -335,30 +377,35 @@ export function ProfileEditPage() {
             </div>
           </section>
 
-          {/* Account type */}
-          <section className="mt-8">
-            <h2 className="font-display text-lg font-semibold text-neutral-900">Type de compte</h2>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              {([['particulier', 'Particulier·e'], ['pro', 'Professionnel·le']] as [AccountType, string][]).map(([v, l]) => (
-                <button
-                  key={v}
-                  type="button"
-                  onClick={() => setForm({ ...form, account_type: v })}
-                  className={cn(
-                    'rounded-xl border px-3 py-3 text-sm font-medium transition',
-                    form.account_type === v ? 'border-primary-500 bg-primary-50 text-primary-600' : 'border-neutral-200 bg-white text-neutral-500 hover:border-neutral-200',
-                  )}
-                >
-                  {l}
-                </button>
-              ))}
-            </div>
-          </section>
-
           {/* Structure fields */}
           {form.account_type === 'pro' && (
             <section className="mt-8 animate-slide-up">
-              <h2 className="font-display text-lg font-semibold text-neutral-900">Informations de la structure</h2>
+              <h2 className="font-display text-lg font-semibold text-neutral-900">Informations de l'entreprise</h2>
+              <p className="mt-1 text-sm text-neutral-500">Ces informations apparaissent sur votre fiche et vous distinguent des particuliers.</p>
+              <div className="mt-4">
+                <label className="label">Nom de l'entreprise *</label>
+                <input value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} className="input" maxLength={120} />
+              </div>
+              <div className="mt-4">
+                <label className="label">Présentation de l'activité</label>
+                <textarea value={form.company_description} onChange={(e) => setForm({ ...form, company_description: e.target.value })} className="input min-h-[96px]" maxLength={1000} />
+              </div>
+              <div className="mt-4">
+                <label className="label">SIRET (14 chiffres)</label>
+                <input value={form.siret} onChange={(e) => setForm({ ...form, siret: e.target.value })} className="input" inputMode="numeric" maxLength={17} />
+              </div>
+              <div className="mt-4">
+                <label className="label">Site web</label>
+                <input value={form.website_url} onChange={(e) => setForm({ ...form, website_url: e.target.value })} className="input" placeholder="https://" />
+              </div>
+              <div className="mt-4">
+                <label className="label">Horaires</label>
+                <input value={form.opening_hours} onChange={(e) => setForm({ ...form, opening_hours: e.target.value })} className="input" placeholder="Ex. Lun–ven 9h–18h" maxLength={200} />
+              </div>
+              <div className="mt-4">
+                <label className="label">Services proposés</label>
+                <ProServicesEditor categories={categories} subcategories={subcategories} value={form.pro_services} onChange={(next) => setForm({ ...form, pro_services: next })} />
+              </div>
               <div className="mt-4">
                 <label className="label">Zone d'intervention</label>
                 <input value={form.intervention_zone} onChange={(e) => setForm({ ...form, intervention_zone: e.target.value })} className="input" />
@@ -367,6 +414,7 @@ export function ProfileEditPage() {
           )}
 
           {/* Services offered (subcategories) */}
+          {form.account_type !== 'pro' && (<>
           <section className="mt-8">
             <h2 className="font-display text-lg font-semibold text-neutral-900">Services proposés</h2>
             <p className="mt-1 text-sm text-neutral-500">Sélectionnez les catégories dans lesquelles vous proposez vos services.</p>
@@ -460,6 +508,7 @@ export function ProfileEditPage() {
             )}
             
           </section>
+          </>)}
 
           {error && <div className="mt-6 rounded-xl bg-error-50 p-3 text-sm text-error-700">{error}</div>}
 

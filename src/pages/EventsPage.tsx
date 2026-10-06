@@ -4,7 +4,8 @@ import { useRouter } from '@/lib/router';
 import { supabase } from '@/lib/supabase';
 import { useRealtimeTick } from '@/lib/realtime';
 import type { Event } from '@/lib/types';
-import { Calendar, MapPin, ExternalLink, Search, X, Plus, CheckCircle2 } from 'lucide-react';
+import { Avatar } from '@/components/Avatar';
+import { Calendar, MapPin, ExternalLink, Search, X, Plus, CheckCircle2, Users } from 'lucide-react';
 
 const CITIES = ['Toutes', 'Paris', 'Marseille', 'Lyon', 'Bordeaux', 'Toulouse', 'Nice', 'Nantes', 'Montpellier'];
 
@@ -16,6 +17,14 @@ function formatDate(dateStr: string, endDateStr?: string | null): string {
   return `${start} → ${end}`;
 }
 
+interface Attendee {
+  profile_id: string;
+  display_name: string;
+  photo_url: string | null;
+  company_name: string | null;
+  account_type: string;
+}
+
 function isToday(dateStr: string): boolean {
   return new Date(dateStr).toDateString() === new Date().toDateString();
 }
@@ -23,13 +32,15 @@ function isToday(dateStr: string): boolean {
 export function EventsPage() {
   const { user } = useAuth();
   const { navigate } = useRouter();
-  const rtTick = useRealtimeTick(['events']);
+  const rtTick = useRealtimeTick(['events', 'event_attendees']);
   const [selected, setSelected] = useState<Event | null>(null);
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [city, setCity] = useState('Toutes');
   const [search, setSearch] = useState('');
+  const [attendees, setAttendees] = useState<Record<string, Attendee[]>>({});
+  const [busyEvent, setBusyEvent] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) { navigate('/connexion'); return; }
@@ -42,11 +53,52 @@ export function EventsPage() {
         .gte('event_date', new Date().toISOString().split('T')[0])
         .order('event_date', { ascending: true });
 
-      setEvents((data ?? []) as Event[]);
+      const list = (data ?? []) as Event[];
+      setEvents(list);
       setLoading(false);
+
+      // Qui y va ? (membres connectés uniquement, hors personnes bloquées)
+      if (list.length && user) {
+        const [attRes, blocksRes] = await Promise.all([
+          supabase
+            .from('event_attendees')
+            .select('event_id, profile_id, profile:profiles(display_name, photo_url, company_name, account_type)')
+            .in('event_id', list.map((e) => e.id)),
+          supabase.from('blocked_users').select('blocker_id, blocked_id').or(`blocker_id.eq.${user.id},blocked_id.eq.${user.id}`),
+        ]);
+        const hidden = new Set((blocksRes.data ?? []).map((b) => (b.blocker_id === user.id ? b.blocked_id : b.blocker_id)));
+        const byEvent: Record<string, Attendee[]> = {};
+        for (const row of (attRes.data ?? []) as unknown as { event_id: string; profile_id: string; profile: Omit<Attendee, 'profile_id'> | null }[]) {
+          if (!row.profile || hidden.has(row.profile_id)) continue;
+          (byEvent[row.event_id] ??= []).push({ profile_id: row.profile_id, ...row.profile });
+        }
+        setAttendees(byEvent);
+      } else {
+        setAttendees({});
+      }
     };
     load();
   }, [user, navigate, rtTick]);
+
+  const toggleGoing = async (eventId: string) => {
+    if (!user || busyEvent) return;
+    setBusyEvent(eventId);
+    const going = (attendees[eventId] ?? []).some((a) => a.profile_id === user.id);
+    if (going) {
+      await supabase.from('event_attendees').delete().eq('event_id', eventId).eq('profile_id', user.id);
+    } else {
+      await supabase.from('event_attendees').insert({ event_id: eventId, profile_id: user.id });
+    }
+    const { data } = await supabase
+      .from('event_attendees')
+      .select('profile_id, profile:profiles(display_name, photo_url, company_name, account_type)')
+      .eq('event_id', eventId);
+    const rows = ((data ?? []) as unknown as { profile_id: string; profile: Omit<Attendee, 'profile_id'> | null }[])
+      .filter((r) => r.profile)
+      .map((r) => ({ profile_id: r.profile_id, ...r.profile! }));
+    setAttendees((prev) => ({ ...prev, [eventId]: rows }));
+    setBusyEvent(null);
+  };
 
   const filtered = useMemo(() => {
     let list = events;
@@ -141,7 +193,7 @@ export function EventsPage() {
                   {theme} · {themeEvents.length} événement{themeEvents.length > 1 ? 's' : ''}
                 </h2>
                 <div className="space-y-3">
-                  {themeEvents.map(e => <EventCard key={e.id} event={e} onOpen={() => setSelected(e)} />)}
+                  {themeEvents.map(e => <EventCard key={e.id} event={e} count={(attendees[e.id] ?? []).length} going={(attendees[e.id] ?? []).some((a) => a.profile_id === user.id)} onOpen={() => setSelected(e)} />)}
                 </div>
               </section>
             ))}
@@ -149,7 +201,17 @@ export function EventsPage() {
         )}
       </div>
 
-      {selected && <EventDetailModal event={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <EventDetailModal
+          event={selected}
+          attendees={attendees[selected.id] ?? []}
+          userId={user.id}
+          busy={busyEvent === selected.id}
+          onToggle={() => toggleGoing(selected.id)}
+          onOpenProfile={(id) => navigate(`/profil/${id}`)}
+          onClose={() => setSelected(null)}
+        />
+      )}
       {suggestOpen && user && (
         <SuggestEventModal
           userId={user.id}
@@ -162,7 +224,7 @@ export function EventsPage() {
   );
 }
 
-function EventCard({ event: e, highlight, onOpen }: { event: Event; highlight?: boolean; onOpen: () => void }) {
+function EventCard({ event: e, highlight, count, going, onOpen }: { event: Event; highlight?: boolean; count: number; going: boolean; onOpen: () => void }) {
   return (
     <article className={`overflow-hidden rounded-[28px] border border-white transition-shadow hover:shadow-lift ${highlight ? 'bg-primary-50/30' : 'bg-white shadow-soft'}`}>
       <div
@@ -204,6 +266,12 @@ function EventCard({ event: e, highlight, onOpen }: { event: Event; highlight?: 
           {e.description && (
             <p className="mt-2 line-clamp-2 text-[13px] leading-snug text-ink-muted">{e.description}</p>
           )}
+
+          {(count > 0 || going) && (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-2.5 py-1 text-[11px] font-bold text-primary-700">
+              <Users size={12} /> {going ? (count > 1 ? `Vous et ${count - 1} autre${count > 2 ? 's' : ''} y allez` : 'Vous y allez') : `${count} membre${count > 1 ? 's' : ''} y vont`}
+            </p>
+          )}
         </div>
       </div>
 
@@ -225,7 +293,25 @@ function EventCard({ event: e, highlight, onOpen }: { event: Event; highlight?: 
   );
 }
 
-function EventDetailModal({ event: e, onClose }: { event: Event; onClose: () => void }) {
+function EventDetailModal({
+  event: e,
+  attendees,
+  userId,
+  busy,
+  onToggle,
+  onOpenProfile,
+  onClose,
+}: {
+  event: Event;
+  attendees: Attendee[];
+  userId: string;
+  busy: boolean;
+  onToggle: () => void;
+  onOpenProfile: (id: string) => void;
+  onClose: () => void;
+}) {
+  const going = attendees.some((a) => a.profile_id === userId);
+  const others = attendees.filter((a) => a.profile_id !== userId);
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/40 sm:items-center" onClick={onClose}>
       <div
@@ -275,12 +361,55 @@ function EventDetailModal({ event: e, onClose }: { event: Event; onClose: () => 
             </p>
           </div>
 
+          <div className="border-t border-gold-hairline pt-3">
+            <button
+              onClick={onToggle}
+              disabled={busy}
+              className={`flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-[15px] font-bold transition-transform active:scale-[0.98] disabled:opacity-60 ${
+                going ? 'border border-success-200 bg-success-50 text-success-700' : 'bg-primary-600 text-white'
+              }`}
+            >
+              {going ? <><CheckCircle2 size={18} /> Vous y allez · Annuler</> : <><Users size={18} /> Je vais à cet événement</>}
+            </button>
+            <p className="mt-1.5 text-center text-[11px] text-ink-muted">
+              Les autres membres connectés pourront le voir et vous contacter pour s'organiser.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[12px] font-bold uppercase tracking-wider text-ink-muted">
+              {attendees.length > 0 ? `${attendees.length} membre${attendees.length > 1 ? 's' : ''} y vont` : 'Qui y va ?'}
+            </h3>
+            {others.length === 0 ? (
+              <p className="mt-1.5 text-sm text-ink-muted">
+                {going ? 'Vous êtes le premier ou la première à y aller.' : 'Personne ne s’est encore signalé. Soyez le premier ou la première !'}
+              </p>
+            ) : (
+              <ul className="mt-2 space-y-2">
+                {others.map((a) => (
+                  <li key={a.profile_id}>
+                    <button
+                      onClick={() => onOpenProfile(a.profile_id)}
+                      className="flex w-full items-center gap-3 rounded-2xl border border-gold-hairline bg-white px-3 py-2 text-left active:bg-neutral-50"
+                    >
+                      <Avatar name={a.display_name} src={a.photo_url} size={40} className="border border-gold-hairline bg-paper-base text-ink-muted" />
+                      <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-ink-base">
+                        {a.account_type === 'pro' && a.company_name ? a.company_name : a.display_name}
+                      </span>
+                      <span className="shrink-0 text-[12px] font-semibold text-primary-700">Contacter</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
           {e.website_url && (
             <a
               href={e.website_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-primary mt-2 flex w-full items-center justify-center gap-2"
+              className="btn-outline mt-1 flex w-full items-center justify-center gap-2"
             >
               <ExternalLink size={16} /> Voir l'événement
             </a>

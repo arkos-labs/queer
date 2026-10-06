@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import type { Resource } from '@/lib/types';
 import { FALLBACK_RESOURCES } from '@/lib/resourcesFallback';
-import { ArrowLeft, Phone, ExternalLink, Clock, ChevronDown, BookOpen, LifeBuoy, MessageCircle } from 'lucide-react';
+import { Phone, ExternalLink, Clock, ChevronDown, BookOpen, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 
@@ -100,62 +100,47 @@ export function ResourcesPage() {
   const guides = resources.filter((r) => r.type === 'guide').sort((a, b) => a.sort_order - b.sort_order);
 
   return (
-    <div className="animate-fade-in">
-      <div className="border-b border-neutral-200 bg-white">
-        <div className="container-app py-6">
-          <button
-            onClick={() => (window.history.length > 1 ? window.history.back() : navigate('/'))}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-primary-600"
-          >
-            <ArrowLeft size={16} /> Retour
-          </button>
-          <div className="mt-3 flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 text-white shadow-soft">
-              <LifeBuoy size={20} />
-            </div>
-            <div>
-              <h1 className="font-display text-2xl font-semibold text-neutral-900 sm:text-3xl">
-                Ressources &amp; guides
-              </h1>
-              <p className="mt-0.5 text-sm text-neutral-500">Vous n'êtes pas seul·e. De l'aide existe, gratuite et confidentielle.</p>
-            </div>
-          </div>
-        </div>
+    <div className="animate-fade-in bg-paper-base pb-28">
+      <div className="container-app max-w-xl pt-2">
+        <h1 className="font-display text-3xl font-bold text-ink-base">Infos pratiques</h1>
+        <p className="mt-1 text-[15px] leading-snug text-ink-muted">Vous n'êtes pas seul·e. De l'aide existe, gratuite et confidentielle.</p>
       </div>
 
-      <div className="container-app max-w-2xl py-8 space-y-8">
-        {/* Hotlines */}
+      <div className="container-app max-w-xl space-y-8 py-6">
+        {/* Numéros utiles */}
         <section>
-          <h2 className="font-display text-lg font-semibold text-neutral-900">Numéros utiles</h2>
-          <span className="mt-1.5 block h-1 w-10 rounded-full bg-amber-400" aria-hidden />
-          <p className="mt-1 text-sm text-neutral-500">Des professionnel·le·s et bénévoles formé·e·s, à votre écoute.</p>
-
-          <div className="mt-4 space-y-3">
+          <p className="mb-2 px-1 text-[12px] font-bold uppercase tracking-[0.1em] text-ink-muted">Numéros utiles</p>
+          <div className="space-y-3">
             {hotlines.map((r) => (
-              <div key={r.id} className="card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-neutral-900">{r.title}</h3>
-                    <p className="mt-1 text-sm text-neutral-500">{r.description}</p>
+              <div key={r.id} className="rounded-3xl border border-white bg-white p-4 shadow-soft">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-success-50 text-success-600">
+                    <Phone size={18} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-[16px] font-bold leading-tight text-ink-base">{r.title}</h3>
+                    <p className="mt-1 text-[13px] leading-snug text-ink-muted">{r.description}</p>
                     {r.hours && (
-                      <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-neutral-400">
+                      <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-paper-base px-2.5 py-1 text-[11px] font-medium text-ink-muted">
                         <Clock size={12} /> {r.hours}
                       </p>
                     )}
                   </div>
                 </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {r.phone && (
-                    <a href={`tel:${r.phone.replace(/\s/g, '')}`} className="btn-primary btn-sm">
-                      <Phone size={14} /> {r.phone}
-                    </a>
-                  )}
-                  {r.url && (
-                    <a href={r.url} target="_blank" rel="noopener noreferrer" className="btn-outline btn-sm">
-                      En savoir plus <ExternalLink size={14} />
-                    </a>
-                  )}
-                </div>
+                {(r.phone || r.url) && (
+                  <div className="mt-3 flex gap-2">
+                    {r.phone && (
+                      <a href={`tel:${r.phone.replace(/\s/g, '')}`} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary-600 px-4 py-3 text-[15px] font-bold text-white active:scale-[0.98] transition-transform">
+                        <Phone size={16} /> {r.phone}
+                      </a>
+                    )}
+                    {r.url && (
+                      <a href={r.url} target="_blank" rel="noopener noreferrer" aria-label="Site web" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-gold-hairline bg-white text-ink-base active:scale-95 transition-transform">
+                        <ExternalLink size={17} />
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -163,31 +148,30 @@ export function ResourcesPage() {
 
         {/* Guides */}
         <section>
-          <h2 className="font-display text-lg font-semibold text-neutral-900">Guides</h2>
-          <p className="mt-1 text-sm text-neutral-500">Des repères généraux — pas un avis médical ou juridique personnalisé.</p>
-
-          <div className="mt-4 space-y-3">
+          <p className="mb-1 px-1 text-[12px] font-bold uppercase tracking-[0.1em] text-ink-muted">Guides</p>
+          <p className="mb-2 px-1 text-[12px] text-ink-muted">Des repères généraux, pas un avis médical ou juridique personnalisé.</p>
+          <div className="overflow-hidden rounded-3xl border border-white bg-white shadow-soft">
             {guides.map((g) => {
               const open = openGuide === g.id;
               return (
-                <div key={g.id} className="card overflow-hidden">
+                <div key={g.id} className="border-b border-neutral-100 last:border-0">
                   <button
                     onClick={() => setOpenGuide(open ? null : g.id)}
-                    className="flex w-full items-start gap-3 p-5 text-left"
+                    className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-neutral-50"
                     aria-expanded={open}
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary-50 text-secondary-600">
-                      <BookOpen size={16} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold text-neutral-900">{g.title}</h3>
-                      <p className="mt-1 text-sm text-neutral-500">{g.description}</p>
-                    </div>
-                    <ChevronDown size={18} className={cn('mt-1 shrink-0 text-neutral-400 transition-transform', open && 'rotate-180')} />
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary-50 text-secondary-600">
+                      <BookOpen size={17} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[15px] font-semibold leading-tight text-ink-base">{g.title}</span>
+                      <span className="mt-0.5 block text-[12px] leading-snug text-ink-muted">{g.description}</span>
+                    </span>
+                    <ChevronDown size={18} className={cn('shrink-0 text-neutral-300 transition-transform', open && 'rotate-180')} />
                   </button>
                   {open && g.content && (
-                    <div className="border-t border-neutral-200 px-5 py-4">
-                      <p className="whitespace-pre-line text-sm leading-relaxed text-neutral-500">{g.content}</p>
+                    <div className="bg-paper-base/60 px-4 pb-4 pt-3">
+                      <p className="whitespace-pre-line text-[14px] leading-relaxed text-ink-muted">{g.content}</p>
                     </div>
                   )}
                 </div>
@@ -197,21 +181,24 @@ export function ResourcesPage() {
         </section>
 
         {!loading && (
-          <div className="card p-6 text-center mt-12 bg-neutral-100/50">
-            <h2 className="font-display text-lg font-semibold text-neutral-900">Besoin d'autre chose ?</h2>
-            <p className="mt-2 text-sm text-neutral-500 mb-6">
-              Vous avez un problème technique, une question, ou vous gérez une association qui devrait figurer sur cette page ?
-            </p>
-            <button
-              onClick={contactSupport}
-              disabled={contactingSupport}
-              className="btn-primary mx-auto"
-            >
-              <MessageCircle size={18} />
-              {contactingSupport ? 'Ouverture...' : 'Contacter l\'équipe'}
-            </button>
-            {error && <p className="mt-3 text-sm text-error-600">{error}</p>}
-          </div>
+          <section>
+            <div className="overflow-hidden rounded-3xl border border-white bg-white shadow-soft">
+              <button
+                onClick={contactSupport}
+                disabled={contactingSupport}
+                className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-neutral-50 disabled:opacity-60"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
+                  <MessageCircle size={17} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15px] font-semibold text-ink-base">{contactingSupport ? 'Ouverture…' : 'Contacter l’équipe'}</span>
+                  <span className="block text-[12px] text-ink-muted">Question, problème technique, association à ajouter</span>
+                </span>
+              </button>
+            </div>
+            {error && <p className="mt-3 px-1 text-sm text-error-600">{error}</p>}
+          </section>
         )}
       </div>
     </div>

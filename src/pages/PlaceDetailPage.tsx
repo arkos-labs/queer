@@ -114,9 +114,6 @@ export function PlaceDetailPage({ id }: { id: string }) {
       <div className="h-40 bg-gradient-to-br from-primary-500 via-primary-600 to-secondary-500 sm:h-48" />
 
       <div className="container-app">
-        <button onClick={() => navigate('/annuaire')} className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-primary-600">
-          <ArrowLeft size={16} /> Annuaire
-        </button>
 
         <div className="-mt-24 grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
