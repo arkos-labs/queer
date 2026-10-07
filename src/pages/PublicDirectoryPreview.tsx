@@ -255,6 +255,10 @@ export function PublicDirectoryPreview({ categorySlug, citySlug }: { categorySlu
         >
           <LogIn size={18} /> Créer un compte pour contacter les membres
         </button>
+        <p className="mt-3 text-center text-[13px] text-ink-muted">
+          Déjà membre ?{' '}
+          <button onClick={() => navigate('/connexion')} className="font-semibold text-primary-700 underline-offset-2 hover:underline">Se connecter</button>
+        </p>
       </div>
     </div>
   );

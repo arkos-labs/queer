@@ -155,7 +155,8 @@ export function Layout({ children }: { children: ReactNode }) {
   const isOnboarding = path === '/onboarding';
   const isMessageThread = path.startsWith('/messages/');
   // Bouton retour dans le header sur toutes les pages, sauf l'annuaire.
-  const showBack = !isMessageThread && !isLanding && !isOnboarding && !path.startsWith('/annuaire');
+  // Sans compte, l'annuaire n'est pas la page d'accueil : on garde le retour (vers l'accueil).
+  const showBack = !isMessageThread && !isLanding && !isOnboarding && (!path.startsWith('/annuaire') || !user);
 
   return (
     <div className={isFixedAuthScreen ? 'fixed inset-0 flex overflow-hidden overscroll-none' : 'mobile-shell'}>
@@ -176,7 +177,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <div className="flex items-center justify-between gap-2">
             {showBack ? (
               <button
-                onClick={() => (window.history.length > 1 ? window.history.back() : go('/annuaire'))}
+                onClick={() => (window.history.length > 1 ? window.history.back() : go(user ? '/annuaire' : '/'))}
                 aria-label="Retour"
                 className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-ink-base shadow-sm transition-colors hover:bg-primary-50"
               >
@@ -242,8 +243,8 @@ export function Layout({ children }: { children: ReactNode }) {
                 )}
               </div>
             ) : !isLanding ? (
-              <button onClick={() => go('/connexion')} className="px-3 py-1.5 rounded-sm text-xs font-semibold text-neutral-900 bg-amber-400 hover:bg-amber-300 transition-colors uppercase tracking-wider">
-                Connexion
+              <button onClick={() => go('/inscription')} className="pointer-events-auto rounded-full bg-primary-600 px-4 py-2.5 text-[13px] font-bold text-white shadow-sm active:scale-95 transition-transform">
+                Créer un compte
               </button>
             ) : (
               <div className="w-[42px]" />
