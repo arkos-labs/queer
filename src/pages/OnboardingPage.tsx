@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
-import { supabase } from '@/lib/supabase';
+import { supabase, invokeEdgeFunction } from '@/lib/supabase';
+import { stripeReturnUrl } from '@/lib/appLinks';
 import { ProServicesEditor } from '@/components/ProServicesEditor';
 import type { ProService, AccountType, Category, Civilite, Profile, Subcategory } from '@/lib/types';
 import { FALLBACK_CATEGORIES, FALLBACK_SUBCATEGORIES } from '@/lib/taxonomy';
@@ -210,6 +211,15 @@ export function OnboardingPage() {
     // /onboarding as long as `profile` reads as null — which looked like
     // "the signup didn't happen" (back to the display-name step) even
     // though the account was created fine.
+    // Sans session valide, la requête part en « anonyme » et la base la refuse
+    // avec une erreur de sécurité cryptique : on demande plutôt de se reconnecter.
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      setLoading(false);
+      setError('Votre session a expiré. Reconnectez-vous, puis finalisez votre inscription.');
+      return;
+    }
+
     const { data, error } = await supabase
       .from('profiles')
       .upsert({
@@ -259,6 +269,22 @@ export function OnboardingPage() {
     // Keeps the proof that the e-mail code was entered (signup session).
     await supabase.rpc('mark_email_code_verified');
     setAuthProfile(data as Profile);
+
+    // Les membres qui proposent des services peuvent activer les paiements tout de suite :
+    // Stripe vérifie leur identité et leur compte bancaire (une seule fois).
+    if (offersServices) {
+      const { data: link } = await invokeEdgeFunction<{ url?: string }>('stripe-connect-onboarding', {
+        return_url: stripeReturnUrl('/parametres?stripe=return'),
+        refresh_url: stripeReturnUrl('/parametres?stripe=refresh'),
+      });
+      if (link?.url) {
+        window.location.assign(link.url);
+        return;
+      }
+      // Échec : l'inscription est faite, le membre pourra réessayer depuis les Réglages.
+      navigate('/parametres');
+      return;
+    }
     navigate('/annuaire');
   };
 
@@ -268,6 +294,8 @@ export function OnboardingPage() {
     ? ['role', 'structure', 'community', 'charte']
     : ['role', 'community', 'identity', 'services', 'charte'];
   const stepKey = stepKeys[step];
+  // Qui propose des services doit vérifier son identité avec Stripe à l'inscription.
+  const offersServices = accountType === 'pro' || selectedIntents.has('offering');
   const lastStep = stepKeys.length - 1;
 
   const next = () => setStep((s) => s + 1);
@@ -558,16 +586,16 @@ export function OnboardingPage() {
               </div>
               )}
 
-              {(accountType === 'pro' || selectedIntents.has('offering')) && (
+              {accountType !== 'pro' && selectedIntents.has('offering') && (
                 <div className="mt-5 animate-slide-up">
                   <ServicePicker
-                    title={accountType === 'pro' ? 'Services proposés par votre entreprise' : 'Prestations que tu proposes'}
+                    title="Prestations que tu proposes"
                     categories={categories}
                     subcategories={subcategories}
                     selected={skills}
                     onToggle={(subcategory) => togglePreset(subcategory, 'offering')}
                   />
-                  <label className="label">{accountType === 'pro' ? 'Autres services (texte libre)' : 'Ce que tu proposes'}</label>
+                  <label className="label">Ce que tu proposes</label>
                   <div className="flex gap-2">
                     <input
                       value={skillInput}
@@ -583,7 +611,7 @@ export function OnboardingPage() {
                   {skills.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {skills.map((s) => (
-                        <span key={s} className="rounded-full bg-white border border-gold-hairline px-3 py-1 text-[11px] font-semibold text-ink-base shadow-sm inline-flex items-center gap-1">
+                        <span key={s} className="rounded-full bg-paper-base border border-gold-hairline px-3 py-1 text-[11px] font-semibold text-ink-base shadow-sm inline-flex items-center gap-1">
                           {s}
                           <button type="button" onClick={() => setSkills((arr) => arr.filter((x) => x !== s))} className="text-patina-deep/70 hover:text-patina-deep">
                             <X size={14} />
@@ -675,6 +703,18 @@ export function OnboardingPage() {
                   J'ai lu et j'accepte la charte de respect de Queer Service.
                 </span>
               </label>
+
+              {offersServices && (
+                <div className="mt-3 flex items-start gap-3 rounded-2xl border border-patina-deep/30 bg-paper-base p-4 shadow-sm">
+                  <ShieldCheck size={18} className="mt-0.5 shrink-0 text-patina-deep" />
+                  <p className="text-sm text-ink-base">
+                    <strong className="font-medium">Dernière étape : vérification pour recevoir vos paiements.</strong>
+                    <span className="mt-1 block text-xs text-ink-muted">
+                      Pour proposer des services, vous allez être redirigé·e vers Stripe (environ 5 minutes) pour vérifier votre identité et votre compte bancaire. C'est ce qui permet de vous verser vos gains directement et de protéger la communauté.
+                    </span>
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

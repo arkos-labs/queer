@@ -47,6 +47,9 @@ export interface Profile {
   is_admin: boolean;
   is_community_member: boolean | null;
   is_ally: boolean;
+  stripe_account_id?: string | null;
+  stripe_charges_enabled?: boolean;
+  stripe_payouts_enabled?: boolean;
   created_at: string;
   updated_at: string;
 }

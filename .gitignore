@@ -25,3 +25,11 @@ vite.config.ts.timestamp-*.mjs
 
 # Supabase CLI (lien local au projet)
 supabase/.temp
+
+.vercel
+.env*
+
+# Fichiers de clés / identifiants locaux (jamais sur GitHub)
+vercel.env
+.env.production
+!.env.example

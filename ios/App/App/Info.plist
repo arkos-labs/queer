@@ -20,14 +20,25 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.queerservices.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>queerservices</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Queer Services utilise l’appareil photo pour ajouter une image à un lieu proposé.</string>
+	<string>Queer Services utilise l’appareil photo uniquement lorsque vous appuyez sur « Prendre une photo » pour ajouter une image à un lieu que vous proposez ou à votre avis (exemple : photographier la devanture d’un café inclusif). La photo n’est partagée qu’avec votre publication.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Queer Services accède à votre photothèque uniquement pour choisir une image de lieu.</string>
+	<string>Queer Services accède à votre photothèque uniquement lorsque vous choisissez une image à joindre à votre photo de profil, à un lieu ou à un avis (exemple : sélectionner une photo de votre atelier). Aucune autre photo n’est lue.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

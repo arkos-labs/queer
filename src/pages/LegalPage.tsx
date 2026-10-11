@@ -212,6 +212,7 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
         heading: '16. Signalement et modération',
         body: [
           `Un mécanisme de signalement permet aux utilisateurs de signaler un profil, un contenu, une conversation ou un comportement problématique.`,
+          `Tolérance zéro : aucun contenu injurieux, haineux, harcelant ou abusif n'est toléré. Chaque profil, avis et message peut être signalé depuis l'application, et chaque membre peut en bloquer un autre à tout moment (le blocage masque instantanément ses contenus et notifie l'équipe de modération). L'équipe traite chaque signalement sous 24 heures : le contenu est retiré et l'auteur·rice exclu·e de la plateforme en cas de manquement.`,
           `Les signalements peuvent notamment concerner : une fraude ; une menace ; un comportement dangereux ; une discrimination ; du harcèlement ; un contenu illégal ; une usurpation d'identité ; une violation des présentes CGU.`,
           `Queer Services peut prendre les mesures nécessaires, notamment : supprimer un contenu ; limiter certaines fonctionnalités ; avertir un utilisateur ; suspendre temporairement un compte ; résilier définitivement un compte ; empêcher la création d'un nouveau compte ; transmettre certaines informations aux autorités compétentes lorsque la loi l'impose ou l'autorise.`,
         ],

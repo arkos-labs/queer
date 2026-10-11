@@ -8,6 +8,7 @@ import type { PublicProfile, Badge, Review } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
 import { SCREENSHOT_DEMO_PROFILES } from '@/lib/screenshotDemo';
 import { StarRating } from '@/components/StarRating';
+import { ReportContentModal } from '@/components/ReportContentModal';
 import { avg, timeAgo } from '@/lib/utils';
 import {
   MapPin,
@@ -45,6 +46,7 @@ export function ProfileDetailPage({ id }: { id: string }) {
   const [loading, setLoading] = useState(true);
   const [contactOpen, setContactOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [reviewReportId, setReviewReportId] = useState<string | null>(null);
   const [contactMsg, setContactMsg] = useState('');
   const [reportReason, setReportReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
@@ -370,6 +372,9 @@ export function ProfileDetailPage({ id }: { id: string }) {
                         <div className="flex items-center justify-between">
                           <p className="text-[15px] font-bold text-ink-base truncate pr-2">{r.author?.display_name ?? 'Anonyme'}</p>
                           <p className="text-[13px] font-medium text-patina-deep shrink-0">{timeAgo(r.created_at)}</p>
+                          {user && r.author_id !== user.id && (
+                            <button onClick={() => setReviewReportId(r.id)} className="ml-2 shrink-0 text-error-600" aria-label="Signaler cet avis" title="Signaler cet avis"><Flag size={14} /></button>
+                          )}
                         </div>
                         <div className="mt-0.5 text-[#D4AF37]">
                           <StarRating value={r.rating} size={13} />
@@ -425,6 +430,10 @@ export function ProfileDetailPage({ id }: { id: string }) {
             </button>
           </div>
         </Modal>
+      )}
+
+      {reviewReportId && (
+        <ReportContentModal targetType="review" targetId={reviewReportId} title="Signaler cet avis" onClose={() => setReviewReportId(null)} />
       )}
 
       {/* Report modal */}

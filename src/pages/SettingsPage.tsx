@@ -1,8 +1,9 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { supabase, edgeFunctionErrorMessage, invokeEdgeFunction } from '@/lib/supabase';
+import { stripeReturnUrl } from '@/lib/appLinks';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
-import { Trash2, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight, LifeBuoy, LogOut, MessageCircle } from 'lucide-react';
+import { Trash2, X, ShieldCheck, FileText, Scale, Cookie, ChevronRight, LifeBuoy, LogOut, MessageCircle, CreditCard } from 'lucide-react';
 
 export function SettingsPage() {
   const { user, profile, signOut, refreshProfile } = useAuth();
@@ -13,6 +14,37 @@ export function SettingsPage() {
   const [signingOut, setSigningOut] = useState(false);
   const [contactingSupport, setContactingSupport] = useState(false);
   const [showData, setShowData] = useState(false);
+  const [payoutLoading, setPayoutLoading] = useState(false);
+  const [payoutError, setPayoutError] = useState<string | null>(null);
+
+  // Onboarding Stripe Connect : Stripe vérifie l'identité et verse les gains.
+  // Au retour de Stripe, on relit l'état du compte (charges/virements activés).
+  // Une seule fois par retour : on retire le paramètre de l'URL pour ne pas relancer l'appel
+  // à chaque rendu (refreshProfile change d'identité, donc ne pas le mettre en dépendance).
+  const syncedRef = useRef(false);
+  useEffect(() => {
+    if (syncedRef.current) return;
+    if (new URLSearchParams(window.location.search).get('stripe') !== 'return') return;
+    syncedRef.current = true;
+    window.history.replaceState({}, '', window.location.pathname);
+    invokeEdgeFunction('stripe-sync-account', {}).then(() => refreshProfile());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const setupPayments = async () => {
+    setPayoutLoading(true);
+    setPayoutError(null);
+    const { data, error: fnError } = await invokeEdgeFunction<{ url?: string }>('stripe-connect-onboarding', {
+      return_url: stripeReturnUrl('/parametres?stripe=return'),
+      refresh_url: stripeReturnUrl('/parametres?stripe=refresh'),
+    });
+    if (fnError || !data?.url) {
+      setPayoutError(await edgeFunctionErrorMessage(fnError, 'Impossible d’ouvrir la configuration des paiements.'));
+      setPayoutLoading(false);
+      return;
+    }
+    window.location.assign(data.url);
+  };
 
   const contactSupport = async () => {
     if (!user) return;
@@ -160,6 +192,18 @@ export function SettingsPage() {
             </div>
           )}
           <SettingsRow icon={<Scale size={18} />} iconClass="bg-neutral-100 text-neutral-500" label="Politique de confidentialité" onClick={() => navigate('/confidentialite')} />
+        </Group>
+
+        <Group title="Paiements">
+          <SettingsRow
+            icon={<CreditCard size={18} />}
+            iconClass="bg-primary-50 text-primary-600"
+            label={profile?.stripe_charges_enabled ? 'Paiements activés' : 'Recevoir des paiements'}
+            description={profile?.stripe_charges_enabled ? 'Gérer mon compte Stripe' : 'Configurer Stripe pour être payé·e directement par virement'}
+            onClick={setupPayments}
+            disabled={payoutLoading}
+          />
+          {payoutError && <div className="mx-4 mb-3 rounded-xl bg-error-50 p-3 text-sm text-error-700">{payoutError}</div>}
         </Group>
 
         <Group title="Informations légales">
