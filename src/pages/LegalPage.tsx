@@ -22,7 +22,8 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
         heading: 'Éditeur du site',
         body: [
           `Le site ${c.siteName} est édité par : ${c.legalName} (${c.legalForm}).`,
-          `SIRET : ${c.siret} — RCS : ${c.rcs} — Capital social : ${c.shareCapital}.`,
+          `SIREN : ${c.siren} — SIRET (siège) : ${c.siret} — N° de TVA : ${c.tva}.`,
+          `Association inscrite au Répertoire national des associations (RNA) sous le n° ${c.rna} le ${c.rnaDate}. ${c.siteName} n'est pas inscrite au RCS.`,
           `Siège social : ${c.address}.`,
           `Directeur de la publication : ${c.publicationDirector}.`,
           `Contact : ${c.contactEmail}`,
@@ -33,6 +34,13 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
         body: [
           `Hébergement du site (front-end) : ${c.frontendHost}, ${c.frontendHostAddress}.`,
           `Hébergement des données et de l'authentification : ${c.backendHost}. ${c.backendHostDetail}`,
+        ],
+      },
+      {
+        heading: 'Paiement en ligne',
+        body: [
+          `Les paiements entre membres sont traités par Stripe Payments Europe, Ltd., 1 Grand Canal Street Lower, Grand Canal Dock, Dublin, D02 H210, Irlande — prestataire de services de paiement agréé qui agit en son nom propre. ${c.siteName} n'a jamais accès aux numéros de carte bancaire.`,
+          `${c.siteName} n'est pas partie aux contrats de prestation conclus entre membres et retient des frais de service sur chaque paiement, dans les conditions décrites aux Conditions Générales d'Utilisation (article 8 bis).`,
         ],
       },
       {
@@ -145,6 +153,18 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
         ],
       },
       {
+        heading: '8 bis. Paiement en ligne entre membres',
+        body: [
+          `Lorsque la fonctionnalité est proposée dans la conversation, un membre peut régler une prestation convenue avec un autre membre directement depuis l'Application. Le prix est fixé librement entre les deux membres ; Queer Services n'est pas partie au contrat de prestation et n'en fixe pas le prix.`,
+          `Le paiement est traité par Stripe Payments Europe, Ltd., prestataire de services de paiement agréé, qui agit en son nom propre. Queer Services n'a jamais accès aux numéros de carte bancaire.`,
+          `Fonctionnement : à la validation, la carte du client est seulement autorisée (une somme est réservée, sans débit définitif). Le débit est effectué lorsque le client confirme que la prestation est terminée, le montant étant alors reversé au prestataire. Tant que la prestation n'est pas confirmée, le paiement peut être annulé et l'autorisation est libérée.`,
+          `Frais de service : Queer Services retient des frais de service de 6,2 % du prix payé, déduits de la somme reversée au prestataire. Le client règle le prix affiché ; le montant net perçu par le prestataire lui est indiqué avant et après le paiement.`,
+          `Pour recevoir un paiement, le prestataire doit vérifier son identité et renseigner un compte bancaire auprès de Stripe, conformément aux obligations légales (lutte contre le blanchiment et le financement du terrorisme). Sans cette vérification, les fonds ne peuvent pas lui être versés.`,
+          `En cas de désaccord sur une prestation, les membres sont invités à se contacter en priorité via la messagerie, puis à signaler la situation à Queer Services à ${c.contactEmail}. Les remboursements sont traités selon les règles de Stripe et l'article 22 des présentes.`,
+          `Les prestataires agissant à titre professionnel restent responsables de leurs obligations fiscales et sociales, ainsi que de la délivrance de leurs factures à leurs clients.`,
+        ],
+      },
+      {
         heading: '9. Professionnels',
         body: [
           `Les professionnels proposant leurs services sur Queer Services sont responsables :`,
@@ -212,6 +232,7 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
         heading: '16. Signalement et modération',
         body: [
           `Un mécanisme de signalement permet aux utilisateurs de signaler un profil, un contenu, une conversation ou un comportement problématique.`,
+          `Tolérance zéro : aucun contenu injurieux, haineux, harcelant ou abusif n'est toléré. Chaque profil, avis et message peut être signalé depuis l'application, et chaque membre peut en bloquer un autre à tout moment (le blocage masque instantanément ses contenus et notifie l'équipe de modération). L'équipe traite chaque signalement sous 24 heures : le contenu est retiré et l'auteur·rice exclu·e de la plateforme en cas de manquement.`,
           `Les signalements peuvent notamment concerner : une fraude ; une menace ; un comportement dangereux ; une discrimination ; du harcèlement ; un contenu illégal ; une usurpation d'identité ; une violation des présentes CGU.`,
           `Queer Services peut prendre les mesures nécessaires, notamment : supprimer un contenu ; limiter certaines fonctionnalités ; avertir un utilisateur ; suspendre temporairement un compte ; résilier définitivement un compte ; empêcher la création d'un nouveau compte ; transmettre certaines informations aux autorités compétentes lorsque la loi l'impose ou l'autorise.`,
         ],
@@ -353,6 +374,7 @@ const PAGES: Record<LegalSlug, { title: string; icon: typeof FileText; intro: st
         body: [
           `Les données personnelles sont accessibles uniquement aux personnes habilitées, dans la limite des informations nécessaires à leurs missions.`,
           `Elles peuvent être communiquées aux membres et bénévoles autorisés, aux utilisateurs concernés par une prestation, aux prestataires techniques ou aux autorités compétentes lorsque la loi le prévoit.`,
+          `Pour le paiement en ligne, les données nécessaires (identité, coordonnées bancaires du prestataire, montant) sont traitées par Stripe Payments Europe, Ltd. en qualité de prestataire de paiement. Queer Services n'a pas accès aux numéros de carte bancaire.`,
           `Queer Services ne vend pas les données personnelles de ses utilisateurs, membres ou adhérent·es.`,
           `Les personnes ayant accès à des informations confidentielles s’engagent à ne pas les divulguer ni les utiliser à des fins personnelles. Cette obligation demeure applicable après la fin de leur adhésion ou de leurs fonctions, tant que les informations conservent leur caractère confidentiel.`
         ]
@@ -525,13 +547,7 @@ export function LegalPage({ slug }: { slug: LegalSlug }) {
     <div className="animate-fade-in">
       <div className="border-b border-neutral-200 bg-white">
         <div className="container-app py-6">
-          <button
-            onClick={() => (window.history.length > 1 ? window.history.back() : navigate('/'))}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-primary-600"
-          >
-            <ArrowLeft size={16} /> Retour
-          </button>
-          <div className="mt-3 flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
               <page.icon size={20} />
             </div>

@@ -4,6 +4,8 @@ import { useRouter } from '@/lib/router';
 import { AlertCircle, ArrowLeft, ArrowRight, Check, Eye, EyeOff, LockKeyhole, Mail, MailCheck, ShieldCheck, Sparkles } from 'lucide-react';
 import { BrandHeader } from '@/components/BrandHeader';
 import { supabase } from '@/lib/supabase';
+import { isAppleSignInAvailable, signInWithApple } from '@/lib/appleSignIn';
+import { signInWithGoogle } from '@/lib/googleSignIn';
 
 export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
   const { signIn, signUp } = useAuth();
@@ -26,8 +28,67 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
   const [codeResent, setCodeResent] = useState(false);
   const [accountCreated, setAccountCreated] = useState(false);
 
+  const [appleLoading, setAppleLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
   const isSignup = mode === 'signup';
   const canSubmit = !isSignup || (acceptTerms && acceptSensitiveData);
+
+  // Connexion / inscription avec Apple (app iPhone). Un nouveau compte passe ensuite par l'onboarding.
+  const onApple = async () => {
+    if (isSignup && !(acceptTerms && acceptSensitiveData)) {
+      setError('Veuillez accepter les CGU et le consentement ci-dessus pour continuer avec Apple.');
+      return;
+    }
+    setError(null);
+    setAppleLoading(true);
+    const res = await signInWithApple();
+    if (res.error) {
+      setAppleLoading(false);
+      setError(res.error);
+      return;
+    }
+    if (res.cancelled) {
+      setAppleLoading(false);
+      return;
+    }
+    // La session est créée : l'onboarding s'ouvre pour un nouveau profil, sinon l'annuaire.
+    const { data: sessionData } = await supabase.auth.getSession();
+    const uid = sessionData.session?.user.id;
+    let hasProfile = false;
+    if (uid) {
+      const { data: prof } = await supabase.from('profiles').select('display_name').eq('id', uid).maybeSingle();
+      hasProfile = !!prof?.display_name;
+    }
+    setAppleLoading(false);
+    navigate(hasProfile ? '/annuaire' : '/onboarding');
+  };
+
+  const onGoogle = async () => {
+    if (isSignup && !(acceptTerms && acceptSensitiveData)) {
+      setError('Veuillez accepter les CGU et le consentement ci-dessus pour continuer avec Google.');
+      return;
+    }
+    setError(null);
+    setGoogleLoading(true);
+    const res = await signInWithGoogle();
+    if (res.error) {
+      setGoogleLoading(false);
+      setError(res.error);
+      return;
+    }
+    if (res.cancelled) {
+      setGoogleLoading(false);
+      return;
+    }
+    const { data: sessionData } = await supabase.auth.getSession();
+    const uid = sessionData.session?.user.id;
+    if (uid) {
+      const { data: prof } = await supabase.from('profiles').select('display_name').eq('id', uid).maybeSingle();
+      setGoogleLoading(false);
+      navigate(prof?.display_name ? '/annuaire' : '/onboarding');
+    }
+  };
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -328,7 +389,7 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
                     <a href="#/confidentialite" target="_blank" rel="noopener noreferrer" className="font-bold text-violet-700 underline underline-offset-2">
                       politique de confidentialité
                     </a>
-                    .
+                    . Je m'engage à ne publier aucun contenu injurieux, haineux ou abusif : tolérance zéro, les contenus signalés sont retirés et leurs auteur·rice·s exclu·e·s sous 24 h.
                   </span>
                 </label>
                 <label className="flex cursor-pointer items-start gap-3 border-t border-violet-200/70 pt-3">
@@ -359,6 +420,50 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
               {!loading && <ArrowRight size={18} />}
             </button>
           </form>
+
+          <div className="mt-4">
+            <div className="mb-4 flex items-center gap-3 text-xs text-neutral-400">
+              <span className="h-px flex-1 bg-neutral-200" /> ou <span className="h-px flex-1 bg-neutral-200" />
+            </div>
+            <button
+              type="button"
+              onClick={onGoogle}
+              disabled={googleLoading || loading}
+              className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl border border-neutral-300 bg-white px-4 font-semibold text-neutral-800 transition active:scale-[0.98] disabled:opacity-45"
+            >
+              <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                      </svg>
+              {googleLoading ? 'Connexion…' : isSignup ? 'S’inscrire avec Google' : 'Se connecter avec Google'}
+            </button>
+          </div>
+
+          {isAppleSignInAvailable() && (
+            <div className="mt-4">
+              <div className="mb-4 flex items-center gap-3 text-xs text-neutral-400">
+                <span className="h-px flex-1 bg-neutral-200" /> ou <span className="h-px flex-1 bg-neutral-200" />
+              </div>
+              <button
+                type="button"
+                onClick={onApple}
+                disabled={appleLoading || loading}
+                className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-black px-4 font-semibold text-white transition active:scale-[0.98] disabled:opacity-45"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M16.37 1.43c0 1.14-.46 2.22-1.2 3-.8.85-2.1 1.5-3.16 1.42-.13-1.1.42-2.25 1.15-3 .82-.86 2.2-1.5 3.21-1.42zM20.5 17.1c-.55 1.27-.82 1.84-1.53 2.96-.99 1.57-2.38 3.52-4.1 3.54-1.53.02-1.93-1-4.01-.99-2.08.01-2.52 1.01-4.05.99-1.72-.02-3.04-1.78-4.03-3.35C-.01 15.9-.3 11 1.6 8.2c1.35-1.99 3.48-3.15 5.48-3.15 2.04 0 3.32 1.12 5 1.12 1.63 0 2.63-1.12 4.99-1.12 1.78 0 3.67.97 5.01 2.65-4.4 2.41-3.69 8.7-1.58 9.4z" />
+                </svg>
+                {appleLoading ? 'Connexion…' : isSignup ? 'S’inscrire avec Apple' : 'Se connecter avec Apple'}
+              </button>
+              <p className="mt-2 text-center text-[11px] leading-relaxed text-neutral-500">
+                En continuant avec Apple, vous acceptez les{' '}
+                <a href="/cgu" className="font-semibold text-violet-700 underline">CGU</a> et la{' '}
+                <a href="/confidentialite" className="font-semibold text-violet-700 underline">politique de confidentialité</a>.
+              </p>
+            </div>
+          )}
 
           <p className="mt-5 text-center text-sm text-neutral-600">
             {isSignup ? (

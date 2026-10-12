@@ -12,6 +12,7 @@ import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
 import { OnboardingPage } from '@/pages/OnboardingPage';
 import { DirectoryPage } from '@/pages/DirectoryPage';
 import { PublicDirectoryPreview } from '@/pages/PublicDirectoryPreview';
+import { PublicProfilePreview } from '@/pages/PublicProfilePreview';
 import { MissionsPage } from '@/pages/MissionsPage';
 import { ProfileDetailPage } from '@/pages/ProfileDetailPage';
 import { ProfileEditPage } from '@/pages/ProfileEditPage';
@@ -25,7 +26,9 @@ import { PlaceDetailPage } from '@/pages/PlaceDetailPage';
 import { EventsPage } from '@/pages/EventsPage';
 import { LegalPage, type LegalSlug } from '@/pages/LegalPage';
 import { InstallGuidePage } from '@/pages/InstallGuidePage';
-import { CookieBanner } from '@/components/CookieBanner';
+import { AppReturnPage } from '@/pages/AppReturnPage';
+import { PaymentPage } from '@/pages/PaymentPage';
+import { listenForAppLinks } from '@/lib/appLinks';
 import { InstallPWABanner } from '@/components/InstallPWABanner';
 import { Capacitor } from '@capacitor/core';
 
@@ -42,6 +45,9 @@ function Routes() {
     }
   }, [loading, user, profile, name, isPasswordRecovery]);
 
+  // Retour dans l'app depuis Stripe (lien queerservices://…).
+  useEffect(() => listenForAppLinks((to) => navigate(to)), [navigate]);
+
   useSEO(name, { skip: name === 'directory' && !!params.category });
 
   if (loading) return <SplashScreen />;
@@ -49,9 +55,9 @@ function Routes() {
   if (isPasswordRecovery || name === 'reset-password') return <ResetPasswordPage />;
 
   // Protect authenticated routes — 'directory' is deliberately not here: it
-  // renders an anonymized public preview when logged out (see the
-  // 'directory' case below) so search engines can actually crawl it.
-  const protectedRoutes = ['events', 'missions', 'profile', 'my-profile', 'profile-edit', 'settings', 'admin', 'messages', 'message-thread', 'place-detail'];
+  // and 'profile' render an anonymized public preview when logged out (see the
+  // cases below) so search engines can actually crawl it.
+  const protectedRoutes = ['events', 'missions', 'my-profile', 'profile-edit', 'settings', 'admin', 'messages', 'message-thread', 'place-detail', 'payment'];
   if (protectedRoutes.includes(name) && !user) {
     navigate('/connexion');
     return null;
@@ -95,7 +101,9 @@ function Routes() {
     case 'missions':
       return <MissionsPage />;
     case 'profile':
-      return <ProfileDetailPage id={params.id} />;
+      return user
+        ? <ProfileDetailPage id={params.id} />
+        : <PublicProfilePreview id={params.id} />;
     case 'my-profile':
       return <MyProfilePage />;
     case 'profile-edit':
@@ -114,6 +122,10 @@ function Routes() {
       return <ResourcesPage />;
     case 'place-detail':
       return <PlaceDetailPage id={params.id} />;
+    case 'payment':
+      return <PaymentPage id={params.id} />;
+    case 'app-return':
+      return <AppReturnPage />;
     case 'install-guide':
       return <InstallGuidePage />;
     case 'legal':
@@ -135,7 +147,6 @@ export default function App() {
           </Layout>
         </RealtimeProvider>
         {!isNativeApp && <InstallPWABanner />}
-        {!isNativeApp && <CookieBanner />}
       </RouterProvider>
     </AuthProvider>
   );

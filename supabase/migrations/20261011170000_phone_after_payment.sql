@@ -1,0 +1,3 @@
+-- Le numéro du prestataire (celui qui reçoit le paiement) ne peut être envoyé qu'une fois
+-- que le client a payé (carte réservée ou encaissée), et n'est lisible que par ce client.
+-- (Voir share_my_phone() et get_contact_phone() dans la base.)

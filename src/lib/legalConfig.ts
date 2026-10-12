@@ -15,30 +15,34 @@
  */
 
 export const legalConfig = {
-  siteName: 'Queer Service',
-  siteUrl: 'https://queerservice.fr',
+  siteName: 'Queer Services',
+  siteUrl: 'https://www.queerservices.fr',
 
   // Publisher identity
-  legalName: 'À COMPLÉTER (raison sociale ou nom du responsable de publication)',
-  legalForm: 'À COMPLÉTER (ex. association loi 1901, SAS, entreprise individuelle…)',
-  siret: 'À COMPLÉTER',
-  rcs: 'À COMPLÉTER',
-  shareCapital: 'À COMPLÉTER',
-  address: 'À COMPLÉTER (adresse postale du siège)',
-  publicationDirector: 'À COMPLÉTER',
+  legalName: 'QUEER SERVICES',
+  legalForm: 'association déclarée (loi du 1er juillet 1901)',
+  siren: '131 113 466',
+  siret: '131 113 466 00018',
+  tva: 'FR75131113466',
+  rna: 'W751286301',
+  rnaDate: '24/09/2026',
+  rcs: 'non inscrite (association)',
+  shareCapital: 'sans objet (association)',
+  address: '12 rue Bichat, 75010 Paris, France',
+  publicationDirector: 'Sandrine Khoto-Thinu (représentante légale)',
 
   // Contact
-  contactEmail: 'contact@queerservice.fr',
-  dpoEmail: 'donnees@queerservice.fr',
+  contactEmail: 'contact@queerservices.fr',
+  dpoEmail: 'contact@queerservices.fr',
 
   // Hosting
-  frontendHost: 'À COMPLÉTER (ex. Netlify, Vercel, OVHcloud…)',
-  frontendHostAddress: 'À COMPLÉTER',
+  frontendHost: 'Vercel Inc.',
+  frontendHostAddress: '440 N Barranca Ave #4133, Covina, CA 91723, États-Unis',
   backendHost: 'Supabase Inc.',
   backendHostDetail:
     'Base de données et authentification hébergées via Supabase, avec instance configurée en région Union Européenne.',
 
   // Misc
   mediationEntity: 'À COMPLÉTER (le cas échéant, médiateur de la consommation compétent)',
-  lastUpdated: '25 juillet 2026',
+  lastUpdated: '12 octobre 2026',
 } as const;

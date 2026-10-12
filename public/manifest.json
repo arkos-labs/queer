@@ -4,7 +4,7 @@
   "description": "La plateforme d'entraide de la communauté LGBT+. Fait pour nous, par nous.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f6f7fb",
+  "background_color": "#400987",
   "theme_color": "#13876d",
   "icons": [
     {

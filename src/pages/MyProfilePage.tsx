@@ -1,11 +1,10 @@
+import { AvatarBadges, BadgeLegend } from '@/components/IdentityBadges';
 import { useEffect, useState } from 'react';
 import { supabase, PUBLIC_PROFILE_COLUMNS } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { useAuth } from '@/lib/auth';
 import type { PublicProfile, Badge, Review, Connection } from '@/lib/types';
 import { Avatar } from '@/components/Avatar';
-import { BadgeList } from '@/components/BadgeChip';
-import { TrustPanel } from '@/components/TrustPanel';
 import { StarRating } from '@/components/StarRating';
 import { avg, timeAgo } from '@/lib/utils';
 import {
@@ -19,6 +18,8 @@ import {
   ArrowRight,
   ArrowLeft,
   ShieldCheck,
+  Star,
+  Linkedin,
   X,
   LogOut,
 } from 'lucide-react';
@@ -88,7 +89,7 @@ export function MyProfilePage() {
   const avgRating = avg(reviews.map((r) => r.rating));
   const typeMeta = {
     particulier: { icon: Users, label: 'Particulier·e' },
-    pro: { icon: Building2, label: 'Professionnel·le / structure' },
+    pro: { icon: Building2, label: 'Professionnel·le / entreprise' },
   }[profile.account_type];
 
   return (
@@ -127,25 +128,12 @@ export function MyProfilePage() {
               <div className="rounded-full bg-white p-1.5 shadow-card">
                 <Avatar name={profile.display_name} src={profile.photo_url} size={112} className="bg-paper-raised text-ink-muted border border-gold-hairline" />
               </div>
-              {profile.verification_status === 'verified' && (
-                <div className="absolute bottom-1 right-1/2 translate-x-12 translate-y-1 rounded-full bg-white p-0.5 shadow-sm border border-gold-hairline">
-                  <ShieldCheck size={20} className="text-patina-deep" />
-                </div>
-              )}
+              <AvatarBadges accountType={profile.account_type} isCommunityMember={profile.is_community_member} isAlly={profile.is_ally} verified={profile.verification_status === 'verified'} />
             </div>
             
             <div className="px-6 mt-6 text-center">
-              <h1 className="font-display text-3xl font-bold text-ink-base">{profile.display_name}</h1>
-                {typeMeta && (
-                  <span className="mt-2 inline-flex items-center rounded-full bg-paper-base border border-gold-hairline px-3 py-1 text-xs font-semibold text-ink-base shadow-sm">
-                    {typeMeta.label}
-                  </span>
-                )}
-                {profile.verification_status === 'verified' && (
-                  <span className="mt-2 ml-2 inline-flex items-center gap-1 rounded-full border border-success-200 bg-success-100 px-3 py-1 text-xs font-bold text-success-700 shadow-sm">
-                    <ShieldCheck size={13} /> Compte vérifié
-                  </span>
-                )}
+              <h1 className="font-display text-3xl font-bold text-ink-base">{profile.account_type === 'pro' && profile.company_name ? profile.company_name : profile.display_name}</h1>
+              <BadgeLegend accountType={profile.account_type} isCommunityMember={profile.is_community_member} isAlly={profile.is_ally} verified={profile.verification_status === 'verified'} className="mt-2" />
 
               <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-ink-muted">
                 {profile.city && (
@@ -153,10 +141,35 @@ export function MyProfilePage() {
                 )}
               </div>
 
+              {reviews.length > 0 && (
+                <p className="mt-3 flex items-center justify-center gap-1.5 text-sm font-bold text-ink-base">
+                  <Star size={15} className="fill-[#D4AF37] text-[#D4AF37]" /> {avgRating.toFixed(1)}
+                  <span className="font-normal text-ink-muted">· {reviews.length} avis</span>
+                </p>
+              )}
+              {profile.linkedin_url && (
+                <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
+                  <Linkedin size={13} /> LinkedIn
+                </a>
+              )}
+
               {profile.bio && (
                 <p className="mt-6 text-[15px] italic text-ink-muted leading-relaxed whitespace-pre-line px-2">
                   "{profile.bio}"
                 </p>
+              )}
+
+              {profile.account_type === 'pro' && (profile.company_description || profile.website_url || profile.opening_hours || profile.siret || profile.intervention_zone) && (
+                <div className="mt-6 rounded-2xl border border-gold-hairline bg-white p-4 text-left text-sm text-ink-base">
+                  <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted"><Building2 size={14} /> L'entreprise</h3>
+                  {profile.company_description && <p className="whitespace-pre-line leading-relaxed">{profile.company_description}</p>}
+                  <dl className="mt-3 space-y-1.5 text-[13px]">
+                    {profile.intervention_zone && <div><dt className="inline font-semibold">Zone d'intervention : </dt><dd className="inline">{profile.intervention_zone}</dd></div>}
+                    {profile.opening_hours && <div><dt className="inline font-semibold">Horaires : </dt><dd className="inline">{profile.opening_hours}</dd></div>}
+                    {profile.siret && <div><dt className="inline font-semibold">SIRET : </dt><dd className="inline">{profile.siret}</dd></div>}
+                    {profile.website_url && <div><dt className="inline font-semibold">Site web : </dt><dd className="inline"><a href={profile.website_url} target="_blank" rel="noopener noreferrer" className="text-patina-deep underline">{profile.website_url.replace(/^https?:\/\//, '')}</a></dd></div>}
+                  </dl>
+                </div>
               )}
 
               <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -175,7 +188,21 @@ export function MyProfilePage() {
                 </button>
               </div>
 
-              {profile.skills.length > 0 && (
+              {profile.account_type === 'pro' && (profile.pro_services?.length ?? 0) > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3">Services proposés</h3>
+                  <ul className="space-y-2 text-left">
+                    {profile.pro_services!.map((svc, i) => (
+                      <li key={i} className="flex items-center justify-between gap-3 rounded-xl border border-gold-hairline bg-white px-4 py-2.5 text-sm shadow-sm">
+                        <span className="font-semibold text-ink-base">{svc.label}</span>
+                        {svc.price && <span className="shrink-0 text-ink-muted">{svc.price}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {profile.skills.length > 0 && !(profile.account_type === 'pro' && (profile.pro_services?.length ?? 0) > 0) && (
                 <div className="mt-8">
                   <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3">Compétences proposées</h3>
                   <div className="flex flex-wrap justify-center gap-2">
@@ -188,7 +215,7 @@ export function MyProfilePage() {
                 </div>
               )}
               
-              {profile.needs.length > 0 && (
+              {profile.account_type !== 'pro' && profile.needs.length > 0 && (
                 <div className="mt-6">
                   <h3 className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-3">Recherche</h3>
                   <div className="flex flex-wrap justify-center gap-2">
@@ -225,8 +252,6 @@ export function MyProfilePage() {
               </div>
             </div>
           )}
-
-          <TrustPanel profile={profile} badges={badges} reviewCount={reviews.length} avgRating={avgRating} />
 
           {/* Mises en relation */}
           <div className="rounded-[30px] border border-white bg-white p-6 shadow-soft">
@@ -287,16 +312,6 @@ export function MyProfilePage() {
                   </div>
                 ))}
               </div>
-            )}
-          </div>
-
-          {/* Badges obtenus */}
-          <div className="rounded-[30px] border border-white bg-white p-6 shadow-soft">
-            <h2 className="mb-4 font-display text-lg font-bold text-ink-base">Badges obtenus</h2>
-            {badges.length === 0 ? (
-              <p className="text-sm text-ink-muted">Aucun badge obtenu.</p>
-            ) : (
-              <BadgeList badges={badges} className="gap-2" />
             )}
           </div>
         </div>

@@ -7,7 +7,11 @@ import { Avatar } from '@/components/Avatar';
 import { ReviewOfferCard } from '@/components/ReviewOfferCard';
 import { ReviewModal } from '@/components/ReviewModal';
 import { formatDate, timeAgo } from '@/lib/utils';
-import { ArrowLeft, Send, CheckCircle2, XCircle, Clock, Flag, AlertTriangle, Phone, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Send, CheckCircle2, XCircle, Clock, Flag, AlertTriangle, Phone, ShieldCheck, UserMinus, CreditCard } from 'lucide-react';
+import { ReportContentModal } from '@/components/ReportContentModal';
+import { useRealtimeRevision } from '@/lib/realtime';
+import { formatCents, type Payment } from '@/lib/payments';
+import type { ReportTargetType } from '@/lib/types';
 import { SCREENSHOT_DEMO_PROFILES } from '@/lib/screenshotDemo';
 import { BrandHeader } from '@/components/BrandHeader';
 import { censorInsults } from '@/lib/profanity';
@@ -41,6 +45,23 @@ function LiveMessageThread({ id }: { id: string }) {
   const [sending, setSending] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+  // Dernier paiement de la conversation : sert à afficher « on vous demande X € » bien en vue.
+  const paymentsRevision = useRealtimeRevision('payments');
+  const [latestPayment, setLatestPayment] = useState<Payment | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    supabase
+      .from('payments')
+      .select('*')
+      .eq('connection_id', id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => { if (!cancelled) setLatestPayment((data ?? null) as Payment | null); });
+    return () => { cancelled = true; };
+  }, [id, user, paymentsRevision]);
+  const [reportTarget, setReportTarget] = useState<{ type: ReportTargetType; id: string; title: string } | null>(null);
   const keyboardOpen = useKeyboardOpen();
   const bottomRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
@@ -140,14 +161,16 @@ function LiveMessageThread({ id }: { id: string }) {
   const otherId = other?.id;
   useEffect(() => {
     if (!user || !connection || !otherId) return;
-    const iAmProvider = connection.user_b === user.id;
-    if (iAmProvider || connection.status !== 'accepted' || !connection.phone_shared) return;
+    // Le client (celui qui a payé) voit le numéro du prestataire une fois qu'il l'a envoyé.
+    const iAmPayer = !!latestPayment && latestPayment.payer_id === user.id;
+    const paid = !!latestPayment && ['authorized', 'captured'].includes(latestPayment.status);
+    if (!iAmPayer || !paid || connection.status !== 'accepted' || !connection.phone_shared) return;
     let cancelled = false;
     supabase.rpc('get_contact_phone', { target_profile_id: otherId }).then(({ data }) => {
       if (!cancelled && data) setContactPhone(data as string);
     });
     return () => { cancelled = true; };
-  }, [user, connection?.status, connection?.phone_shared, connection?.user_b, otherId]);
+  }, [user, connection?.status, connection?.phone_shared, latestPayment?.status, latestPayment?.payer_id, otherId]);
 
   useEffect(() => {
     const list = messagesRef.current;
@@ -179,6 +202,25 @@ function LiveMessageThread({ id }: { id: string }) {
     }
     setMessages((prev) => [...prev, data as Message]);
     setBody('');
+  };
+
+  // Bloquer un membre : masque la conversation instantanément et prévient
+  // l'équipe de modération via un signalement automatique.
+  const blockOther = async () => {
+    if (!user || !other) return;
+    if (!window.confirm(`Bloquer ${other.display_name} ? Vous ne pourrez plus vous écrire et cette conversation sera masquée.`)) return;
+    const { error: blockError } = await supabase.from('blocked_users').insert({ blocker_id: user.id, blocked_id: other.id });
+    if (blockError) {
+      setError(blockError.message);
+      return;
+    }
+    await supabase.from('reports').insert({
+      reporter_id: user.id,
+      target_type: 'profile',
+      target_id: other.id,
+      reason: 'Membre bloqué par un utilisateur depuis la messagerie',
+    });
+    navigate('/messages');
   };
 
   const updateStatus = async (status: Connection['status']) => {
@@ -233,6 +275,9 @@ function LiveMessageThread({ id }: { id: string }) {
   const isInitiator = connection.user_a === user.id;
   const isParticipant = connection.user_a === user.id || connection.user_b === user.id;
   const isProvider = connection.user_b === user.id;
+  // Qui reçoit le paiement (prestataire) et si le client a déjà payé : conditionne l'envoi du numéro.
+  const iAmPayee = !!latestPayment && latestPayment.payee_id === user.id;
+  const paidForPhone = !!latestPayment && ['authorized', 'captured'].includes(latestPayment.status);
   const isAdmin = !!profile?.is_admin;
   const isSupport = connection.service_label === 'Support Queer Service';
   const conversationName = isSupport ? '🏳️‍🌈 Équipe Queer Services' : (other?.display_name ?? 'Membre');
@@ -259,6 +304,9 @@ function LiveMessageThread({ id }: { id: string }) {
           }}
         />
       )}
+      {reportTarget && (
+        <ReportContentModal targetType={reportTarget.type} targetId={reportTarget.id} title={reportTarget.title} onClose={() => setReportTarget(null)} />
+      )}
       {/* Thread header */}
       <div className="z-10 w-full shrink-0 border-b border-gold-hairline bg-[#ede9fe]">
         <BrandHeader onBack={() => navigate('/messages')} />
@@ -270,6 +318,16 @@ function LiveMessageThread({ id }: { id: string }) {
               {isSupport ? <span className="text-[11px] font-medium text-primary-700">Équipe Queer Services</span> : <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${statusMeta.cls}`}><statusMeta.icon size={10} /> {statusMeta.label}</span>}
             </div>
           </button>
+          {!isSupport && isParticipant && other && (
+            <div className="flex shrink-0 items-center gap-1">
+              <button onClick={() => setReportTarget({ type: 'profile', id: other.id, title: 'Signaler ce membre' })} className="flex h-9 w-9 items-center justify-center rounded-full text-error-600 active:bg-error-50" aria-label="Signaler ce membre" title="Signaler">
+                <Flag size={17} />
+              </button>
+              <button onClick={blockOther} className="flex h-9 w-9 items-center justify-center rounded-full text-ink-muted active:bg-neutral-100" aria-label="Bloquer ce membre" title="Bloquer">
+                <UserMinus size={17} />
+              </button>
+            </div>
+          )}
         </div>
 
         {isSupport && isAdmin && connection.status !== 'completed' && connection.status !== 'cancelled' && (
@@ -312,7 +370,11 @@ function LiveMessageThread({ id }: { id: string }) {
 
             {connection.status === 'accepted' && (
               <div className="flex items-center px-4 py-2 bg-primary-50 border-t border-gold-hairline">
-                {isProvider ? (
+                {!paidForPhone ? (
+                  <p className="text-xs font-medium text-primary-700 flex items-center gap-1.5">
+                    <Phone size={14} /> Le numéro du prestataire pourra être envoyé une fois que le client aura payé (carte réservée).
+                  </p>
+                ) : iAmPayee ? (
                   connection.phone_shared ? (
                     <p className="text-xs font-medium text-primary-700 flex items-center gap-1.5">
                       <Phone size={14} /> Votre numéro a été envoyé. Il disparaîtra à la fin de la prestation.
@@ -324,7 +386,7 @@ function LiveMessageThread({ id }: { id: string }) {
                   )
                 ) : !connection.phone_shared ? (
                   <p className="text-xs font-medium text-primary-700 flex items-center gap-1.5">
-                    <Phone size={14} /> Le prestataire peut vous envoyer son numéro maintenant que la mission est acceptée.
+                    <Phone size={14} /> Paiement reçu : le prestataire peut maintenant vous envoyer son numéro.
                   </p>
                 ) : contactPhone ? (
                   <p className="text-sm font-medium text-primary-700 flex items-center gap-1.5">
@@ -337,6 +399,41 @@ function LiveMessageThread({ id }: { id: string }) {
                 )}
               </div>
             )}
+          </div>
+        )}
+
+        {!isSupport && isParticipant && other && latestPayment && user &&
+          (latestPayment.status === 'pending' || latestPayment.status === 'authorized') && (() => {
+          const iAmPayer = latestPayment.payer_id === user.id;
+          const myTurn = latestPayment.proposed_by !== user.id;
+          let text: string | null = null;
+          let cta = 'Ouvrir le paiement';
+          if (latestPayment.status === 'pending' && !latestPayment.stripe_payment_intent_id && myTurn) {
+            const total = latestPayment.amount;
+            text = iAmPayer
+              ? `${other.display_name.split(' ')[0]} vous demande ${formatCents(total)} pour cette prestation.`
+              : `${other.display_name.split(' ')[0]} propose ${formatCents(latestPayment.amount)} pour cette prestation.`;
+            cta = iAmPayer ? 'Voir et payer' : 'Voir la demande';
+          } else if (latestPayment.status === 'authorized' && iAmPayer) {
+            text = 'Votre carte est réservée. Confirmez la fin de la prestation pour payer.';
+            cta = 'Confirmer la fin';
+          }
+          if (!text) return null;
+          return (
+            <div className="border-t border-primary-200 bg-primary-50 px-4 py-3">
+              <p className="text-sm font-semibold text-primary-900">{text}</p>
+              <button onClick={() => navigate(`/paiement/${connection.id}`)} className="btn-primary btn-sm mt-2 w-full justify-center">
+                <CreditCard size={15} /> {cta}
+              </button>
+            </div>
+          );
+        })()}
+
+        {!isSupport && isParticipant && other && (
+          <div className="border-t border-gold-hairline bg-white/60 px-4 py-2.5">
+            <button onClick={() => navigate(`/paiement/${connection.id}`)} className="btn-primary btn-sm w-full justify-center">
+              <CreditCard size={15} /> Payer ou demander un paiement
+            </button>
           </div>
         )}
 
@@ -371,7 +468,14 @@ function LiveMessageThread({ id }: { id: string }) {
                         }`}
                       >
                         <p className="whitespace-pre-wrap break-words">{connection.status === 'pending' && !isSupport ? maskContactInfo(censorInsults(m.body)) : censorInsults(m.body)}</p>
-                        <p className={`mt-1 text-[10px] ${mine ? 'text-white/80' : 'text-patina-deep'}`}>{timeAgo(m.created_at)}</p>
+                        <p className={`mt-1 flex items-center gap-2 text-[10px] ${mine ? 'text-white/80' : 'text-patina-deep'}`}>
+                          {timeAgo(m.created_at)}
+                          {!mine && !isSupport && (
+                            <button onClick={() => setReportTarget({ type: 'message', id: m.id, title: 'Signaler ce message' })} className="inline-flex items-center gap-0.5 text-error-600 underline" aria-label="Signaler ce message">
+                              <Flag size={10} /> Signaler
+                            </button>
+                          )}
+                        </p>
                       </div>
                     </div>
                   );

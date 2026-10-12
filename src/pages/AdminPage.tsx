@@ -500,6 +500,27 @@ function ReportsTab() {
     if (!error) setReports((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
   };
 
+  // Retire le contenu signalé et exclut son auteur·rice (obligation App Store 1.2).
+  const removeAndBan = async (r: Report) => {
+    if (!window.confirm('Retirer ce contenu et bannir son auteur·rice ?')) return;
+    let authorId: string | null = null;
+    if (r.target_type === 'profile') {
+      authorId = r.target_id;
+    } else if (r.target_type === 'review') {
+      const { data } = await supabase.from('reviews').select('author_id').eq('id', r.target_id).maybeSingle();
+      authorId = data?.author_id ?? null;
+      await supabase.from('reviews').delete().eq('id', r.target_id);
+    } else {
+      const { data } = await supabase.from('messages').select('sender_id').eq('id', r.target_id).maybeSingle();
+      authorId = data?.sender_id ?? null;
+      await supabase.from('messages').delete().eq('id', r.target_id);
+    }
+    if (authorId) {
+      await supabase.from('profiles').update({ profile_status: 'banned', updated_at: new Date().toISOString() }).eq('id', authorId);
+    }
+    await updateStatus(r.id, 'resolved');
+  };
+
   if (loading) return <div className="card h-64 animate-pulse bg-neutral-100" />;
 
   if (reports.length === 0) return <div className="card p-10 text-center text-sm text-neutral-500">Aucun signalement. Tout va bien !</div>;
@@ -529,6 +550,11 @@ function ReportsTab() {
               <p className="mt-2 text-sm text-neutral-500">{r.reason}</p>
             </div>
             <div className="flex shrink-0 gap-1">
+              {r.status !== 'resolved' && (
+                <button onClick={() => removeAndBan(r)} className="btn-ghost btn-sm text-error-600 hover:bg-error-50" title="Retirer le contenu et bannir l'auteur" aria-label="Retirer le contenu et bannir son auteur">
+                  <Trash2 size={16} />
+                </button>
+              )}
               {r.status !== 'resolved' && (
                 <button onClick={() => updateStatus(r.id, 'resolved')} className="btn-ghost btn-sm text-success-600 hover:bg-success-50" title="Résoudre" aria-label="Marquer ce signalement comme résolu">
                   <CheckCircle2 size={16} />

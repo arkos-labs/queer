@@ -16,6 +16,8 @@ const TABLES = [
   'mission_applications',
   'profile_subcategories',
   'reviews',
+  'event_attendees',
+  'payments',
 ];
 
 type Listener = () => void;

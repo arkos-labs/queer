@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useRouter } from '@/lib/router';
 import { Capacitor } from '@capacitor/core';
+import { supabase } from '@/lib/supabase';
+import { isAppleSignInAvailable, signInWithApple } from '@/lib/appleSignIn';
+import { signInWithGoogle } from '@/lib/googleSignIn';
 import {
   ShieldCheck,
   BadgeCheck,
@@ -98,6 +101,61 @@ function CategoryTile({
 export function LandingPage() {
   const { navigate } = useRouter();
   const isNativeApp = Capacitor.isNativePlatform();
+  const [appleLoading, setAppleLoading] = useState(false);
+  const [appleError, setAppleError] = useState<string | null>(null);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  // Inscription / connexion avec Google depuis l'accueil (site et app).
+  const onGoogle = async () => {
+    setAppleError(null);
+    setGoogleLoading(true);
+    const res = await signInWithGoogle();
+    if (res.error) {
+      setGoogleLoading(false);
+      setAppleError(res.error);
+      return;
+    }
+    if (res.cancelled) {
+      setGoogleLoading(false);
+      return;
+    }
+    if (Capacitor.isNativePlatform()) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const uid = sessionData.session?.user.id;
+      let hasProfile = false;
+      if (uid) {
+        const { data: prof } = await supabase.from('profiles').select('display_name').eq('id', uid).maybeSingle();
+        hasProfile = !!prof?.display_name;
+      }
+      setGoogleLoading(false);
+      navigate(hasProfile ? '/annuaire' : '/onboarding');
+    }
+  };
+
+  // Inscription / connexion avec Apple depuis l'accueil (app iPhone). Un nouveau compte passe par l'onboarding.
+  const onApple = async () => {
+    setAppleError(null);
+    setAppleLoading(true);
+    const res = await signInWithApple();
+    if (res.error) {
+      setAppleLoading(false);
+      setAppleError(res.error);
+      return;
+    }
+    if (res.cancelled) {
+      setAppleLoading(false);
+      return;
+    }
+    const { data: sessionData } = await supabase.auth.getSession();
+    const uid = sessionData.session?.user.id;
+    let hasProfile = false;
+    if (uid) {
+      const { data: prof } = await supabase.from('profiles').select('display_name').eq('id', uid).maybeSingle();
+      hasProfile = !!prof?.display_name;
+    }
+    setAppleLoading(false);
+    navigate(hasProfile ? '/annuaire' : '/onboarding');
+  };
 
   return (
     <div className="min-h-screen font-sans text-neutral-900 flex flex-col relative overflow-hidden"
@@ -195,7 +253,7 @@ export function LandingPage() {
             }}>
               <div className="px-3 pt-4 pb-4 text-center">
                 <p className="text-[13px] text-neutral-500 mb-5 leading-relaxed">
-                  Rejoignez la communauté pour proposer vos services ou contacter des membres de confiance.
+                  Parcourez l'annuaire librement. Un compte gratuit n'est nécessaire que pour proposer vos services ou contacter des membres.
                 </p>
 
                 <button
@@ -211,6 +269,44 @@ export function LandingPage() {
                 </button>
 
                 <button
+                  type="button"
+                  onClick={onGoogle}
+                  disabled={googleLoading}
+                  className="mt-3 w-full flex items-center justify-center gap-2.5 font-bold text-[15px] text-neutral-800 py-4 rounded-2xl bg-white active:scale-[0.98] transition-all duration-150 disabled:opacity-45"
+                  style={{ border: '1px solid rgba(0,0,0,0.18)' }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                      </svg>
+                  {googleLoading ? 'Connexion…' : 'Continuer avec Google'}
+                </button>
+
+                {appleError && <p className="mt-2 text-[12px] text-red-600">{appleError}</p>}
+                {isAppleSignInAvailable() && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={onApple}
+                      disabled={appleLoading}
+                      className="mt-3 w-full flex items-center justify-center gap-2.5 font-bold text-[15px] text-white py-4 rounded-2xl bg-black active:scale-[0.98] transition-all duration-150 disabled:opacity-45"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M16.37 1.43c0 1.14-.46 2.22-1.2 3-.8.85-2.1 1.5-3.16 1.42-.13-1.1.42-2.25 1.15-3 .82-.86 2.2-1.5 3.21-1.42zM20.5 17.1c-.55 1.27-.82 1.84-1.53 2.96-.99 1.57-2.38 3.52-4.1 3.54-1.53.02-1.93-1-4.01-.99-2.08.01-2.52 1.01-4.05.99-1.72-.02-3.04-1.78-4.03-3.35C-.01 15.9-.3 11 1.6 8.2c1.35-1.99 3.48-3.15 5.48-3.15 2.04 0 3.32 1.12 5 1.12 1.63 0 2.63-1.12 4.99-1.12 1.78 0 3.67.97 5.01 2.65-4.4 2.41-3.69 8.7-1.58 9.4z" />
+                      </svg>
+                      {appleLoading ? 'Connexion…' : 'S’inscrire avec Apple'}
+                    </button>
+                    <p className="mt-2 text-[11px] leading-relaxed text-neutral-500">
+                      En continuant avec Apple, vous acceptez les{' '}
+                      <a href="/cgu" className="font-semibold text-violet-700 underline">CGU</a> et la{' '}
+                      <a href="/confidentialite" className="font-semibold text-violet-700 underline">politique de confidentialité</a>.
+                    </p>
+                  </>
+                )}
+
+                <button
                   onClick={() => navigate('/connexion')}
                   className="mt-3 w-full flex items-center justify-center gap-2 font-bold text-[14px] py-3.5 rounded-2xl active:scale-[0.98] transition-all duration-150"
                   style={{
@@ -223,15 +319,18 @@ export function LandingPage() {
                   <ArrowRight size={17} strokeWidth={2.2} />
                 </button>
 
-                <div className="mt-4 pt-4 text-center" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-                  <button
-                    onClick={() => navigate('/annuaire')}
-                    className="inline-flex items-center gap-2 text-[12px] font-semibold text-neutral-400 hover:text-primary-600 transition-colors"
-                  >
-                    <Search size={13} strokeWidth={2.2} />
-                    Explorer l'annuaire librement
-                  </button>
-                </div>
+                <button
+                  onClick={() => navigate('/annuaire')}
+                  className="mt-3 w-full flex items-center justify-center gap-2 font-bold text-[14px] py-3.5 rounded-2xl active:scale-[0.98] transition-all duration-150"
+                  style={{
+                    color: '#374151',
+                    background: '#ffffff',
+                    border: '1px solid rgba(0,0,0,0.12)',
+                  }}
+                >
+                  <Search size={16} strokeWidth={2.2} />
+                  Parcourir l'annuaire sans compte
+                </button>
               </div>
             </div>
           </div>
