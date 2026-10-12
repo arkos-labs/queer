@@ -6,13 +6,6 @@ export type ConnectionStatus = 'pending' | 'accepted' | 'completed' | 'cancelled
 export type ReportStatus = 'open' | 'reviewing' | 'resolved' | 'dismissed';
 export type ReportTargetType = 'profile' | 'review' | 'message';
 
-export interface ProService {
-  subcategory_id: string | null;
-  label: string;
-  price: string;
-  other?: boolean;
-}
-
 export interface Profile {
   id: string;
   display_name: string;
@@ -30,13 +23,6 @@ export interface Profile {
   indicative_rates: string | null;
   budget_indicatif: string | null;
   linkedin_url: string | null;
-  pro_services?: ProService[] | null;
-  is_test_account?: boolean;
-  company_name?: string | null;
-  company_description?: string | null;
-  website_url?: string | null;
-  opening_hours?: string | null;
-  siret?: string | null;
   external_reviews_url: string | null;
   charte_accepted: boolean;
   charte_accepted_at: string | null;
@@ -84,7 +70,6 @@ export interface PublicDirectoryListing {
   avg_rating: number;
   review_count: number;
   subcategory_ids: string[];
-  company_name?: string | null;
 }
 
 export interface Badge {
@@ -214,8 +199,7 @@ export interface Notification {
   body: string;
   action_url: string | null;
   reference_id: string | null;
-  is_read?: boolean;
-  read_at: string | null;
+  is_read: boolean;
   created_at: string;
 }
 

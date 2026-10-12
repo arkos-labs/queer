@@ -1,10 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Download, Share, PlusSquare, X } from 'lucide-react';
 
-// Don't greet visitors with the prompt on arrival — wait until they've
-// spent a little time on the site.
-const SHOW_DELAY_MS = 30_000;
-
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
@@ -28,25 +24,24 @@ export function InstallPWABanner() {
     const isIOSDevice = /iPad|iPhone|iPod/.test(ua) && !(window as Window & { MSStream?: boolean }).MSStream;
     setIsIOS(isIOSDevice);
 
-    let timer: number | undefined;
-    const showLater = () => {
-      if (localStorage.getItem('pwa_prompt_dismissed') || timer) return;
-      timer = window.setTimeout(() => setShow(true), SHOW_DELAY_MS);
-    };
-
-    if (isIOSDevice) showLater();
+    if (isIOSDevice) {
+      const hasDismissed = localStorage.getItem('pwa_prompt_dismissed');
+      if (!hasDismissed) {
+        setShow(true);
+      }
+    }
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      showLater();
+      const hasDismissed = localStorage.getItem('pwa_prompt_dismissed');
+      if (!hasDismissed) {
+        setShow(true);
+      }
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.clearTimeout(timer);
-    };
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   }, []);
 
   const handleInstall = async () => {
