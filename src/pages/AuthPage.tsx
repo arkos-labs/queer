@@ -420,6 +420,13 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
               {!loading && <ArrowRight size={18} />}
             </button>
           </form>
+          {!isSignup && (
+            <p className="mt-3 text-center text-[11px] leading-relaxed text-neutral-500">
+              En vous connectant, vous acceptez les{' '}
+              <a href="/cgu" className="font-semibold text-violet-700 underline">Conditions d’utilisation</a> et la{' '}
+              <a href="/confidentialite" className="font-semibold text-violet-700 underline">politique de confidentialité</a>.
+            </p>
+          )}
 
           <div className="mt-4">
             <div className="mb-4 flex items-center gap-3 text-xs text-neutral-400">

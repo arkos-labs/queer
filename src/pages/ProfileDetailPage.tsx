@@ -186,6 +186,15 @@ export function ProfileDetailPage({ id }: { id: string }) {
       setActionDone('Erreur : ' + result.error.message);
       return;
     }
+    if (!isBlocked) {
+      // Un blocage prévient aussi l'équipe de modération (exigence Apple 1.2) : elle examine le profil sous 24 h.
+      void supabase.from('reports').insert({
+        reporter_id: user.id,
+        target_type: 'profile',
+        target_id: target.id,
+        reason: 'Membre bloqué par un utilisateur (signalement automatique)',
+      });
+    }
     setIsBlocked(!isBlocked);
     setActionDone(isBlocked ? 'Membre débloqué.' : 'Membre bloqué. Vous ne pourrez plus vous contacter.');
   };
