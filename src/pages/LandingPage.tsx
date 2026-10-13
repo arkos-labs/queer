@@ -1,3 +1,4 @@
+import { LegalLink } from '@/components/LegalLink';
 import { useState } from 'react';
 import { useRouter } from '@/lib/router';
 import { Capacitor } from '@capacitor/core';
@@ -300,8 +301,8 @@ export function LandingPage() {
                     </button>
                     <p className="mt-2 text-[11px] leading-relaxed text-neutral-500">
                       En continuant avec Apple, vous acceptez les{' '}
-                      <a href="/cgu" className="font-semibold text-violet-700 underline">CGU</a> et la{' '}
-                      <a href="/confidentialite" className="font-semibold text-violet-700 underline">politique de confidentialité</a>.
+                      <LegalLink to="/cgu" className="font-semibold text-violet-700 underline">CGU</LegalLink> et la{' '}
+                      <LegalLink to="/confidentialite" className="font-semibold text-violet-700 underline">politique de confidentialité</LegalLink>.
                     </p>
                   </>
                 )}

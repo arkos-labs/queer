@@ -1,3 +1,4 @@
+import { LegalLink } from '@/components/LegalLink';
 import { useState, useEffect, type FormEvent } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
@@ -382,13 +383,13 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
                   />
                   <span className="text-xs leading-relaxed text-neutral-600">
                     J'ai lu et j'accepte les{' '}
-                    <a href="#/cgu" target="_blank" rel="noopener noreferrer" className="font-bold text-violet-700 underline underline-offset-2">
+                    <LegalLink to="/cgu" className="font-bold text-violet-700 underline underline-offset-2">
                       CGU
-                    </a>{' '}
+                    </LegalLink>{' '}
                     et la{' '}
-                    <a href="#/confidentialite" target="_blank" rel="noopener noreferrer" className="font-bold text-violet-700 underline underline-offset-2">
+                    <LegalLink to="/confidentialite" className="font-bold text-violet-700 underline underline-offset-2">
                       politique de confidentialité
-                    </a>
+                    </LegalLink>
                     . Je m'engage à ne publier aucun contenu injurieux, haineux ou abusif : tolérance zéro, les contenus signalés sont retirés et leurs auteur·rice·s exclu·e·s sous 24 h.
                   </span>
                 </label>
@@ -423,8 +424,8 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
           {!isSignup && (
             <p className="mt-3 text-center text-[11px] leading-relaxed text-neutral-500">
               En vous connectant, vous acceptez les{' '}
-              <a href="/cgu" className="font-semibold text-violet-700 underline">Conditions d’utilisation</a> et la{' '}
-              <a href="/confidentialite" className="font-semibold text-violet-700 underline">politique de confidentialité</a>.
+              <LegalLink to="/cgu" className="font-semibold text-violet-700 underline">Conditions d’utilisation</LegalLink> et la{' '}
+              <LegalLink to="/confidentialite" className="font-semibold text-violet-700 underline">politique de confidentialité</LegalLink>.
             </p>
           )}
 
@@ -466,8 +467,8 @@ export function AuthPage({ mode }: { mode: 'signin' | 'signup' }) {
               </button>
               <p className="mt-2 text-center text-[11px] leading-relaxed text-neutral-500">
                 En continuant avec Apple, vous acceptez les{' '}
-                <a href="/cgu" className="font-semibold text-violet-700 underline">CGU</a> et la{' '}
-                <a href="/confidentialite" className="font-semibold text-violet-700 underline">politique de confidentialité</a>.
+                <LegalLink to="/cgu" className="font-semibold text-violet-700 underline">CGU</LegalLink> et la{' '}
+                <LegalLink to="/confidentialite" className="font-semibold text-violet-700 underline">politique de confidentialité</LegalLink>.
               </p>
             </div>
           )}
