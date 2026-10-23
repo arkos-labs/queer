@@ -1,9 +1,32 @@
 import { useState, useEffect } from 'react';
-import { Download, Share, PlusSquare, X } from 'lucide-react';
+import { Download, X } from 'lucide-react';
 
-// Don't greet visitors with the prompt on arrival — wait until they've
-// spent a little time on the site.
-const SHOW_DELAY_MS = 30_000;
+const APP_STORE_URL = 'https://apps.apple.com/fr/app/queer-services/id6817094310';
+
+// Small pause so the page is visible before the popup covers it.
+const SHOW_DELAY_MS = 4_000;
+
+const DISMISS_KEY = 'pwa_prompt_dismissed';
+
+// Stored in localStorage AND a 1-year cookie: Safari wipes localStorage after
+// 7 days without a visit, which would bring the popup back.
+function isDismissed(): boolean {
+  try {
+    if (localStorage.getItem(DISMISS_KEY)) return true;
+  } catch {
+    // localStorage unavailable
+  }
+  return document.cookie.split('; ').some((c) => c.startsWith(`${DISMISS_KEY}=`));
+}
+
+function rememberDismissal() {
+  try {
+    localStorage.setItem(DISMISS_KEY, 'true');
+  } catch {
+    // ignore
+  }
+  document.cookie = `${DISMISS_KEY}=1; max-age=31536000; path=/; SameSite=Lax`;
+}
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -12,36 +35,24 @@ interface BeforeInstallPromptEvent extends Event {
 
 export function InstallPWABanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    // Check if already installed
+    // Already installed as a PWA, or dismissed for good: never show.
     if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as Navigator & { standalone?: boolean }).standalone) {
       setIsStandalone(true);
       return;
     }
+    if (isDismissed()) return;
 
-    // Check if iOS
-    const ua = window.navigator.userAgent;
-    const isIOSDevice = /iPad|iPhone|iPod/.test(ua) && !(window as Window & { MSStream?: boolean }).MSStream;
-    setIsIOS(isIOSDevice);
-
-    let timer: number | undefined;
-    const showLater = () => {
-      if (localStorage.getItem('pwa_prompt_dismissed') || timer) return;
-      timer = window.setTimeout(() => setShow(true), SHOW_DELAY_MS);
-    };
-
-    if (isIOSDevice) showLater();
+    // Shown on every screen (phone, tablet, desktop).
+    const timer = window.setTimeout(() => setShow(true), SHOW_DELAY_MS);
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      showLater();
     };
-
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -53,63 +64,66 @@ export function InstallPWABanner() {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setShow(false);
-      }
+      if (outcome === 'accepted') handleDismiss();
       setDeferredPrompt(null);
     }
   };
 
   const handleDismiss = () => {
     setShow(false);
-    localStorage.setItem('pwa_prompt_dismissed', 'true');
+    rememberDismissal();
   };
 
   if (isStandalone || !show) return null;
 
   return (
-    <div className="fixed bottom-24 left-4 right-4 z-50 md:bottom-6 md:left-auto md:right-6 md:w-96 animate-slide-up">
-      <div className="relative overflow-hidden rounded-2xl bg-neutral-900 px-5 py-4 text-white shadow-2xl">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Installer l'application"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-5 backdrop-blur-sm"
+    >
+      <div className="relative w-full max-w-sm animate-slide-up rounded-3xl bg-white px-6 pb-5 pt-8 text-center shadow-2xl">
         <button
           onClick={handleDismiss}
-          className="absolute right-3 top-3 rounded-full p-1 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 transition-colors"
+          className="absolute right-3 top-3 rounded-full p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700"
           aria-label="Fermer"
         >
-          <X size={16} />
+          <X size={18} />
         </button>
 
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 shadow-inner">
-            <Download size={22} className="text-white" />
-          </div>
-          <div className="pr-6">
-            <h3 className="font-display font-semibold text-white">Installer l'application</h3>
-            
-            {isIOS ? (
-              <div className="mt-1.5 text-xs text-neutral-400 space-y-1.5">
-                <p>Pour une meilleure expérience, ajoutez Queer Service à votre écran d'accueil.</p>
-                <div className="flex items-center gap-1.5 rounded-lg bg-white/10 px-2.5 py-2">
-                  <span className="flex items-center gap-1">1. Appuyez sur <Share size={14} className="mx-0.5" /></span>
-                </div>
-                <div className="flex items-center gap-1.5 rounded-lg bg-white/10 px-2.5 py-2">
-                  <span className="flex items-center gap-1">2. Choisissez <PlusSquare size={14} className="mx-0.5" /> <strong>Sur l'écran d'accueil</strong></span>
-                </div>
-              </div>
-            ) : (
-              <>
-                <p className="mt-1 text-xs text-neutral-400">
-                  Installez Queer Service pour un accès rapide, hors-ligne, et des notifications instantanées.
-                </p>
-                <button
-                  onClick={handleInstall}
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-600"
-                >
-                  <Download size={16} /> Installer maintenant
-                </button>
-              </>
-            )}
-          </div>
-        </div>
+        <img src="/icons/app-icon.png" alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} className="mx-auto mb-4 h-20 w-20 rounded-2xl shadow-lg" />
+        <h3 className="font-display text-xl font-bold text-neutral-900">Téléchargez l'application</h3>
+
+        <p className="mt-2 text-sm text-neutral-600">
+          Queer Services est disponible sur l'App Store : notifications, accès rapide et meilleure expérience.
+        </p>
+        <a
+          href={APP_STORE_URL}
+          // Same tab and no immediate unmount: Safari hands apps.apple.com over
+          // to the App Store app, and a new blank tab or a removed link breaks that.
+          onClick={() => {
+            rememberDismissal();
+            window.setTimeout(() => setShow(false), 1500);
+          }}
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary-600 px-4 py-3 text-base font-semibold text-white transition-colors hover:bg-primary-500"
+        >
+          <Download size={18} /> Télécharger sur l'App Store
+        </a>
+        {deferredPrompt && (
+          <button
+            onClick={handleInstall}
+            className="mt-2 w-full rounded-2xl border border-neutral-200 px-4 py-2.5 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
+          >
+            Ou installer la version web
+          </button>
+        )}
+        <button
+          onClick={handleDismiss}
+          className="mt-3 w-full py-1 text-center text-sm text-neutral-500 underline underline-offset-2 hover:text-neutral-800"
+        >
+          Ne plus me demander
+        </button>
       </div>
     </div>
   );
